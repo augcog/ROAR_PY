@@ -1,0 +1,7 @@
+gymnasium==0.28.1
+numpy
+asyncio
+msgpack==1.0.5
+pyserde==0.10.4
+Pillow==9.5.0
+transforms3d==0.4.1
