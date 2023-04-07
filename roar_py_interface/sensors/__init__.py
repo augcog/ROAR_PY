@@ -1,6 +1,6 @@
 from .sensor import RoarPySensor
 from .accelerometer_sensor import RoarPyAccelerometerSensor, RoarPyAccelerometerSensorData
-from .camera_sensor import RoarPyCameraSensor, RoarPyCameraSensorData, RoarPyCameraSensorDataGreyscale, RoarPyCameraSensorDataRGB
+from .camera_sensor import RoarPyCameraSensor, RoarPyCameraSensorData, RoarPyCameraSensorDataGreyscale, RoarPyCameraSensorDataRGB, RoarPyCameraSensorDataDepth, RoarPyCameraSensorDataSemanticSegmentation
 from .collision_sensor import RoarPyCollisionSensor, RoarPyCollisionSensorData
 from .gnss_sensor import RoarPyGNSSSensor, RoarPyGNSSSensorData
 from .gyroscope_sensor import RoarPyGyroscopeSensor, RoarPyGyroscopeSensorData
