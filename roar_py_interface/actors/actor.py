@@ -127,7 +127,7 @@ class RoarPyActor:
     This does not need to be inherited and implemented again because the actor
     class constructs the observation dictionary from the sensor list
     """
-    async def receive_observation(self, observation: dict) -> dict[str, typing.Any]:
+    async def receive_observation(self, observation: dict) -> typing.Dict[str, typing.Any]:
         observation_dict = {}
         obs_keys = []
         all_sensors = list(self.get_sensors())
@@ -144,7 +144,7 @@ class RoarPyActor:
         
         return observation_dict
     
-    def get_last_observation(self) -> typing.Optional[dict[str,typing.Any]]:
+    def get_last_observation(self) -> typing.Optional[typing.Dict[str,typing.Any]]:
         observation_dict = {}
         for sensor in self.get_sensors():
             store_name = __propose_name_and_modify_dict(observation_dict, sensor.name)
@@ -155,7 +155,7 @@ class RoarPyActor:
                 return None
         return observation_dict
     
-    def get_last_gym_observation(self) -> typing.Optional[dict[str,typing.Any]]:
+    def get_last_gym_observation(self) -> typing.Optional[typing.Dict[str,typing.Any]]:
         observation_dict = {}
         for sensor in self.get_sensors():
             store_name = __propose_name_and_modify_dict(observation_dict, sensor.name)
@@ -166,7 +166,7 @@ class RoarPyActor:
                 return None
         return observation_dict
 
-    def convert_obs_to_gym_obs(self, observation: dict[str,typing.Any]) -> dict[str,typing.Any]:
+    def convert_obs_to_gym_obs(self, observation : typing.Dict[str,typing.Any]) -> typing.Dict[str,typing.Any]:
         obs_gym_dict = {}
         for sensor in self.get_sensors():
             store_name = __propose_name_and_modify_dict(obs_gym_dict, sensor.name)

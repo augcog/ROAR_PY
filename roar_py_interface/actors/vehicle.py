@@ -29,7 +29,7 @@ class RoarPyVehicleManualGearActor(RoarPyActor):
         name: str = "vehicle_manualgear",
         control_timestep : float = 0.05,
         force_real_control_timestep : bool = False,
-        num_gears: int = 5
+        num_gears: int = 6
     ):
         super().__init__(
             name=name,
