@@ -61,7 +61,7 @@ def __convert_carla_to_roarpy_image(blueprint_id : str, width : int, height : in
     #https://github.com/carla-simulator/carla/blob/master/LibCarla/source/carla/image/ColorConverter.h
     #https://github.com/carla-simulator/data-collector/blob/master/carla/image_converter.py
 
-    assert blueprint_id in ["sensor.camera.depth", "sensor.camera.semantic_segmentation", "sensor.camera.rgb"], "Unsupported blueprint_id: {} for carla camera sensor support".format(blueprint_id)
+    assert blueprint_id in ["sensor.camera.depth", "sensor.camera.semantic_segmentation", "sensor.camera.rgb", "sensor.camera.instance_segmentation"], "Unsupported blueprint_id: {} for carla camera sensor support".format(blueprint_id)
 
     ret_image_bgra = __convert_carla_image_to_bgra_array(carla_data, width, height)
     if target_data_type == RoarPyCameraSensorDataRGB:
@@ -86,10 +86,9 @@ def __convert_carla_to_roarpy_image(blueprint_id : str, width : int, height : in
             is_log_scale=False
         )
     elif target_data_type == RoarPyCameraSensorDataSemanticSegmentation:
-        assert blueprint_id == "sensor.camera.semantic_segmentation", "Cannot convert {} to RoarPyCameraSensorDataSemanticSegmentation".format(blueprint_id)
+        assert blueprint_id == "sensor.camera.semantic_segmentation" or blueprint_id == "sensor.camera.instance_segmentation", "Cannot convert {} to RoarPyCameraSensorDataSemanticSegmentation".format(blueprint_id)
         # label encoded in the red channel: A pixel with a red value of x belongs to an object with tag x
-        # The green and blue values of the pixel define the object's unique ID. 
-        # For example a pixel with an 8 bit RGB value of [10, 20, 55] is a vehicle (Semantic tag 10) with a unique instance ID 20-55. 
+        # for instance segmentation sensor, The green and blue values of the pixel define the object's unique ID. 
         # Code cross-checked with https://github.com/carla-simulator/data-collector/blob/master/carla/image_converter.py, should be ok
         ret_labels = ret_image_bgra[:,:,2].astype(np.uint64)
 
@@ -105,7 +104,8 @@ class RoarPyCarlaCameraSensorRGB(RoarPyCameraSensor[RoarPyCameraSensorData]):
     SUPPORTED_BLUEPRINT_TO_TARGET_DATA = {
         "sensor.camera.rgb": [RoarPyCameraSensorDataRGB, RoarPyCameraSensorDataGreyscale],
         "sensor.camera.depth": [RoarPyCameraSensorDataDepth],
-        "sensor.camera.semantic_segmentation": [RoarPyCameraSensorDataSemanticSegmentation]
+        "sensor.camera.semantic_segmentation": [RoarPyCameraSensorDataSemanticSegmentation],
+        "sensor.camera.instance_segmentation": [RoarPyCameraSensorDataSemanticSegmentation]
     }
     def __init__(
         self, 
