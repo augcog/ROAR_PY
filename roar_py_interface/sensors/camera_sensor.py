@@ -93,7 +93,7 @@ class RoarPyCameraSensorDataSemanticSegmentation(RoarPyCameraSensorData):
     # Semantic Segmentation(SS) Frame, W*H*1
     image_ss: np.NDArray[np.uint64]
     # Dictionary mapping each pixel in SS Frame to a RGB array of color and a label
-    ss_label_color_map: dict[int,tuple[np.NDArray[np.uint8], str]]
+    ss_label_color_map: typing.Dict[int,typing.Tuple[np.NDArray[np.uint8], str]]
 
     def get_image(self) -> Image:
         # we have to normalize this to [0,1]
@@ -115,6 +115,18 @@ class RoarPyCameraSensorDataSemanticSegmentation(RoarPyCameraSensorData):
         return gym.spaces.Box(low=0, high=np.inf, shape=(height, width, 1), dtype=np.uint64)
 
 class RoarPyCameraSensor(RoarPySensor[RoarPyCameraSensorData]):
+    @property
+    def image_size_width(self) -> int:
+        raise NotImplementedError()
+    
+    @property
+    def image_size_height(self) -> int:
+        raise NotImplementedError()
+    
+    @property
+    def fov(self) -> float:
+        raise NotImplementedError()
+
     def convert_obs_to_gym_obs(self, obs: RoarPyCameraSensorData):
         return obs.to_gym()
 

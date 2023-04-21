@@ -6,4 +6,3 @@ pyserde==0.10.4
 Pillow==9.5.0
 transforms3d==0.4.1
 carla==0.9.12
-python>=3.8.16, <3.9.0
