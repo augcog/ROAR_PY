@@ -7,16 +7,18 @@ import gymnasium as gym
 import carla
 
 class RoarPyCollisionSensor(RoarPyCollisionSensor[RoarPyCollisionSensorData]):
-
     def __init__(
         self, 
-        name: str,
         sensor: carla.Sensor,
+        name: str = "carla_collision_sensor",
     ):
-        super().__init__(name, control_timestep=0.02)
+        assert sensor.type_id == "sensor.other.collision", "Unsupported blueprint_id: {} for carla collision sensor support".format(sensor.type_id)
+        super().__init__(name, control_timestep = 0.0)
         self.received_data : typing.Optional[RoarPyCollisionSensorData] = None
-
-        assert sensor.type_id == "sensor.other.collision"
+        self.sensor = sensor
+        self.sensor.listen(
+            self.listen_callback
+        )
 
     async def receive_observation(self) -> RoarPyCollisionSensorData:
         while self.received_data is None:
