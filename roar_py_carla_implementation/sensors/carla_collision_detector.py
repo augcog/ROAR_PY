@@ -27,9 +27,13 @@ class RoarPyCollisionSensor(RoarPyCollisionSensor[RoarPyCollisionSensorData]):
     
     def listen_callback(self, event: carla.CollisionEvent):
         self.received_data = RoarPyCollisionSensorData(np.array([
-            event.normal_impulse.x, 
-            event.normal_impulse.y, 
-            event.normal_impulse.z
+            event.actor,
+            event.other_actor,
+            [
+                event.normal_impulse.x, 
+                event.normal_impulse.y, 
+                event.normal_impulse.z
+            ]
         ]))
     
     def get_last_observation(self) -> typing.Optional[RoarPyCollisionSensorData]:
@@ -42,3 +46,14 @@ class RoarPyCollisionSensor(RoarPyCollisionSensor[RoarPyCollisionSensorData]):
     
     def is_closed(self) -> bool:
         return self.sensor is None or not self.sensor.is_listening
+    
+    @property
+    def other_actor(self) -> carla.Actor | None:
+        if self.received_data is None:
+            return None
+        else:
+            return self.received_data.other_actor
+        
+    @property
+    def impulse_normal(self) -> np.array:
+        return self.received_data.impulse_normal
