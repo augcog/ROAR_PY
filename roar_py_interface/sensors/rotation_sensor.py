@@ -40,8 +40,8 @@ class RoarPyRollPitchYawSensorData:
 class RoarPyRollPitchYawSensor(RoarPySensor[RoarPyRollPitchYawSensorData]):
     def __init__(
         self, 
+        name: str,
         control_timestep: float,
-        name: str = "rpy_sensor",
     ):
         super().__init__(name, control_timestep)
 

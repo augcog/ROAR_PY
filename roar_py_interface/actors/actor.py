@@ -89,7 +89,8 @@ class RoarPyActor:
 
     def __del__(self):
         try:
-            self.close()
+            if not self.is_closed():
+                self.close()
         finally:
             pass
 

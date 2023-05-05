@@ -5,18 +5,19 @@ import asyncio
 import numpy as np
 import gymnasium as gym
 import carla
+from ..base import RoarPyCarlaBase
 
-class RoarPyCollisionSensor(RoarPyCollisionSensor[RoarPyCollisionSensorData]):
+class RoarPyCarlaCollisionSensor(RoarPyCollisionSensor[RoarPyCollisionSensorData],RoarPyCarlaBase):
     def __init__(
         self, 
         sensor: carla.Sensor,
         name: str = "carla_collision_sensor",
     ):
         assert sensor.type_id == "sensor.other.collision", "Unsupported blueprint_id: {} for carla collision sensor support".format(sensor.type_id)
-        super().__init__(name, control_timestep = 0.0)
+        RoarPyCollisionSensor.__init__(self, name, control_timestep = 0.0)
+        RoarPyCarlaBase.__init__(self, sensor)
         self.received_data : typing.Optional[RoarPyCollisionSensorData] = None
-        self.sensor = sensor
-        self.sensor.listen(
+        sensor.listen(
             self.listen_callback
         )
 
@@ -26,34 +27,23 @@ class RoarPyCollisionSensor(RoarPyCollisionSensor[RoarPyCollisionSensorData]):
         return self.received_data
     
     def listen_callback(self, event: carla.CollisionEvent):
-        self.received_data = RoarPyCollisionSensorData(np.array([
+        self.received_data = RoarPyCollisionSensorData(
             event.actor,
             event.other_actor,
-            [
+            np.array([
                 event.normal_impulse.x, 
                 event.normal_impulse.y, 
                 event.normal_impulse.z
-            ]
-        ]))
+            ])
+        )
     
     def get_last_observation(self) -> typing.Optional[RoarPyCollisionSensorData]:
         return self.received_data
     
     def close(self):
-        if self.sensor is not None and self.sensor.is_listening:
-            self.sensor.stop()
-            self.sensor = None
+        if self._base_actor is not None and self._base_actor.is_listening:
+            self._base_actor.stop()
+        RoarPyCarlaBase.close(self)
     
     def is_closed(self) -> bool:
-        return self.sensor is None or not self.sensor.is_listening
-    
-    @property
-    def other_actor(self) -> carla.Actor | None:
-        if self.received_data is None:
-            return None
-        else:
-            return self.received_data.other_actor
-        
-    @property
-    def impulse_normal(self) -> np.array:
-        return self.received_data.impulse_normal
+        return self._base_actor is None or not self._base_actor.is_listening
