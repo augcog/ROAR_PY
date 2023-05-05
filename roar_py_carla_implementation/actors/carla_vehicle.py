@@ -7,7 +7,7 @@ import carla
 import transforms3d as tr3d
 from .carla_actor import RoarPyCarlaActor
 
-class CarlaVehicleAutoGear(RoarPyCarlaActor):
+class RoarPyCarlaVehicle(RoarPyCarlaActor):
     def __init__(self, carla_actor: carla.Vehicle, auto_gear : bool = False, *args, **kwargs):
         RoarPyCarlaActor.__init__(self,carla_actor, *args, **kwargs)
         self.auto_gear = auto_gear

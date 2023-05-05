@@ -5,6 +5,7 @@ import carla
 import asyncio
 import numpy as np
 from PIL import Image
+from ..base import RoarPyCarlaBase
 
 def __convert_carla_image_to_bgra_array(
     carla_data: carla.Image,
@@ -100,7 +101,7 @@ def __convert_carla_to_roarpy_image(blueprint_id : str, width : int, height : in
         raise NotImplementedError("Unsupported target_data_type: {}".format(target_data_type))
 
 
-class RoarPyCarlaCameraSensorRGB(RoarPyCameraSensor[RoarPyCameraSensorData]):
+class RoarPyCarlaCameraSensor(RoarPyCameraSensor[RoarPyCameraSensorData],RoarPyCarlaBase):
     SUPPORTED_BLUEPRINT_TO_TARGET_DATA = {
         "sensor.camera.rgb": [RoarPyCameraSensorDataRGB, RoarPyCameraSensorDataGreyscale],
         "sensor.camera.depth": [RoarPyCameraSensorDataDepth],
@@ -113,56 +114,55 @@ class RoarPyCarlaCameraSensorRGB(RoarPyCameraSensor[RoarPyCameraSensorData]):
         target_data_type: typing.Optional[typing.Type[RoarPyCameraSensorData]] = None,
         name: str = "carla_camera",
     ):
-        self.sensor = sensor
-        super().__init__(name = name, control_timestep = 0.0)
-        self.sensor = sensor
+        RoarPyCameraSensor.__init__(self, name = name, control_timestep = 0.0)
+        RoarPyCarlaBase.__init__(self, sensor)
 
-        assert self.sensor.type_id in __class__.SUPPORTED_BLUEPRINT_TO_TARGET_DATA.keys(), "Unsupported blueprint_id: {} for carla camera sensor support".format(self.sensor.type_id)
+        assert sensor.type_id in __class__.SUPPORTED_BLUEPRINT_TO_TARGET_DATA.keys(), "Unsupported blueprint_id: {} for carla camera sensor support".format(sensor.type_id)
         if target_data_type is None:
-            target_data_type = __class__.SUPPORTED_BLUEPRINT_TO_TARGET_DATA[self.sensor.type_id][0]
-        assert target_data_type in __class__.SUPPORTED_BLUEPRINT_TO_TARGET_DATA[self.sensor.type_id], "Unsupported target_data_type: {} for blueprint_id: {}".format(target_data_type, self.sensor.type_id)
+            target_data_type = __class__.SUPPORTED_BLUEPRINT_TO_TARGET_DATA[sensor.type_id][0]
+        assert target_data_type in __class__.SUPPORTED_BLUEPRINT_TO_TARGET_DATA[sensor.type_id], "Unsupported target_data_type: {} for blueprint_id: {}".format(target_data_type, sensor.type_id)
 
         self._target_data_type = target_data_type
-        self.sensor.listen(
+        sensor.listen(
             self.listen_carla_data
         )
         self.received_data : typing.Optional[RoarPyCameraSensorData] = None
 
     @property
     def control_timestep(self) -> float:
-        return self.sensor.sensor_tick
+        return self._base_actor.sensor_tick
     
     @control_timestep.setter
     def control_timestep(self, control_timestep: float) -> None:
-        self.sensor.sensor_tick = control_timestep
+        self._base_actor.sensor_tick = control_timestep
 
     @property
     def fov(self) -> float:
-        return self.sensor.fov
+        return self._base_actor.fov
     
     @fov.setter
     def fov(self, fov: float) -> None:
-        self.sensor.fov = fov
+        self._base_actor.fov = fov
     
     @property
     def image_size_width(self) -> int:
-        return self.sensor.image_size_x
+        return self._base_actor.image_size_x
     
     @image_size_width.setter
     def image_size_width(self, image_size_width: int) -> None:
-        self.sensor.image_size_x = image_size_width
+        self._base_actor.image_size_x = image_size_width
 
     @property
     def image_size_height(self) -> int:
-        return self.sensor.image_size_y
+        return self._base_actor.image_size_y
     
     @image_size_height.setter
     def image_size_height(self, image_size_height: int) -> None:
-        self.sensor.image_size_y = image_size_height
+        self._base_actor.image_size_y = image_size_height
     
     def listen_carla_data(self, carla_data: carla.Image) -> None:
         self.received_data = __convert_carla_to_roarpy_image(
-            self.sensor.type_id,
+            self._base_actor.type_id,
             self.image_size_width,
             self.image_size_height,
             self._target_data_type,
@@ -181,9 +181,9 @@ class RoarPyCarlaCameraSensorRGB(RoarPyCameraSensor[RoarPyCameraSensorData]):
         return self.received_data
     
     def close(self):
-        if self.sensor is not None and self.sensor.is_listening:
-            self.sensor.stop()
-            self.sensor = None
+        if self._base_actor is not None and self._base_actor.is_listening:
+            self._base_actor.stop()
+        RoarPyCarlaBase.close(self)
     
     def is_closed(self) -> bool:
         return self.sensor is None or not self.sensor.is_listening
