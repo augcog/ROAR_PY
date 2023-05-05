@@ -27,11 +27,15 @@ class RoarPyCarlaCollisionSensor(RoarPyCollisionSensor[RoarPyCollisionSensorData
         return self.received_data
     
     def listen_callback(self, event: carla.CollisionEvent):
-        self.received_data = RoarPyCollisionSensorData(np.array([
-            event.normal_impulse.x, 
-            event.normal_impulse.y, 
-            event.normal_impulse.z
-        ]))
+        self.received_data = RoarPyCollisionSensorData(
+            event.actor,
+            event.other_actor,
+            np.array([
+                event.normal_impulse.x, 
+                event.normal_impulse.y, 
+                event.normal_impulse.z
+            ])
+        )
     
     def get_last_observation(self) -> typing.Optional[RoarPyCollisionSensorData]:
         return self.received_data
