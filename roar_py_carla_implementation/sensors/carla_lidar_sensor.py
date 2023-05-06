@@ -6,17 +6,35 @@ import asyncio
 import numpy as np
 from PIL import Image
 from ..base import RoarPyCarlaBase
+from ..clients import RoarPyCarlaInstance
+
+"""
+Lidar sensor data transform
+https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/lidar_to_camera.py#L161
+We can of course also iterate through the point cloud since it implements __iter__ and transform each point [carla.LidarDetection] individually
+but this is much slower.
+"""
+def __convert_carla_lidar_raw_to_roar_py(carla_lidar_dat : carla.LidarMeasurement) -> RoarPyLiDARSensorData:
+    p_cloud_size = len(carla_lidar_dat)
+    p_cloud = np.copy(np.frombuffer(carla_lidar_dat.raw_data, dtype=np.dtype('f4')))
+    p_cloud = np.reshape(p_cloud, (p_cloud_size, 4))
+    return RoarPyLiDARSensorData(
+        carla_lidar_dat.channels,
+        carla_lidar_dat.horizontal_angle,
+        p_cloud
+    )
 
 class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor[RoarPyLiDARSensorData], RoarPyCarlaBase):
     def __init__(
         self, 
+        carla_instance: RoarPyCarlaInstance,
         sensor: carla.Sensor,
         target_data_type: typing.Optional[typing.Type[RoarPyLiDARSensorData]] = None,
         name: str = "carla_lidar_sensor",
     ):
         assert sensor.type_id == "sensor.lidar.ray_cast", "Unsupported blueprint_id: {} for carla collision sensor support".format(sensor.type_id)
         RoarPyLiDARSensor.__init__(self, name, control_timestep = 0.0)
-        RoarPyCarlaBase.__init__(self, sensor)
+        RoarPyCarlaBase.__init__(self, carla_instance, sensor)
         self.received_data : typing.Optional[RoarPyLiDARSensorData] = None
         sensor.listen(
             self.listen_callback
@@ -51,11 +69,7 @@ class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor[RoarPyLiDARSensorData], RoarPyCar
     # In meters
     @property
     def min_distance(self) -> float:
-        raise NotImplementedError
-    
-    @min_distance.setter
-    def min_distance(self, min_distance: float) -> None:
-        raise NotImplementedError
+        return 0.0
     
     @property
     def points_per_second(self) -> int:
@@ -102,15 +116,8 @@ class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor[RoarPyLiDARSensorData], RoarPyCar
             await asyncio.sleep(0.001)
         return self.received_data
     
-    def get_gym_observation_spec(self) -> gym.Space:
-        return RoarPyLiDARSensorData.get_gym_observation_spec()
-    
     def listen_carla_data(self, carla_data: carla.LidarMeasurement) -> None:
-        self.received_data = RoarPyLiDARSensorData(
-            carla_data.channels,
-            carla_data.horizontal_angle,
-            np.array(carla_data.raw_data)
-        )
+        self.received_data = __convert_carla_lidar_raw_to_roar_py(carla_data)
 
     def get_last_observation(self) -> typing.Optional[RoarPyLiDARSensorData]:
         return self.received_data
