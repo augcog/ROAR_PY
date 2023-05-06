@@ -24,9 +24,12 @@ class RoarPyCarlaBoundingBox:
 class RoarPyCarlaBase:
     def __init__(
         self,
+        carla_instance : 'RoarPyCarlaInstance',
         base_actor : carla.Actor,
     ) -> None:
         self._base_actor = base_actor
+        self._carla_instance = carla_instance
+        carla_instance.register_actor(base_actor.id, self)
     
     @property
     def carla_attributes(self) -> Dict:
@@ -128,6 +131,7 @@ class RoarPyCarlaBase:
     def close(self):
         if self._base_actor.is_alive:
             self._base_actor.destroy()
+        self._carla_instance.unregister_actor(self._base_actor.id, self)
 
     def is_closed(self) -> bool:
         return self._base_actor.is_alive

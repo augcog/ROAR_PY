@@ -6,10 +6,12 @@ import numpy as np
 import gymnasium as gym
 import carla
 from ..base import RoarPyCarlaBase
+from ..clients import RoarPyCarlaInstance
 
 class RoarPyCarlaRPYSensor(RoarPyRollPitchYawSensor[RoarPyRollPitchYawSensorData]):
-    def __init__(self, binded_target : RoarPyCarlaBase, name: str = "rpy_sensor"):
+    def __init__(self, carla_instance: RoarPyCarlaInstance, binded_target : RoarPyCarlaBase, name: str = "rpy_sensor"):
         super().__init__(name, control_timestep = 0.0)
+        self._carla_instance = carla_instance
         self.binded_target = binded_target
         self.received_data : typing.Optional[RoarPyRollPitchYawSensorData] = None
         self._closed = False

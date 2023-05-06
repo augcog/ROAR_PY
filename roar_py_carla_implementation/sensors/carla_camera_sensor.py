@@ -6,6 +6,7 @@ import asyncio
 import numpy as np
 from PIL import Image
 from ..base import RoarPyCarlaBase
+from ..clients import RoarPyCarlaInstance
 
 def __convert_carla_image_to_bgra_array(
     carla_data: carla.Image,
@@ -110,12 +111,13 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor[RoarPyCameraSensorData],RoarPyC
     }
     def __init__(
         self, 
+        carla_instance: RoarPyCarlaInstance,
         sensor: carla.Sensor,
         target_data_type: typing.Optional[typing.Type[RoarPyCameraSensorData]] = None,
         name: str = "carla_camera",
     ):
         RoarPyCameraSensor.__init__(self, name = name, control_timestep = 0.0)
-        RoarPyCarlaBase.__init__(self, sensor)
+        RoarPyCarlaBase.__init__(self, carla_instance, sensor)
 
         assert sensor.type_id in __class__.SUPPORTED_BLUEPRINT_TO_TARGET_DATA.keys(), "Unsupported blueprint_id: {} for carla camera sensor support".format(sensor.type_id)
         if target_data_type is None:

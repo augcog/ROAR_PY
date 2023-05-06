@@ -5,16 +5,18 @@ import gymnasium as gym
 import carla
 import transforms3d as tr3d
 from ..base import RoarPyCarlaBase
+from ..clients import RoarPyCarlaInstance
 
 class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
     def __init__(
         self, 
+        carla_instance: RoarPyCarlaInstance,
         carla_actor: carla.Actor,
         *args,
         **kwargs
     ):
         RoarPyActor.__init__(self, *args, **kwargs)
-        RoarPyCarlaBase.__init__(self, carla_actor)
+        RoarPyCarlaBase.__init__(self, carla_instance, carla_actor)
         self._internal_sensors = []
         self.frame_quat_sensor = None
 
