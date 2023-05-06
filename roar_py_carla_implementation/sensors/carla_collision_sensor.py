@@ -6,16 +6,18 @@ import numpy as np
 import gymnasium as gym
 import carla
 from ..base import RoarPyCarlaBase
+from ..clients import RoarPyCarlaInstance
 
 class RoarPyCarlaCollisionSensor(RoarPyCollisionSensor[RoarPyCollisionSensorData],RoarPyCarlaBase):
     def __init__(
         self, 
+        carla_instance: RoarPyCarlaInstance,
         sensor: carla.Sensor,
         name: str = "carla_collision_sensor",
     ):
         assert sensor.type_id == "sensor.other.collision", "Unsupported blueprint_id: {} for carla collision sensor support".format(sensor.type_id)
         RoarPyCollisionSensor.__init__(self, name, control_timestep = 0.0)
-        RoarPyCarlaBase.__init__(self, sensor)
+        RoarPyCarlaBase.__init__(self, carla_instance, sensor)
         self.received_data : typing.Optional[RoarPyCollisionSensorData] = None
         sensor.listen(
             self.listen_callback
@@ -28,8 +30,8 @@ class RoarPyCarlaCollisionSensor(RoarPyCollisionSensor[RoarPyCollisionSensorData
     
     def listen_callback(self, event: carla.CollisionEvent):
         self.received_data = RoarPyCollisionSensorData(
-            event.actor,
-            event.other_actor,
+            self._carla_instance.search_actor(event.actor.id),
+            self._carla_instance.search_actor(event.other_actor.id),
             np.array([
                 event.normal_impulse.x, 
                 event.normal_impulse.y, 
