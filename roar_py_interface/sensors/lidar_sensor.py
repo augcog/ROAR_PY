@@ -7,6 +7,13 @@ import gymnasium as gym
 @serde
 @dataclass
 class RoarPyLiDARSensorData:
+    # Number of lasers shot
+    channels: int
+
+    # Horizontal angle the LIDAR is rotated 
+    # at the time of the measurement
+    horizontal_angle: float
+    
     # Received list of 4D points in shape (N, (X, Y, Z, I))
     # where N is the # of points,
     # X, Y, Z are the x, y, z coordinates respectively
@@ -15,6 +22,7 @@ class RoarPyLiDARSensorData:
     # plus the intensity computed for that point
     # intensity is a value between 0 and 1
     lidar_points_data: np.ndarray
+
 
 class RoarPyLiDARSensor(RoarPySensor[RoarPyLiDARSensorData]):
     def __init__(
