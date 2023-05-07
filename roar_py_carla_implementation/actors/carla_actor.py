@@ -6,19 +6,19 @@ import carla
 import transforms3d as tr3d
 from ..base import RoarPyCarlaBase
 from ..clients import RoarPyCarlaInstance
+import numpy as np
+from ..sensors import *
 
 class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
     def __init__(
         self, 
         carla_instance: RoarPyCarlaInstance,
         carla_actor: carla.Actor,
-        *args,
-        **kwargs
+        name: str
     ):
-        RoarPyActor.__init__(self, *args, **kwargs)
+        RoarPyActor.__init__(self, control_timestep=0.0, force_real_control_timestep=False, name=name)
         RoarPyCarlaBase.__init__(self, carla_instance, carla_actor)
         self._internal_sensors = []
-        self.frame_quat_sensor = None
 
     def get_action_spec(self) -> gym.Space:
         raise NotImplementedError()
@@ -28,3 +28,96 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
     
     def get_sensors(self) -> typing.Iterable[RoarPySensor]:
         return self._internal_sensors
+
+    def attach_camera_sensor(
+        self,
+        target_datatype: typing.Type[RoarPyCameraSensorData],
+        location: np.ndarray,
+        roll_pitch_yaw: np.ndarray,
+        attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid,
+        name: str = "carla_camera",
+    ) -> RoarPyCameraSensor:
+        if target_datatype not in RoarPyCarlaCameraSensor.SUPPORTED_TARGET_DATA_TO_BLUEPRINT:
+            raise ValueError(f"Unsupported target data type {target_datatype}")
+
+        blueprint_id = RoarPyCarlaCameraSensor.SUPPORTED_TARGET_DATA_TO_BLUEPRINT[target_datatype]
+        new_actor = self.attach_native_carla_actor(blueprint_id, location, roll_pitch_yaw, attachment_type)
+        new_sensor = RoarPyCarlaCameraSensor(self._carla_instance, new_actor, target_datatype, name=name)
+        self._internal_sensors.append(new_sensor)
+        return new_sensor
+
+    def attach_collision_sensor(
+        self,
+        location: np.ndarray,
+        roll_pitch_yaw: np.ndarray,
+        attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid,
+        name: str = "carla_collision_sensor",
+    ):
+        blueprint_id = "sensor.other.collision"
+        new_actor = self.attach_native_carla_actor(blueprint_id, location, roll_pitch_yaw, attachment_type)
+        new_sensor = RoarPyCarlaCollisionSensor(self._carla_instance, new_actor, name=name)
+        self._internal_sensors.append(new_sensor)
+        return new_sensor
+
+    def attach_accelerometer_sensor(
+        self,
+        name : str = "carla_accelerometer_sensor",
+    ):
+        new_sensor = RoarPyCarlaAccelerometerSensor(self._carla_instance, self, name=name)
+        self._internal_sensors.append(new_sensor)
+        return new_sensor
+
+    def attach_gnss_sensor(
+        self,
+        name : str = "carla_gnss_sensor",
+    ):
+        blueprint_id = "sensor.other.gnss"
+        new_actor = self.attach_native_carla_actor(blueprint_id, np.array([0,0,0]), np.array([0,0,0]), carla.AttachmentType.Rigid)
+        new_sensor = RoarPyCarlaGNSSSensor(self._carla_instance, new_actor, name=name)
+        self._internal_sensors.append(new_sensor)
+        return new_sensor
+
+    def attach_lidar_sensor(
+        self,
+        location: np.ndarray,
+        roll_pitch_yaw: np.ndarray,
+        attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid,
+        name: str = "carla_lidar_sensor",
+    ):
+        blueprint_id = "sensor.lidar.ray_cast"
+        new_actor = self.attach_native_carla_actor(blueprint_id, location, roll_pitch_yaw, attachment_type)
+        new_sensor = RoarPyCarlaLiDARSensor(self._carla_instance, new_actor, name=name)
+        self._internal_sensors.append(new_sensor)
+        return new_sensor
+    
+    def attach_roll_pitch_yaw_sensor(
+        self,
+        name: str = "carla_rpy_sensor",
+    ):
+        new_sensor = RoarPyCarlaRPYSensor(self._carla_instance, self, name=name)
+        self._internal_sensors.append(new_sensor)
+        return new_sensor
+    
+    def attach_framequat_sensor(
+        self,
+        name: str = "carla_framequat_sensor",
+    ):
+        new_sensor = RoarPyCarlaRPYSensor(self._carla_instance, self)
+        new_sensor = RoarPyFrameQuatSensorFromRollPitchYaw(new_sensor, name=name)
+        self._internal_sensors.append(new_sensor)
+        return new_sensor
+    
+    def remove_sensor(self, sensor: RoarPySensor):
+        self._internal_sensors.remove(sensor)
+        if not sensor.is_closed():
+            sensor.close()
+    
+    def close(self):
+        for sensor in self._internal_sensors:
+            if not sensor.is_closed():
+                sensor.close()
+        self._internal_sensors = []
+        RoarPyCarlaBase.close(self)
+
+    def is_closed(self) -> bool:
+        return RoarPyCarlaBase.is_closed(self) and len(self._internal_sensors) == 0

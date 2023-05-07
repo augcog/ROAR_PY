@@ -8,7 +8,7 @@ import carla
 from ..base import RoarPyCarlaBase
 from ..clients import RoarPyCarlaInstance
 
-class RoarPyCarlaGNSSSensor(RoarPyGNSSSensor[RoarPyGNSSSensorData], RoarPyCarlaBase):
+class RoarPyCarlaGNSSSensor(RoarPyGNSSSensor, RoarPyCarlaBase):
     def __init__(
         self, 
         carla_instance: RoarPyCarlaInstance,

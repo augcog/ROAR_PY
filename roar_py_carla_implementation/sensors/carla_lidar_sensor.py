@@ -24,7 +24,7 @@ def __convert_carla_lidar_raw_to_roar_py(carla_lidar_dat : carla.LidarMeasuremen
         p_cloud
     )
 
-class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor[RoarPyLiDARSensorData], RoarPyCarlaBase):
+class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor, RoarPyCarlaBase):
     def __init__(
         self, 
         carla_instance: RoarPyCarlaInstance,

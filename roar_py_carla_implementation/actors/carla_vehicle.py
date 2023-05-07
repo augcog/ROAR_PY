@@ -9,8 +9,8 @@ from .carla_actor import RoarPyCarlaActor
 from ..clients import RoarPyCarlaInstance
 
 class RoarPyCarlaVehicle(RoarPyCarlaActor):
-    def __init__(self, carla_instance : RoarPyCarlaInstance, carla_actor: carla.Vehicle, auto_gear : bool = False, *args, **kwargs):
-        RoarPyCarlaActor.__init__(self,carla_instance, carla_actor, *args, **kwargs)
+    def __init__(self, carla_instance : RoarPyCarlaInstance, carla_actor: carla.Vehicle, auto_gear : bool = False, name : str = "carla_vehicle"):
+        RoarPyCarlaActor.__init__(self, carla_instance, carla_actor, name=name)
         self.auto_gear = auto_gear
     
     @property

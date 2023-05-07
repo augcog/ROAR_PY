@@ -8,7 +8,7 @@ import carla
 from ..base import RoarPyCarlaBase
 from ..clients import RoarPyCarlaInstance
 
-class RoarPyCarlaRPYSensor(RoarPyRollPitchYawSensor[RoarPyRollPitchYawSensorData]):
+class RoarPyCarlaRPYSensor(RoarPyRollPitchYawSensor):
     def __init__(self, carla_instance: RoarPyCarlaInstance, binded_target : RoarPyCarlaBase, name: str = "rpy_sensor"):
         super().__init__(name, control_timestep = 0.0)
         self._carla_instance = carla_instance

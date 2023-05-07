@@ -102,12 +102,18 @@ def __convert_carla_to_roarpy_image(blueprint_id : str, width : int, height : in
         raise NotImplementedError("Unsupported target_data_type: {}".format(target_data_type))
 
 
-class RoarPyCarlaCameraSensor(RoarPyCameraSensor[RoarPyCameraSensorData],RoarPyCarlaBase):
+class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
     SUPPORTED_BLUEPRINT_TO_TARGET_DATA = {
         "sensor.camera.rgb": [RoarPyCameraSensorDataRGB, RoarPyCameraSensorDataGreyscale],
         "sensor.camera.depth": [RoarPyCameraSensorDataDepth],
         "sensor.camera.semantic_segmentation": [RoarPyCameraSensorDataSemanticSegmentation],
         "sensor.camera.instance_segmentation": [RoarPyCameraSensorDataSemanticSegmentation]
+    }
+    SUPPORTED_TARGET_DATA_TO_BLUEPRINT = {
+        RoarPyCameraSensorDataRGB: "sensor.camera.rgb",
+        RoarPyCameraSensorDataGreyscale: "sensor.camera.rgb",
+        RoarPyCameraSensorDataDepth: "sensor.camera.depth",
+        RoarPyCameraSensorDataSemanticSegmentation: "sensor.camera.semantic_segmentation"
     }
     def __init__(
         self, 

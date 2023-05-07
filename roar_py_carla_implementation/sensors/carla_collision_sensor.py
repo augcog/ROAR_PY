@@ -8,7 +8,7 @@ import carla
 from ..base import RoarPyCarlaBase
 from ..clients import RoarPyCarlaInstance
 
-class RoarPyCarlaCollisionSensor(RoarPyCollisionSensor[RoarPyCollisionSensorData], RoarPyCarlaBase):
+class RoarPyCarlaCollisionSensor(RoarPyCollisionSensor, RoarPyCarlaBase):
     def __init__(
         self, 
         carla_instance: RoarPyCarlaInstance,

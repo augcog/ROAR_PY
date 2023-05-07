@@ -2,6 +2,8 @@ import carla
 from typing import Optional, Dict, Any, List, Tuple
 from dataclasses import dataclass
 import numpy as np
+from ..clients import RoarPyCarlaInstance
+from ..worlds import RoarPyCarlaWorld
 
 @dataclass
 class RoarPyCarlaBoundingBox:
@@ -24,7 +26,7 @@ class RoarPyCarlaBoundingBox:
 class RoarPyCarlaBase:
     def __init__(
         self,
-        carla_instance : 'RoarPyCarlaInstance',
+        carla_instance : RoarPyCarlaInstance,
         base_actor : carla.Actor,
     ) -> None:
         self._base_actor = base_actor
@@ -51,9 +53,12 @@ class RoarPyCarlaBase:
     def carla_parent(self) -> Optional[carla.Actor]:
         return self._base_actor.parent
     
-    def get_carla_world(self) -> carla.World:
+    def get_native_carla_world(self) -> carla.World:
         return self._base_actor.get_world()
     
+    def get_carla_world(self) -> RoarPyCarlaWorld:
+        return self._carla_instance.world
+
     @property
     def semantic_labels(self) -> List[int]:
         # Return the semantic labels of the actor, see carla_camera_rgb.py for example tags
@@ -102,8 +107,8 @@ class RoarPyCarlaBase:
         rot = self._base_actor.get_transform().rotation
         return np.deg2rad(np.array([rot.roll, rot.pitch, rot.yaw]))
     
-    def set_roll_pitch_yaw(self, new_rotation : np.ndarray) -> None:
-        new_rot_deg = np.rad2deg(new_rotation)
+    def set_roll_pitch_yaw(self, new_rotation_rpy : np.ndarray) -> None:
+        new_rot_deg = np.rad2deg(new_rotation_rpy)
         transform = carla.Transform(
             location=self._base_actor.get_location(),
             rotation=carla.Rotation(roll=new_rot_deg[0], pitch=new_rot_deg[1], yaw=new_rot_deg[2])
@@ -124,6 +129,19 @@ class RoarPyCarlaBase:
 
     def set_simulate_physics(self, enable: bool = True) -> None:
         self._base_actor.set_simulate_physics(enable)
+    
+    def attach_native_carla_actor(
+        self,
+        blueprint_id : str, 
+        location: np.ndarray,
+        roll_pitch_yaw: np.ndarray,
+        attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid
+    ) -> carla.Actor:
+        assert location.shape == (3,) and roll_pitch_yaw.shape == (3,)
+        blueprint = self.get_native_carla_world().get_blueprint_library().find(blueprint_id)
+        transform = carla.Transform(carla.Location(*location), carla.Rotation(roll=roll_pitch_yaw[0], pitch=roll_pitch_yaw[1], yaw=roll_pitch_yaw[2]))
+        new_actor = self.get_native_carla_world().spawn_actor(blueprint, transform, attach_to=self._base_actor, attachment=attachment_type)
+        return new_actor
 
     def __str__(self):
         return str(self._base_actor)

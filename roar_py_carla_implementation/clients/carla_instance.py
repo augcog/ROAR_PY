@@ -1,10 +1,9 @@
 import carla
 from typing import Dict, List, Optional
-from ..base import RoarPyCarlaBase
 from ..worlds import RoarPyCarlaWorld
 
 class RoarPyCarlaInstance:
-    actor_to_instance_map : Dict[int,RoarPyCarlaBase] = {}
+    actor_to_instance_map : Dict[int,"RoarPyCarlaBase"] = {}
 
     def __init__(
         self,
@@ -15,10 +14,10 @@ class RoarPyCarlaInstance:
         if world_override is not None:
             self.world = world_override
         else:
-            self.world = RoarPyCarlaWorld()
+            self.world = RoarPyCarlaWorld(carla_client.get_world(),self)
 
     def __refresh_world(self):
-        self.world = RoarPyCarlaWorld()
+        self.world = RoarPyCarlaWorld(self.carla_client.get_world(),self)
 
     """
     Creates a new world with using map_name map. All actors in the current world will be destroyed. 
@@ -51,12 +50,12 @@ class RoarPyCarlaInstance:
                 actor.close()
         self.actor_to_instance_map = {}
     
-    def register_actor(self, actor_id : int, actor_instance : RoarPyCarlaBase):
+    def register_actor(self, actor_id : int, actor_instance : "RoarPyCarlaBase"):
         self.actor_to_instance_map[actor_id] = actor_instance
     
-    def unregister_actor(self, actor_id : int, actor_instance : RoarPyCarlaBase):
-        if self.actor_to_instance_map.get(actor_id, None) == actor_instance:
+    def unregister_actor(self, actor_id : int, actor_instance : "RoarPyCarlaBase"):
+        if self.actor_to_instance_map.get(actor_id, None) is actor_instance:
             del self.actor_to_instance_map[actor_id]
     
-    def search_actor(self, actor_id : int) -> Optional[RoarPyCarlaBase]:
+    def search_actor(self, actor_id : int) -> Optional["RoarPyCarlaBase"]:
         return self.actor_to_instance_map.get(actor_id, None)
