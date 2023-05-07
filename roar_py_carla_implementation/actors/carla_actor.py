@@ -107,6 +107,14 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         self._internal_sensors.append(new_sensor)
         return new_sensor
     
+    def attach_gyroscope_sensor(
+        self,
+        name: str = "carla_gyroscope_sensor",
+    ):
+        new_sensor = RoarPyCarlaGyroscopeSensor(self._carla_instance, self, name=name)
+        self._internal_sensors.append(new_sensor)
+        return new_sensor
+    
     def remove_sensor(self, sensor: RoarPySensor):
         self._internal_sensors.remove(sensor)
         if not sensor.is_closed():
