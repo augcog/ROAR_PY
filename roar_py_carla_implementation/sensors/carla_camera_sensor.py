@@ -58,7 +58,7 @@ __carla_semantic_segmentation_color_map = {
     22: (np.array([145,170,100],dtype=np.uint8),"Terrain")
 }
 
-def __convert_carla_to_roarpy_image(blueprint_id : str, width : int, height : int, target_data_type : typing.Type[RoarPyCameraSensorData], carla_data: carla.Image) -> RoarPyCameraSensorData:
+def _convert_carla_to_roarpy_image(blueprint_id : str, width : int, height : int, target_data_type : typing.Type[RoarPyCameraSensorData], carla_data: carla.Image) -> RoarPyCameraSensorData:
     #https://github.com/carla-simulator/carla/blob/master/LibCarla/source/carla/image/ColorConverter.h
     #https://github.com/carla-simulator/data-collector/blob/master/carla/image_converter.py
 
@@ -172,7 +172,7 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
         self._base_actor.image_size_y = image_size_height
     
     def listen_carla_data(self, carla_data: carla.Image) -> None:
-        self.received_data = __convert_carla_to_roarpy_image(
+        self.received_data = _convert_carla_to_roarpy_image(
             self._base_actor.type_id,
             self.image_size_width,
             self.image_size_height,

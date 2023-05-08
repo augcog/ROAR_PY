@@ -25,7 +25,7 @@ if __name__ == '__main__':
     from rpyc.utils.server import ThreadPoolServer
     print("Initializing server...")
     service = RoarPyServer()
-    print("Carla Server initialized.")
+    print("Carla World initialized.")
     server = ThreadPoolServer(service, port=18861, protocol_config={"allow_public_attrs": True})
     server_world : roar_py_remote.RoarPyRemoteServer = service.get_server_world()
     
@@ -35,7 +35,9 @@ if __name__ == '__main__':
                 await server_world._step()
         asyncio.run(event_loop())
     
+    print("Setting up step world process...")
     step_world_process = threading.Thread(target=step_world_runner, daemon=True)
     step_world_process.start()
 
+    print("Starting rpyc server...")
     server.start()

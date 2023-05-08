@@ -132,7 +132,7 @@ class RoarPyCarlaWorld(RoarPyWorld):
         assert location.shape == (3,) and roll_pitch_yaw.shape == (3,)
         blueprint = self.carla_world.get_blueprint_library().find(blueprint_id)
         transform = carla.Transform(carla.Location(*location), carla.Rotation(roll=roll_pitch_yaw[0], pitch=roll_pitch_yaw[1], yaw=roll_pitch_yaw[2]))
-        new_actor = self.carla_world.spawn_actor(blueprint, transform, attach_to=None, attachment=carla.AttachmentType.Rigid)
+        new_actor = self.carla_world.spawn_actor(blueprint, transform, None, carla.AttachmentType.Rigid)
         return new_actor
 
     """

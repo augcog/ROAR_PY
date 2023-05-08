@@ -52,7 +52,7 @@ class RoarPyCarlaBase:
     def carla_is_alive(self) -> bool:
         return self._base_actor.is_alive
     
-    def __get_native_carla_world(self) -> carla.World:
+    def _get_native_carla_world(self) -> carla.World:
         return self._base_actor.get_world()
     
     def _get_carla_world(self):
@@ -144,9 +144,9 @@ class RoarPyCarlaBase:
         attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid
     ) -> carla.Actor:
         assert location.shape == (3,) and roll_pitch_yaw.shape == (3,)
-        blueprint = self.get_native_carla_world().get_blueprint_library().find(blueprint_id)
+        blueprint = self._get_native_carla_world().get_blueprint_library().find(blueprint_id)
         transform = carla.Transform(carla.Location(*location), carla.Rotation(roll=roll_pitch_yaw[0], pitch=roll_pitch_yaw[1], yaw=roll_pitch_yaw[2]))
-        new_actor = self.get_native_carla_world().spawn_actor(blueprint, transform, attach_to=self._base_actor, attachment=attachment_type)
+        new_actor = self._get_native_carla_world().spawn_actor(blueprint, transform, self._base_actor, attachment_type)
         return new_actor
 
     def __str__(self):
