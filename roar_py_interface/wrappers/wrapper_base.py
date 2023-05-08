@@ -1,9 +1,7 @@
 from typing import Any, TypeVar, Generic, Union, Callable
 import threading
-
-from roar_py_interface.base.wrapper_base import RoarPyWrapper
 from ..actors import RoarPyActor
-from ..sensors import RoarPySensor
+from ..base.sensor import RoarPySensor
 from ..worlds import RoarPyWorld
 
 _Wrapped = TypeVar("_Wrapped")

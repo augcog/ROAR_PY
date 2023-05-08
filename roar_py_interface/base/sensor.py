@@ -47,7 +47,7 @@ class RoarPyRemoteSupportedSensorData:
         return ret
     
     @classmethod
-    def from_data(cls: type["RoarPyRemoteSupportedSensorData"], data: bytes, scheme: RoarPyRemoteSupportedSensorSerializationScheme) -> "RoarPyRemoteSupportedSensorData":
+    def from_data(cls: typing.Type["RoarPyRemoteSupportedSensorData"], data: bytes, scheme: RoarPyRemoteSupportedSensorSerializationScheme) -> "RoarPyRemoteSupportedSensorData":
         # Not compressed data types
         if scheme == RoarPyRemoteSupportedSensorSerializationScheme.DICT:
             ret = serde.from_dict(cls, data)

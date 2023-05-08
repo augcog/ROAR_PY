@@ -1,5 +1,5 @@
 from .remote_sensors import RoarPyRemoteSharedSensor
-from roar_py_interface.base import RoarPyWrapper
+from roar_py_interface.wrappers import RoarPyWrapper
 from roar_py_interface import RoarPySensor
 import gymnasium as gym
 import typing
@@ -21,7 +21,7 @@ class RoarPyRemoteSharedSensorWrapper(typing.Generic[_ObsT], RoarPyRemoteSharedS
     def get_gym_observation_spec(self) -> gym.Space:
         return self._wrapped_object.get_gym_observation_spec()
     
-    def get_last_observation(self) -> typing.Optional[typing._ObsT]:
+    def get_last_observation(self) -> typing.Optional[_ObsT]:
         return self._wrapped_object.get_last_observation()
 
     def convert_obs_to_gym_obs(self, obs: _ObsT):

@@ -61,7 +61,6 @@ class RoarPyRemoteMaskedWorld(RoarPyWorld):
             self._sensors.clear()
             self.__server_world._masked_worlds.remove(self)
 
-@rpyc.Service
 class RoarPyRemoteServer:
     def __init__(
         self, 

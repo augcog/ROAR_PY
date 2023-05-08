@@ -1,4 +1,4 @@
-from .sensor import RoarPySensor,RoarPyRemoteSupportedSensorData
+from ..base import RoarPySensor,RoarPyRemoteSupportedSensorData
 from serde import serde
 from dataclasses import dataclass
 import numpy as np

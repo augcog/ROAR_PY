@@ -1,4 +1,3 @@
-from .sensor import RoarPySensor, custom_roar_py_sensor_wrapper, RoarPyRemoteSupportedSensorData, RoarPyRemoteSupportedSensorSerializationScheme
 from .accelerometer_sensor import RoarPyAccelerometerSensor, RoarPyAccelerometerSensorData
 from .camera_sensor import RoarPyCameraSensor, RoarPyCameraSensorData, RoarPyCameraSensorDataGreyscale, RoarPyCameraSensorDataRGB, RoarPyCameraSensorDataDepth, RoarPyCameraSensorDataSemanticSegmentation
 from .collision_sensor import RoarPyCollisionSensor, RoarPyCollisionSensorData

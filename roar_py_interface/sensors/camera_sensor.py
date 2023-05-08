@@ -1,4 +1,4 @@
-from .sensor import RoarPySensor, RoarPyRemoteSupportedSensorData
+from ..base import RoarPySensor, RoarPyRemoteSupportedSensorData
 from serde import serde
 from dataclasses import dataclass
 from PIL import Image
@@ -25,7 +25,7 @@ class RoarPyCameraSensorData:
 @serde
 class RoarPyCameraSensorDataRGB(RoarPyCameraSensorData, RoarPyRemoteSupportedSensorData):
     # RGB image W*H*3, each r/g/b value in range [0,255]
-    image_rgb: np.NDArray[np.uint8]
+    image_rgb: np.ndarray #np.NDArray[np.uint8]
 
     def get_image(self) -> Image:
         return Image.fromarray(self.image_rgb,mode="RGB")
@@ -47,7 +47,7 @@ class RoarPyCameraSensorDataRGB(RoarPyCameraSensorData, RoarPyRemoteSupportedSen
 @serde
 class RoarPyCameraSensorDataGreyscale(RoarPyCameraSensorData, RoarPyRemoteSupportedSensorData):
     # Greyscale image W*H*1, each pixel in range[0,255]
-    image_greyscale: np.NDArray[np.uint8]
+    image_greyscale: np.ndarray #np.NDArray[np.uint8]
 
     def get_image(self) -> Image:
         return Image.fromarray(self.image_greyscale,mode="L")
@@ -69,7 +69,7 @@ class RoarPyCameraSensorDataGreyscale(RoarPyCameraSensorData, RoarPyRemoteSuppor
 @serde
 class RoarPyCameraSensorDataDepth(RoarPyCameraSensorData, RoarPyRemoteSupportedSensorData):
     # unit in m, W*H*1
-    image_depth: np.NDArray[np.float32]
+    image_depth: np.ndarray #np.NDArray[np.float32]
     is_log_scale: bool
 
     def get_image(self) -> Image:
@@ -91,9 +91,9 @@ class RoarPyCameraSensorDataDepth(RoarPyCameraSensorData, RoarPyRemoteSupportedS
 @serde
 class RoarPyCameraSensorDataSemanticSegmentation(RoarPyCameraSensorData, RoarPyRemoteSupportedSensorData):
     # Semantic Segmentation(SS) Frame, W*H*1
-    image_ss: np.NDArray[np.uint64]
+    image_ss: np.ndarray #np.NDArray[np.uint64]
     # Dictionary mapping each pixel in SS Frame to a RGB array of color and a label
-    ss_label_color_map: typing.Dict[int,typing.Tuple[np.NDArray[np.uint8], str]]
+    ss_label_color_map: typing.Dict[int,typing.Tuple[np.ndarray, str]] #typing.Dict[int,typing.Tuple[np.NDArray[np.uint8], str]]
 
     def get_image(self) -> Image:
         # we have to normalize this to [0,1]

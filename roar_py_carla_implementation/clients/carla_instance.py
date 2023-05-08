@@ -1,7 +1,6 @@
 import carla
 from typing import Dict, List, Optional
-from ..worlds import RoarPyCarlaWorld
-from roar_py_interface.base import roar_py_thread_sync
+from roar_py_interface.wrappers import roar_py_thread_sync
 
 class RoarPyCarlaInstance:
     actor_to_instance_map : Dict[int,"RoarPyCarlaBase"] = {}
@@ -9,17 +8,17 @@ class RoarPyCarlaInstance:
     def __init__(
         self,
         carla_client: carla.Client,
-        world_override : Optional[RoarPyCarlaWorld] = None
+        world_override : Optional["RoarPyCarlaWorld"] = None
     ):
         self.carla_client = carla_client
         if world_override is not None:
             self.world = world_override
         else:
-            self.world = RoarPyCarlaWorld(carla_client.get_world(),self)
+            self.world = "RoarPyCarlaWorld"(carla_client.get_world(),self)
 
     @roar_py_thread_sync
     def __refresh_world(self):
-        self.world = RoarPyCarlaWorld(self.carla_client.get_world(),self)
+        self.world = "RoarPyCarlaWorld"(self.carla_client.get_world(),self)
 
     """
     Creates a new world with using map_name map. All actors in the current world will be destroyed. 

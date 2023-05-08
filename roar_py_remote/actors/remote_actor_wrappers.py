@@ -1,5 +1,5 @@
-from roar_py_interface.sensors.sensor import RoarPySensor
-from roar_py_interface.base import RoarPyWrapper
+from roar_py_interface.base import RoarPySensor
+from roar_py_interface.wrappers import RoarPyWrapper
 from .remote_actors import RoarPyRemoteSharedActor
 from roar_py_interface import RoarPyActor
 import typing

@@ -12,14 +12,14 @@ def __convert_carla_image_to_bgra_array(
     carla_data: carla.Image,
     width: int,
     height: int
-) -> np.NDArray[np.uint8]:
+) -> np.ndarray: #np.NDArray[np.uint8]:
     array_dat = np.frombuffer(carla_data.raw_data, dtype=np.dtype("uint8"))
     array_dat = np.reshape(array_dat, (height, width, 4))
     return array_dat
 
 def __depth_meters_from_carla_bgra(
     bgra_carla: np.ndarray
-) -> np.NDArray[np.float32]:
+) -> np.ndarray: #np.NDArray[np.float32]:
     assert bgra_carla.ndim == 4
     assert bgra_carla.shape[-1] == 4
     bgra_carla = bgra_carla.astype(np.float32)

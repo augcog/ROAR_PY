@@ -1,7 +1,7 @@
 import typing
 import asyncio
 import gymnasium as gym
-from ..sensors.sensor import RoarPySensor
+from ..base import RoarPySensor
 import time
 
 """

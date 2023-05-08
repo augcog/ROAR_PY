@@ -1,4 +1,4 @@
-from .sensor import RoarPySensor, RoarPyRemoteSupportedSensorData
+from ..base import RoarPySensor, RoarPyRemoteSupportedSensorData
 from serde import serde
 from dataclasses import dataclass
 import numpy as np
@@ -10,7 +10,7 @@ import typing
 @dataclass
 class RoarPyFrameQuatSensorData(RoarPyRemoteSupportedSensorData):
     # Normalized frame quaternion (w,x,y,z)
-    frame_quaternion: np.NDArray[np.float32]
+    frame_quaternion: np.ndarray #np.NDArray[np.float32]
 
 class RoarPyFrameQuatSensor(RoarPySensor[RoarPyFrameQuatSensorData]):
     def __init__(
@@ -35,7 +35,7 @@ class RoarPyFrameQuatSensor(RoarPySensor[RoarPyFrameQuatSensorData]):
 @dataclass
 class RoarPyRollPitchYawSensorData(RoarPyRemoteSupportedSensorData):
     # Normalized[-pi,pi) roll,pitch,yaw
-    roll_pitch_yaw: np.NDArray[np.float32]
+    roll_pitch_yaw: np.ndarray #np.NDArray[np.float32]
 
 class RoarPyRollPitchYawSensor(RoarPySensor[RoarPyRollPitchYawSensorData]):
     def __init__(

@@ -1,6 +1,6 @@
 from roar_py_interface.actors.vehicle import *
 from roar_py_interface.sensors import *
-from roar_py_interface.base import roar_py_thread_sync
+from roar_py_interface.wrappers import roar_py_thread_sync
 import typing
 import gymnasium as gym
 import carla

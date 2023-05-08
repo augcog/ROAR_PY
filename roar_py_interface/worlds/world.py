@@ -1,6 +1,6 @@
 import typing
 from ..actors.actor import RoarPyActor
-from ..sensors.sensor import RoarPySensor
+from ..base import RoarPySensor
 
 class RoarPyWorld:
     @property

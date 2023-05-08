@@ -3,9 +3,7 @@ from typing import Optional, Dict, Any, List, Tuple
 from dataclasses import dataclass
 import numpy as np
 from ..clients import RoarPyCarlaInstance
-from ..worlds import RoarPyCarlaWorld
-
-from roar_py_interface.base import roar_py_thread_sync
+from roar_py_interface.wrappers import roar_py_thread_sync
 
 @dataclass
 class RoarPyCarlaBoundingBox:
@@ -58,7 +56,7 @@ class RoarPyCarlaBase:
     def __get_native_carla_world(self) -> carla.World:
         return self._base_actor.get_world()
     
-    def _get_carla_world(self) -> RoarPyCarlaWorld:
+    def _get_carla_world(self):
         return self._carla_instance.world
 
     @property

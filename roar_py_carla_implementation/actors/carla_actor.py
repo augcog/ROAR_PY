@@ -1,14 +1,15 @@
 from roar_py_interface.actors.actor import RoarPyActor, RoarPyResettableActor
 from roar_py_interface.sensors import *
-from roar_py_interface.base import roar_py_thread_sync, roar_py_append_item, roar_py_remove_item
+from roar_py_interface.base import RoarPySensor
+from roar_py_interface.wrappers import roar_py_thread_sync, roar_py_append_item, roar_py_remove_item
 import typing
 import gymnasium as gym
 import carla
 import transforms3d as tr3d
 from ..base import RoarPyCarlaBase
 from ..clients import RoarPyCarlaInstance
-import numpy as np
 from ..sensors import *
+import numpy as np
 
 class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
     def __init__(
