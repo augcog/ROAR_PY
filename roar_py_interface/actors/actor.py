@@ -62,9 +62,17 @@ class RoarPyActor:
         force_real_control_timestep : bool = False,
     ):
         self.name = name
-        self.control_timestep = control_timestep
-        self.force_real_control_timestep = force_real_control_timestep
+        self._control_timestep = control_timestep
+        self._force_real_control_timestep = force_real_control_timestep
         self._last_action_t = 0.0
+
+    @property
+    def control_timestep(self) -> float:
+        return self._control_timestep
+    
+    @property
+    def force_real_control_timestep(self) -> bool:
+        return self._force_real_control_timestep
 
     """
     List all sensors on this actor

@@ -15,7 +15,7 @@ class RoarPyCarlaVehicle(RoarPyCarlaActor):
     @property
     @roar_py_thread_sync
     def num_gears(self) -> int:
-        return len(self.carla_actor.forward_gears)
+        return len(self.carla_actor.get_physics_control().forward_gears)
 
     def get_action_spec(self) -> gym.Space:
         spec_dict = {

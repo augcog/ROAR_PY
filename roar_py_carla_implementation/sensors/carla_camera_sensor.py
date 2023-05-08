@@ -12,7 +12,8 @@ def __convert_carla_image_to_bgra_array(
     width: int,
     height: int
 ) -> np.ndarray: #np.NDArray[np.uint8]:
-    array_dat = np.frombuffer(carla_data.raw_data, dtype=np.dtype("uint8"))
+    
+    array_dat = np.frombuffer(carla_data.raw_data, dtype=np.uint8)
     array_dat = np.reshape(array_dat, (height, width, 4))
     return array_dat
 
@@ -68,11 +69,11 @@ def _convert_carla_to_roarpy_image(blueprint_id : str, width : int, height : int
     if target_data_type == RoarPyCameraSensorDataRGB:
         assert blueprint_id == "sensor.camera.rgb", "Cannot convert {} to RoarPyCameraSensorDataRGB".format(blueprint_id)
         return RoarPyCameraSensorDataRGB(
-            ret_image_bgra[:,:,:-1:-1]
+            ret_image_bgra[:,:,:3][:,:,::-1]
         )
     elif target_data_type == RoarPyCameraSensorDataGreyscale:
         assert blueprint_id == "sensor.camera.rgb", "Cannot convert {} to RoarPyCameraSensorDataGreyscale".format(blueprint_id)
-        img = Image.fromarray(ret_image_bgra,mode="RGBA")
+        img = Image.fromarray(ret_image_bgra,mode="BGRA")
         grey_img = img.convert("L")
         img.close()
         ret = RoarPyCameraSensorDataGreyscale(
@@ -137,39 +138,19 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
 
     @property
     def control_timestep(self) -> float:
-        return self._base_actor.sensor_tick
-    
-    @control_timestep.setter
-    @roar_py_thread_sync
-    def control_timestep(self, control_timestep: float) -> None:
-        self._base_actor.sensor_tick = control_timestep
+        return float(self._base_actor.attributes["sensor_tick"])
 
     @property
     def fov(self) -> float:
-        return self._base_actor.fov
-    
-    @fov.setter
-    @roar_py_thread_sync
-    def fov(self, fov: float) -> None:
-        self._base_actor.fov = fov
-    
+        return float(self._base_actor.attributes["fov"])
+
     @property
     def image_size_width(self) -> int:
-        return self._base_actor.image_size_x
-    
-    @image_size_width.setter
-    @roar_py_thread_sync
-    def image_size_width(self, image_size_width: int) -> None:
-        self._base_actor.image_size_x = image_size_width
+        return int(self._base_actor.attributes["image_size_x"])
 
     @property
     def image_size_height(self) -> int:
-        return self._base_actor.image_size_y
-    
-    @image_size_height.setter
-    @roar_py_thread_sync
-    def image_size_height(self, image_size_height: int) -> None:
-        self._base_actor.image_size_y = image_size_height
+        return int(self._base_actor.attributes["image_size_y"])
     
     def listen_carla_data(self, carla_data: carla.Image) -> None:
         self.received_data = _convert_carla_to_roarpy_image(
@@ -181,14 +162,14 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
         )
 
     def get_gym_observation_spec(self) -> gym.Space:
-        return RoarPyCameraSensorDataRGB.gym_observation_space()
+        return self._target_data_type.gym_observation_space()
     
-    async def receive_observation(self) -> RoarPyCameraSensorDataRGB:
+    async def receive_observation(self) -> RoarPyCameraSensorData:
         while self.received_data is None:
             await asyncio.sleep(0.001)
         return self.received_data
     
-    def get_last_observation(self) -> typing.Optional[RoarPyCameraSensorDataRGB]:
+    def get_last_observation(self) -> typing.Optional[RoarPyCameraSensorData]:
         return self.received_data
     
     @roar_py_thread_sync

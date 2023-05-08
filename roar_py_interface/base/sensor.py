@@ -78,7 +78,11 @@ class RoarPySensor(typing.Generic[_ObsT]):
         control_timestep: float,
     ):
         self.name = name
-        self.control_timestep = control_timestep
+        self._control_timestep = control_timestep
+
+    @property
+    def control_timestep(self) -> float:
+        return self._control_timestep
 
     def get_gym_observation_spec(self) -> gym.Space:
         raise NotImplementedError()

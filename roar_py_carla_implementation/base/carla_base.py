@@ -144,6 +144,9 @@ class RoarPyCarlaBase:
         attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid
     ) -> carla.Actor:
         assert location.shape == (3,) and roll_pitch_yaw.shape == (3,)
+        location = location.astype(float)
+        roll_pitch_yaw = roll_pitch_yaw.astype(float)
+
         blueprint = self._get_native_carla_world().get_blueprint_library().find(blueprint_id)
         transform = carla.Transform(carla.Location(*location), carla.Rotation(roll=roll_pitch_yaw[0], pitch=roll_pitch_yaw[1], yaw=roll_pitch_yaw[2]))
         new_actor = self._get_native_carla_world().spawn_actor(blueprint, transform, self._base_actor, attachment_type)
