@@ -1,4 +1,4 @@
-from .sensor import RoarPySensor
+from .sensor import RoarPySensor, RoarPyRemoteSupportedSensorData
 from serde import serde
 from dataclasses import dataclass
 import numpy as np
@@ -6,7 +6,7 @@ import gymnasium as gym
 
 @serde
 @dataclass
-class RoarPyGyroscopeSensorData:
+class RoarPyGyroscopeSensorData(RoarPyRemoteSupportedSensorData):
     # angular velocity (x,y,z local axis) in rad/s
     angular_velocity: np.NDArray[np.float32]
 

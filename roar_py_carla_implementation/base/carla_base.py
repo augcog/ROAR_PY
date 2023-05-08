@@ -49,10 +49,6 @@ class RoarPyCarlaBase:
     def carla_is_alive(self) -> bool:
         return self._base_actor.is_alive
     
-    @property
-    def carla_parent(self) -> Optional[carla.Actor]:
-        return self._base_actor.parent
-    
     def get_native_carla_world(self) -> carla.World:
         return self._base_actor.get_world()
     

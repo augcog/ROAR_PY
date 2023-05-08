@@ -1,4 +1,4 @@
-from .sensor import RoarPySensor
+from .sensor import RoarPySensor, RoarPyRemoteSupportedSensorData
 from serde import serde
 from dataclasses import dataclass
 import numpy as np
@@ -8,7 +8,7 @@ from ..actors import RoarPyActor
 
 @serde
 @dataclass
-class RoarPyCollisionSensorData:
+class RoarPyCollisionSensorData(RoarPyRemoteSupportedSensorData):
     # The actor the sensor is attached to, the one that measured the collision.
     actor: typing.Optional[RoarPyActor]
     # The second actor involved in the collision.

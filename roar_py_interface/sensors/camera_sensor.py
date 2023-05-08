@@ -1,4 +1,4 @@
-from .sensor import RoarPySensor
+from .sensor import RoarPySensor, RoarPyRemoteSupportedSensorData
 from serde import serde
 from dataclasses import dataclass
 from PIL import Image
@@ -23,7 +23,7 @@ class RoarPyCameraSensorData:
 
 @dataclass
 @serde
-class RoarPyCameraSensorDataRGB(RoarPyCameraSensorData):
+class RoarPyCameraSensorDataRGB(RoarPyCameraSensorData, RoarPyRemoteSupportedSensorData):
     # RGB image W*H*3, each r/g/b value in range [0,255]
     image_rgb: np.NDArray[np.uint8]
 
@@ -45,7 +45,7 @@ class RoarPyCameraSensorDataRGB(RoarPyCameraSensorData):
 
 @dataclass
 @serde
-class RoarPyCameraSensorDataGreyscale(RoarPyCameraSensorData):
+class RoarPyCameraSensorDataGreyscale(RoarPyCameraSensorData, RoarPyRemoteSupportedSensorData):
     # Greyscale image W*H*1, each pixel in range[0,255]
     image_greyscale: np.NDArray[np.uint8]
 
@@ -67,7 +67,7 @@ class RoarPyCameraSensorDataGreyscale(RoarPyCameraSensorData):
 
 @dataclass
 @serde
-class RoarPyCameraSensorDataDepth(RoarPyCameraSensorData):
+class RoarPyCameraSensorDataDepth(RoarPyCameraSensorData, RoarPyRemoteSupportedSensorData):
     # unit in m, W*H*1
     image_depth: np.NDArray[np.float32]
     is_log_scale: bool
@@ -89,7 +89,7 @@ class RoarPyCameraSensorDataDepth(RoarPyCameraSensorData):
 
 @dataclass
 @serde
-class RoarPyCameraSensorDataSemanticSegmentation(RoarPyCameraSensorData):
+class RoarPyCameraSensorDataSemanticSegmentation(RoarPyCameraSensorData, RoarPyRemoteSupportedSensorData):
     # Semantic Segmentation(SS) Frame, W*H*1
     image_ss: np.NDArray[np.uint64]
     # Dictionary mapping each pixel in SS Frame to a RGB array of color and a label

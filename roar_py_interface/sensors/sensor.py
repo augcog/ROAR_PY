@@ -1,6 +1,74 @@
 import typing
 import asyncio
 import gymnasium as gym
+from enum import Enum
+from dataclasses import dataclass
+import serde
+import serde.json
+import serde.yaml
+import serde.toml
+import serde.msgpack
+import serde.pickle
+import zlib
+
+class RoarPyRemoteSupportedSensorSerializationScheme(Enum):
+    DICT = 1,
+    JSON = 2,
+    YAML = 4,
+    TOML = 8,
+    MSGPACK = 16,
+    INTERNAL_COMPRESSED = 64,
+
+class RoarPyRemoteSupportedSensorData:
+    def to_data(self, scheme : RoarPyRemoteSupportedSensorSerializationScheme) -> typing.Any:
+        # Not compressed data types
+        if scheme == RoarPyRemoteSupportedSensorSerializationScheme.DICT:
+            ret = serde.to_dict(self)
+            return ret
+
+        # Compressed data types
+        if scheme.value & RoarPyRemoteSupportedSensorSerializationScheme.JSON.value > 0:
+            ret = serde.json.to_json(self)
+            ret = ret.encode("utf-8")
+        elif scheme.value & RoarPyRemoteSupportedSensorSerializationScheme.YAML.value > 0:
+            ret = serde.yaml.to_yaml(self)
+            ret = ret.encode("utf-8")
+        elif scheme.value & RoarPyRemoteSupportedSensorSerializationScheme.TOML.value > 0:
+            ret = serde.toml.to_toml(self)
+            ret = ret.encode("utf-8")
+        elif scheme.value & RoarPyRemoteSupportedSensorSerializationScheme.MSGPACK.value > 0:
+            ret = serde.msgpack.to_msgpack(self)
+        else:
+            raise NotImplementedError()
+
+        if scheme.value & RoarPyRemoteSupportedSensorSerializationScheme.INTERNAL_COMPRESSED.value > 0:
+            ret = zlib.compress(ret)
+
+        return ret
+    
+    @classmethod
+    def from_data(cls: type["RoarPyRemoteSupportedSensorData"], data: bytes, scheme: RoarPyRemoteSupportedSensorSerializationScheme) -> "RoarPyRemoteSupportedSensorData":
+        # Not compressed data types
+        if scheme == RoarPyRemoteSupportedSensorSerializationScheme.DICT:
+            ret = serde.from_dict(cls, data)
+            return ret
+        
+        # Compressed data types
+        if scheme.value & RoarPyRemoteSupportedSensorSerializationScheme.INTERNAL_COMPRESSED.value > 0:
+            data = zlib.decompress(data)
+        
+        if scheme.value & RoarPyRemoteSupportedSensorSerializationScheme.JSON.value > 0:
+            ret = serde.json.from_json(cls, data.decode("utf-8"))
+        elif scheme.value & RoarPyRemoteSupportedSensorSerializationScheme.YAML.value > 0:
+            ret = serde.yaml.from_yaml(cls, data.decode("utf-8"))
+        elif scheme.value & RoarPyRemoteSupportedSensorSerializationScheme.TOML.value > 0:
+            ret = serde.toml.from_toml(cls, data.decode("utf-8"))
+        elif scheme.value & RoarPyRemoteSupportedSensorSerializationScheme.MSGPACK.value > 0:
+            ret = serde.msgpack.from_msgpack(cls, data)
+        else:
+            raise NotImplementedError()
+        
+        return ret
 
 _ObsT = typing.TypeVar("_ObsT")
 class RoarPySensor(typing.Generic[_ObsT]):

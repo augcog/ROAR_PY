@@ -91,9 +91,10 @@ class RoarPyCarlaWorld(RoarPyWorld):
                 # Instead of waitForTick, we use sleep here to avoid blocking the event loop
             
             if start_time is None:
-                return 0.0
+                dt = 0.0
             else:
-                return self.last_tick_time - start_time
+                dt = self.last_tick_time - start_time
+            return dt
         else:
             self.carla_world.tick(seconds=60.0) # server waits 60s for client to finish the tick
             return self.control_timestep

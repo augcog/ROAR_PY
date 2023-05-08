@@ -1,4 +1,4 @@
-from .sensor import RoarPySensor
+from .sensor import RoarPySensor, RoarPyRemoteSupportedSensorData
 from serde import serde
 from dataclasses import dataclass
 import numpy as np
@@ -6,11 +6,11 @@ import gymnasium as gym
 
 @serde
 @dataclass
-class RoarPyAccelerometerSensorData:
+class RoarPyAccelerometerSensorData(RoarPyRemoteSupportedSensorData):
     # acceleration (x,y,z local axis) in m/s^2
     acceleration: np.NDArray[np.float32]
 
-class RoarPyAccelerometerSensor(RoarPySensor[RoarPyAccelerometerSensorData]):
+class RoarPyAccelerometerSensor(RoarPySensor[RoarPyAccelerometerSensorData], RoarPyRemoteSupportedSensorData):
     def __init__(
         self, 
         name: str,

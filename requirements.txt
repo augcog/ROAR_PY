@@ -6,3 +6,4 @@ pyserde==0.10.4
 Pillow==9.5.0
 transforms3d==0.4.1
 carla==0.9.12
+rpyc>=5.3.1
