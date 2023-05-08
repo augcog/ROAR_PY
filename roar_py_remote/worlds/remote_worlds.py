@@ -3,7 +3,7 @@ import typing
 import threading
 import asyncio
 import time
-import rpyc
+import weakref
 
 class RoarPyRemoteMaskedWorld(RoarPyWorld):
     def __init__(self, server_world : "RoarPyRemoteServer", shared_lock : threading.RLock):
@@ -86,8 +86,13 @@ class RoarPyRemoteServer:
     def get_world(self) -> RoarPyRemoteMaskedWorld:
         with self.__shared_lock:
             new_masked_world = self._constructor_to_subworld(self, self.__shared_lock)
-            self._masked_worlds.append(new_masked_world)
+            self._masked_worlds.append(weakref.proxy(new_masked_world,self.del_masked_world))
             return new_masked_world
+        
+    def del_masked_world(self,world : RoarPyRemoteMaskedWorld):
+        with self.__shared_lock:
+            if world in self._masked_worlds:
+                self._masked_worlds.remove(world)
 
     def __add_item_callback(self, item):
         if self._last_subworld_modified is None:
