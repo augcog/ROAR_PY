@@ -42,31 +42,16 @@ class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor, RoarPyCarlaBase):
 
     @property
     def control_timestep(self) -> float:
-        return self._base_actor.sensor_tick
-    
-    @control_timestep.setter
-    @roar_py_thread_sync
-    def control_timestep(self, control_timestep: float) -> None:
-        self._base_actor.sensor_tick = control_timestep
+        return float(self._base_actor.attributes["sensor_tick"])
 
     @property
     def num_lasers(self) -> int:
-        return self._base_actor.channels
-    
-    @num_lasers.setter
-    @roar_py_thread_sync
-    def num_lasers(self, channels: int) -> None:
-        self._base_actor.channels = channels
-    
+        return int(self._base_actor.attributes["channels"])
+
     # In meters
     @property
     def max_distance(self) -> float:
-        return self._base_actor.range
-    
-    @max_distance.setter
-    @roar_py_thread_sync
-    def max_distance(self, range: float) -> None:
-        self._base_actor.range = range
+        return float(self._base_actor.atributes["range"])
     
     # In meters
     @property
@@ -75,48 +60,23 @@ class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor, RoarPyCarlaBase):
     
     @property
     def points_per_second(self) -> int:
-        return self._base_actor.points_per_second
-    
-    @points_per_second.setter
-    @roar_py_thread_sync
-    def points_per_second(self, points_per_second: int) -> None:
-        self._base_actor.points_per_second = points_per_second
+        return int(self._base_actor.attributes["points_per_second"])
     
     @property
     def rotation_frequency(self) -> float:
-        return self._base_actor.rotation_frequency
-    
-    @rotation_frequency.setter
-    @roar_py_thread_sync
-    def rotation_frequency(self, rotation_frequency: float) -> None:
-        self._base_actor.rotation_frequency = rotation_frequency
+        return float(self._base_actor.attributes["rotation_frequency"])
 
     @property
     def upper_fov(self) -> float:
-        return self._base_actor.upper_fov
-    
-    @upper_fov.setter
-    @roar_py_thread_sync
-    def upper_fov(self, upper_fov: float) -> None:  
-        self._base_actor.upper_fov = upper_fov  
+        return float(self._base_actor.attributes["upper_fov"])
     
     @property
     def lower_fov(self) -> float:
-        return self._base_actor.lower_fov
-    
-    @lower_fov.setter
-    @roar_py_thread_sync
-    def lower_fov(self, lower_fov: float) -> None:
-        self._base_actor.lower_fov = lower_fov
+        return float(self._base_actor.attributes["lower_fov"])
     
     @property
     def horizontal_fov(self) -> int:
-        return self._base_actor.horizontal_fov
-    
-    @horizontal_fov.setter
-    @roar_py_thread_sync
-    def horizontal_fov(self, horizontal_fov: float) -> None:
-        self._base_actor.horizontal_fov = horizontal_fov
+        return int(self._base_actor.attributes["horizontal_fov"])
 
     async def receive_observation(self) -> RoarPyLiDARSensorData:
         while self.received_data is None:
