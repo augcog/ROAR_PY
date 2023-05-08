@@ -1,4 +1,4 @@
-from roar_py_interface import RoarPyAccelerometerSensor, RoarPyAccelerometerSensorData
+from roar_py_interface import RoarPyAccelerometerSensor, RoarPyAccelerometerSensorData, roar_py_thread_sync
 from ..base import RoarPyCarlaBase
 from ..clients import RoarPyCarlaInstance
 import typing
@@ -20,6 +20,7 @@ class RoarPyCarlaAccelerometerSensor(RoarPyAccelerometerSensor):
     def get_last_observation(self) -> typing.Optional[RoarPyAccelerometerSensorData]:
         return self.received_data
     
+    @roar_py_thread_sync
     def close(self):
         self._closed = True
     

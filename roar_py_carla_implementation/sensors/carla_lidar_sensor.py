@@ -1,4 +1,4 @@
-from roar_py_interface import RoarPyLiDARSensor, RoarPyLiDARSensorData
+from roar_py_interface import RoarPyLiDARSensor, RoarPyLiDARSensorData, roar_py_thread_sync
 import typing
 import gymnasium as gym
 import carla
@@ -46,6 +46,7 @@ class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor, RoarPyCarlaBase):
         return self._base_actor.sensor_tick
     
     @control_timestep.setter
+    @roar_py_thread_sync
     def control_timestep(self, control_timestep: float) -> None:
         self._base_actor.sensor_tick = control_timestep
 
@@ -54,6 +55,7 @@ class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor, RoarPyCarlaBase):
         return self._base_actor.channels
     
     @num_lasers.setter
+    @roar_py_thread_sync
     def num_lasers(self, channels: int) -> None:
         self._base_actor.channels = channels
     
@@ -63,6 +65,7 @@ class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor, RoarPyCarlaBase):
         return self._base_actor.range
     
     @max_distance.setter
+    @roar_py_thread_sync
     def max_distance(self, range: float) -> None:
         self._base_actor.range = range
     
@@ -76,6 +79,7 @@ class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor, RoarPyCarlaBase):
         return self._base_actor.points_per_second
     
     @points_per_second.setter
+    @roar_py_thread_sync
     def points_per_second(self, points_per_second: int) -> None:
         self._base_actor.points_per_second = points_per_second
     
@@ -84,6 +88,7 @@ class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor, RoarPyCarlaBase):
         return self._base_actor.rotation_frequency
     
     @rotation_frequency.setter
+    @roar_py_thread_sync
     def rotation_frequency(self, rotation_frequency: float) -> None:
         self._base_actor.rotation_frequency = rotation_frequency
 
@@ -92,6 +97,7 @@ class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor, RoarPyCarlaBase):
         return self._base_actor.upper_fov
     
     @upper_fov.setter
+    @roar_py_thread_sync
     def upper_fov(self, upper_fov: float) -> None:  
         self._base_actor.upper_fov = upper_fov  
     
@@ -100,6 +106,7 @@ class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor, RoarPyCarlaBase):
         return self._base_actor.lower_fov
     
     @lower_fov.setter
+    @roar_py_thread_sync
     def lower_fov(self, lower_fov: float) -> None:
         self._base_actor.lower_fov = lower_fov
     
@@ -108,6 +115,7 @@ class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor, RoarPyCarlaBase):
         return self._base_actor.horizontal_fov
     
     @horizontal_fov.setter
+    @roar_py_thread_sync
     def horizontal_fov(self, horizontal_fov: float) -> None:
         self._base_actor.horizontal_fov = horizontal_fov
 
@@ -122,10 +130,12 @@ class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor, RoarPyCarlaBase):
     def get_last_observation(self) -> typing.Optional[RoarPyLiDARSensorData]:
         return self.received_data
     
+    @roar_py_thread_sync
     def close(self):
         if self._base_actor is not None and self._base_actor.is_listening:
             self._base_actor.stop()
         RoarPyCarlaBase.close(self)
     
+    @roar_py_thread_sync
     def is_closed(self) -> bool:
         return self.sensor is None or not self.sensor.is_listening

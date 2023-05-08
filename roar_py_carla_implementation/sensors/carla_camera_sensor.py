@@ -1,4 +1,4 @@
-from roar_py_interface import RoarPyCameraSensor, RoarPyCameraSensorDataRGB, RoarPyCameraSensorDataDepth, RoarPyCameraSensorDataGreyscale, RoarPyCameraSensorDataSemanticSegmentation, RoarPyCameraSensorData
+from roar_py_interface import RoarPyCameraSensor, RoarPyCameraSensorDataRGB, RoarPyCameraSensorDataDepth, RoarPyCameraSensorDataGreyscale, RoarPyCameraSensorDataSemanticSegmentation, RoarPyCameraSensorData, roar_py_thread_sync
 import typing
 import gymnasium as gym
 import carla
@@ -141,6 +141,7 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
         return self._base_actor.sensor_tick
     
     @control_timestep.setter
+    @roar_py_thread_sync
     def control_timestep(self, control_timestep: float) -> None:
         self._base_actor.sensor_tick = control_timestep
 
@@ -149,6 +150,7 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
         return self._base_actor.fov
     
     @fov.setter
+    @roar_py_thread_sync
     def fov(self, fov: float) -> None:
         self._base_actor.fov = fov
     
@@ -157,6 +159,7 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
         return self._base_actor.image_size_x
     
     @image_size_width.setter
+    @roar_py_thread_sync
     def image_size_width(self, image_size_width: int) -> None:
         self._base_actor.image_size_x = image_size_width
 
@@ -165,6 +168,7 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
         return self._base_actor.image_size_y
     
     @image_size_height.setter
+    @roar_py_thread_sync
     def image_size_height(self, image_size_height: int) -> None:
         self._base_actor.image_size_y = image_size_height
     
@@ -188,10 +192,12 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
     def get_last_observation(self) -> typing.Optional[RoarPyCameraSensorDataRGB]:
         return self.received_data
     
+    @roar_py_thread_sync
     def close(self):
         if self._base_actor is not None and self._base_actor.is_listening:
             self._base_actor.stop()
         RoarPyCarlaBase.close(self)
     
+    @roar_py_thread_sync
     def is_closed(self) -> bool:
         return self.sensor is None or not self.sensor.is_listening

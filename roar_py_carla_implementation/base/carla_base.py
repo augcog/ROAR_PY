@@ -5,6 +5,8 @@ import numpy as np
 from ..clients import RoarPyCarlaInstance
 from ..worlds import RoarPyCarlaWorld
 
+from roar_py_interface.base import roar_py_thread_sync
+
 @dataclass
 class RoarPyCarlaBoundingBox:
     """
@@ -34,22 +36,26 @@ class RoarPyCarlaBase:
         carla_instance.register_actor(base_actor.id, self)
     
     @property
+    @roar_py_thread_sync
     def carla_attributes(self) -> Dict:
         return self._base_actor.attributes
     
     @property
+    @roar_py_thread_sync
     def carla_id(self) -> int:
         return self._base_actor.id
     
     @property
+    @roar_py_thread_sync
     def carla_blueprint_type_id(self) -> str:
         return self._base_actor.type_id
     
     @property
+    @roar_py_thread_sync
     def carla_is_alive(self) -> bool:
         return self._base_actor.is_alive
     
-    def get_native_carla_world(self) -> carla.World:
+    def __get_native_carla_world(self) -> carla.World:
         return self._base_actor.get_world()
     
     def get_carla_world(self) -> RoarPyCarlaWorld:
@@ -79,6 +85,7 @@ class RoarPyCarlaBase:
         return np.deg2rad(np.array([ang_vel.x, ang_vel.y, ang_vel.z]))
     
     # Angular velocity in radians per second
+    @roar_py_thread_sync
     def set_angular_velocity(self, target_angular_velocity : np.ndarray):
         ang_vel = np.rad2deg(target_angular_velocity)
         self._base_actor.set_target_angular_velocity(carla.Vector3D(x=ang_vel[0], y=ang_vel[1], z=ang_vel[2]))
@@ -88,6 +95,7 @@ class RoarPyCarlaBase:
         vel = self._base_actor.get_velocity()
         return np.array([vel.x, vel.y, vel.z])
     
+    @roar_py_thread_sync
     def set_linear_3d_velocity(self, target_linear_velocity : np.ndarray) -> None:
         self._base_actor.set_target_velocity(carla.Vector3D(x=target_linear_velocity[0], y=target_linear_velocity[1], z=target_linear_velocity[2]))
     
@@ -95,6 +103,7 @@ class RoarPyCarlaBase:
         loc = self._base_actor.get_location()
         return np.array([loc.x, loc.y, loc.z])
     
+    @roar_py_thread_sync
     def set_3d_location(self, new_location: np.ndarray) -> None:
         self._base_actor.set_location(carla.Location(x=new_location[0], y=new_location[1], z=new_location[2]))
     
@@ -103,6 +112,7 @@ class RoarPyCarlaBase:
         rot = self._base_actor.get_transform().rotation
         return np.deg2rad(np.array([rot.roll, rot.pitch, rot.yaw]))
     
+    @roar_py_thread_sync
     def set_roll_pitch_yaw(self, new_rotation_rpy : np.ndarray) -> None:
         new_rot_deg = np.rad2deg(new_rotation_rpy)
         transform = carla.Transform(
@@ -111,6 +121,7 @@ class RoarPyCarlaBase:
         )
         self._base_actor.set_transform(transform)
     
+    @roar_py_thread_sync
     def set_transform(self, new_location : np.ndarray, new_rotation : np.ndarray) -> None:
         new_rot_deg = np.rad2deg(new_rotation)
         transform = carla.Transform(
@@ -119,13 +130,15 @@ class RoarPyCarlaBase:
         )
         self._base_actor.set_transform(transform)
 
-    
+    @roar_py_thread_sync
     def set_enable_gravity(self, enable: bool = True) -> None:
         self._base_actor.set_enable_gravity(enable)
 
+    @roar_py_thread_sync
     def set_simulate_physics(self, enable: bool = True) -> None:
         self._base_actor.set_simulate_physics(enable)
     
+    @roar_py_thread_sync
     def attach_native_carla_actor(
         self,
         blueprint_id : str, 

@@ -1,6 +1,7 @@
 from roar_py_interface.actors.actor import RoarPyActor, RoarPyResettableActor
 from roar_py_interface.actors.vehicle import *
 from roar_py_interface.sensors import *
+from roar_py_interface.base import roar_py_thread_sync
 import typing
 import gymnasium as gym
 import carla
@@ -14,6 +15,7 @@ class RoarPyCarlaVehicle(RoarPyCarlaActor):
         self.auto_gear = auto_gear
     
     @property
+    @roar_py_thread_sync
     def num_gears(self) -> int:
         return len(self.carla_actor.forward_gears)
 
@@ -45,6 +47,7 @@ class RoarPyCarlaVehicle(RoarPyCarlaActor):
             control.gear = 0
         return control
 
+    @roar_py_thread_sync
     async def __apply_action(self, action: typing.Any) -> bool:
         control = self.translate_action_to_carla_vehicle_control(self.auto_gear,action)
         self.carla_actor.apply_control(control)

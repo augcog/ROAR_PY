@@ -1,4 +1,4 @@
-from roar_py_interface import RoarPyRollPitchYawSensor, RoarPyRollPitchYawSensorData
+from roar_py_interface import RoarPyRollPitchYawSensor, RoarPyRollPitchYawSensorData, roar_py_thread_sync
 from dataclasses import dataclass
 import typing
 import asyncio
@@ -26,6 +26,7 @@ class RoarPyCarlaRPYSensor(RoarPyRollPitchYawSensor):
     def get_last_observation(self) -> typing.Optional[RoarPyRollPitchYawSensorData]:
         return self.received_data
     
+    @roar_py_thread_sync
     def close(self):
         self._closed = True
     

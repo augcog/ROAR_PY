@@ -1,4 +1,4 @@
-from roar_py_interface import RoarPyGyroscopeSensor, RoarPyGyroscopeSensorData
+from roar_py_interface import RoarPyGyroscopeSensor, RoarPyGyroscopeSensorData, roar_py_thread_sync
 import numpy as np
 import typing
 from ..clients import RoarPyCarlaInstance
@@ -21,6 +21,7 @@ class RoarPyCarlaGyroscopeSensor(RoarPyGyroscopeSensor):
     def get_last_observation(self) -> typing.Optional[RoarPyGyroscopeSensorData]:
         return self.received_data
     
+    @roar_py_thread_sync
     def close(self):
         self._closed = True
 

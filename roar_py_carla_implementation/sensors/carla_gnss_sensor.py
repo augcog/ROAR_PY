@@ -1,4 +1,4 @@
-from roar_py_interface import RoarPyGNSSSensor, RoarPyGNSSSensorData
+from roar_py_interface import RoarPyGNSSSensor, RoarPyGNSSSensorData, roar_py_thread_sync
 from dataclasses import dataclass
 import typing
 import asyncio
@@ -28,6 +28,7 @@ class RoarPyCarlaGNSSSensor(RoarPyGNSSSensor, RoarPyCarlaBase):
         return self._base_actor.noise_alt_bias
 
     @noise_altitude_bias.setter
+    @roar_py_thread_sync
     def noise_altitude_bias(self, value: float) -> None:
         self._base_actor.noise_alt_bias = value
 
@@ -36,6 +37,7 @@ class RoarPyCarlaGNSSSensor(RoarPyGNSSSensor, RoarPyCarlaBase):
         return self._base_actor.noise_alt_stddev
 
     @noise_altitude_std.setter
+    @roar_py_thread_sync
     def noise_altitude_std(self, value: float) -> None:
         self._base_actor.noise_alt_stddev = value
     
@@ -44,6 +46,7 @@ class RoarPyCarlaGNSSSensor(RoarPyGNSSSensor, RoarPyCarlaBase):
         return self._base_actor.noise_lat_bias
     
     @noise_latitude_bias.setter
+    @roar_py_thread_sync
     def noise_latitude_bias(self, value: float) -> None:
         self._base_actor.noise_lat_bias = value
     
@@ -52,6 +55,7 @@ class RoarPyCarlaGNSSSensor(RoarPyGNSSSensor, RoarPyCarlaBase):
         return self._base_actor.noise_lat_stddev
     
     @noise_latitude_std.setter
+    @roar_py_thread_sync
     def noise_latitude_std(self, value: float) -> None:
         self._base_actor.noise_lat_stddev = value
     
@@ -60,6 +64,7 @@ class RoarPyCarlaGNSSSensor(RoarPyGNSSSensor, RoarPyCarlaBase):
         return self._base_actor.noise_lon_bias
     
     @noise_longitude_bias.setter
+    @roar_py_thread_sync
     def noise_longitude_bias(self, value: float) -> None:
         self._base_actor.noise_lon_bias = value
 
@@ -68,6 +73,7 @@ class RoarPyCarlaGNSSSensor(RoarPyGNSSSensor, RoarPyCarlaBase):
         return self._base_actor.noise_lon_stddev
     
     @noise_longitude_std.setter
+    @roar_py_thread_sync
     def noise_longitude_std(self, value: float) -> None:
         self._base_actor.noise_lon_stddev = value
 
@@ -76,6 +82,7 @@ class RoarPyCarlaGNSSSensor(RoarPyGNSSSensor, RoarPyCarlaBase):
         return self._base_actor.noise_seed
     
     @noise_seed.setter
+    @roar_py_thread_sync
     def noise_seed(self, value: int) -> None:
         self._base_actor.noise_seed = value
 
@@ -84,6 +91,7 @@ class RoarPyCarlaGNSSSensor(RoarPyGNSSSensor, RoarPyCarlaBase):
         return self._base_actor.sensor_tick
     
     @control_timestep.setter
+    @roar_py_thread_sync
     def control_timestep(self, value: float) -> None:
         self._base_actor.sensor_tick = value
 
@@ -102,10 +110,12 @@ class RoarPyCarlaGNSSSensor(RoarPyGNSSSensor, RoarPyCarlaBase):
     def get_last_observation(self) -> typing.Optional[RoarPyGNSSSensorData]:
         return self.received_data
     
+    @roar_py_thread_sync
     def close(self):
         if self._base_actor is not None and self._base_actor.is_listening:
             self._base_actor.stop()
         RoarPyCarlaBase.close(self)
 
+    @roar_py_thread_sync
     def is_closed(self) -> bool:
         return self._base_actor is None or not self._base_actor.is_listening
