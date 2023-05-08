@@ -6,7 +6,6 @@ import asyncio
 import numpy as np
 from PIL import Image
 from ..base import RoarPyCarlaBase
-from ..clients import RoarPyCarlaInstance
 
 def __convert_carla_image_to_bgra_array(
     carla_data: carla.Image,
@@ -117,7 +116,7 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
     }
     def __init__(
         self, 
-        carla_instance: RoarPyCarlaInstance,
+        carla_instance: "RoarPyCarlaInstance",
         sensor: carla.Sensor,
         target_data_type: typing.Optional[typing.Type[RoarPyCameraSensorData]] = None,
         name: str = "carla_camera",

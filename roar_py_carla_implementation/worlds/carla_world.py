@@ -37,13 +37,13 @@ class RoarPyCarlaWorld(RoarPyWorld):
     @property
     @roar_py_thread_sync
     def is_asynchronous(self):
-        native_settings = self.get_native_settings()
+        native_settings = self.carla_world.get_settings()
         return not native_settings.synchronous_mode
     
     @roar_py_thread_sync
     def set_asynchronous(self, asynchronous : bool):
         self.setup_mode(asynchronous)
-        native_settings = self.get_native_settings()
+        native_settings = self.carla_world.get_settings()
         native_settings.synchronous_mode = not asynchronous
         self.carla_world.apply_settings(native_settings)
     
@@ -85,12 +85,21 @@ class RoarPyCarlaWorld(RoarPyWorld):
         native_settings.max_substep_delta_time = contorl_subtimestep
         self.carla_world.apply_settings(native_settings)
     
+    @roar_py_thread_sync
+    def set_control_steps(self, control_timestep : float, control_substimestep : float):
+        assert control_substimestep <= control_timestep and control_timestep % control_substimestep < 1e-6
+        native_settings = self.carla_world.get_settings()
+        native_settings.fixed_delta_seconds = control_timestep
+        native_settings.max_substeps = int(control_timestep / control_substimestep)
+        native_settings.max_substep_delta_time = control_substimestep
+        self.carla_world.apply_settings(native_settings)
+
     def __on_tick_recv(self, world_snapshot : carla.WorldSnapshot):
         self.last_tick_time = world_snapshot.timestamp.elapsed_seconds
     
     @roar_py_thread_sync
     async def step(self) -> float:
-        if self.is_asynchronous():
+        if self.is_asynchronous:
             start_time = self.last_tick_time
             while self.last_tick_time == start_time:
                 await asyncio.sleep(__class__.ASYNC_SLEEP_TIME)

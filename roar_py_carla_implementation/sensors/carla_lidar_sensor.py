@@ -6,7 +6,6 @@ import asyncio
 import numpy as np
 from PIL import Image
 from ..base import RoarPyCarlaBase
-from ..clients import RoarPyCarlaInstance
 
 """
 Lidar sensor data transform
@@ -27,7 +26,7 @@ def __convert_carla_lidar_raw_to_roar_py(carla_lidar_dat : carla.LidarMeasuremen
 class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor, RoarPyCarlaBase):
     def __init__(
         self, 
-        carla_instance: RoarPyCarlaInstance,
+        carla_instance: "RoarPyCarlaInstance",
         sensor: carla.Sensor,
         target_data_type: typing.Optional[typing.Type[RoarPyLiDARSensorData]] = None,
         name: str = "carla_lidar_sensor",

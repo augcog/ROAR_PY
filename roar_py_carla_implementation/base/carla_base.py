@@ -2,7 +2,6 @@ import carla
 from typing import Optional, Dict, Any, List, Tuple
 from dataclasses import dataclass
 import numpy as np
-from ..clients import RoarPyCarlaInstance
 from roar_py_interface.wrappers import roar_py_thread_sync
 
 @dataclass
@@ -26,7 +25,7 @@ class RoarPyCarlaBoundingBox:
 class RoarPyCarlaBase:
     def __init__(
         self,
-        carla_instance : RoarPyCarlaInstance,
+        carla_instance : "RoarPyCarlaInstance",
         base_actor : carla.Actor,
     ) -> None:
         self._base_actor = base_actor

@@ -6,10 +6,9 @@ import gymnasium as gym
 import carla
 import transforms3d as tr3d
 from .carla_actor import RoarPyCarlaActor
-from ..clients import RoarPyCarlaInstance
 
 class RoarPyCarlaVehicle(RoarPyCarlaActor):
-    def __init__(self, carla_instance : RoarPyCarlaInstance, carla_actor: carla.Vehicle, auto_gear : bool = False, name : str = "carla_vehicle"):
+    def __init__(self, carla_instance : "RoarPyCarlaInstance", carla_actor: carla.Vehicle, auto_gear : bool = False, name : str = "carla_vehicle"):
         RoarPyCarlaActor.__init__(self, carla_instance, carla_actor, name=name)
         self.auto_gear = auto_gear
     

@@ -1,11 +1,10 @@
 from roar_py_interface import RoarPyGyroscopeSensor, RoarPyGyroscopeSensorData, roar_py_thread_sync
 import numpy as np
 import typing
-from ..clients import RoarPyCarlaInstance
 from ..base import RoarPyCarlaBase
 
 class RoarPyCarlaGyroscopeSensor(RoarPyGyroscopeSensor):
-    def __init__(self, carla_instance : RoarPyCarlaInstance, bind_target : RoarPyCarlaBase, name: str = "carla_gyroscope_sensor"):
+    def __init__(self, carla_instance : "RoarPyCarlaInstance", bind_target : RoarPyCarlaBase, name: str = "carla_gyroscope_sensor"):
         super().__init__(name, control_timestep=0.0)
         self._carla_instance = carla_instance
         self.bind_target = bind_target

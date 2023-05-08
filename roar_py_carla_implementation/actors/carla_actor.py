@@ -7,14 +7,13 @@ import gymnasium as gym
 import carla
 import transforms3d as tr3d
 from ..base import RoarPyCarlaBase
-from ..clients import RoarPyCarlaInstance
 from ..sensors import *
 import numpy as np
 
 class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
     def __init__(
         self, 
-        carla_instance: RoarPyCarlaInstance,
+        carla_instance: "RoarPyCarlaInstance",
         carla_actor: carla.Actor,
         name: str
     ):

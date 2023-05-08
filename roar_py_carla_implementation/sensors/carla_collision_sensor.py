@@ -6,12 +6,11 @@ import numpy as np
 import gymnasium as gym
 import carla
 from ..base import RoarPyCarlaBase
-from ..clients import RoarPyCarlaInstance
 
 class RoarPyCarlaCollisionSensor(RoarPyCollisionSensor, RoarPyCarlaBase):
     def __init__(
         self, 
-        carla_instance: RoarPyCarlaInstance,
+        carla_instance: "RoarPyCarlaInstance",
         sensor: carla.Sensor,
         name: str = "carla_collision_sensor",
     ):
