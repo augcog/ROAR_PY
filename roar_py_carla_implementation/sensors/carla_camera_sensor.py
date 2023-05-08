@@ -92,7 +92,7 @@ def _convert_carla_to_roarpy_image(blueprint_id : str, width : int, height : int
         # label encoded in the red channel: A pixel with a red value of x belongs to an object with tag x
         # for instance segmentation sensor, The green and blue values of the pixel define the object's unique ID. 
         # Code cross-checked with https://github.com/carla-simulator/data-collector/blob/master/carla/image_converter.py, should be ok
-        ret_labels = ret_image_bgra[:,:,2].astype(np.uint64)
+        ret_labels = ret_image_bgra[:,:,2:3].astype(np.uint64)
 
         return RoarPyCameraSensorDataSemanticSegmentation(
             ret_labels,
@@ -180,4 +180,4 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
     
     @roar_py_thread_sync
     def is_closed(self) -> bool:
-        return self.sensor is None or not self.sensor.is_listening
+        return self._base_actor is None or not self._base_actor.is_listening

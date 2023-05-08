@@ -52,7 +52,8 @@ class RoarPyCarlaInstance:
 
     @roar_py_thread_sync
     def __cleanup_actor_instance_map(self):
-        for actor in self.actor_to_instance_map.values():
+        all_actors = list(self.actor_to_instance_map.values())
+        for actor in all_actors:
             if not actor.is_closed():
                 actor.close()
         self.actor_to_instance_map = {}
@@ -68,3 +69,12 @@ class RoarPyCarlaInstance:
     
     def search_actor(self, actor_id : int) -> Optional["RoarPyCarlaBase"]:
         return self.actor_to_instance_map.get(actor_id, None)
+    
+    def close(self):
+        self.__cleanup_actor_instance_map()
+    
+    def is_closed(self) -> bool:
+        return len(self.actor_to_instance_map) == 0
+    
+    def __del__(self):
+        self.close()

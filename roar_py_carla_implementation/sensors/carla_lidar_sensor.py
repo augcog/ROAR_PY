@@ -97,4 +97,4 @@ class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor, RoarPyCarlaBase):
     
     @roar_py_thread_sync
     def is_closed(self) -> bool:
-        return self.sensor is None or not self.sensor.is_listening
+        return self._base_actor is None or not self._base_actor.is_listening

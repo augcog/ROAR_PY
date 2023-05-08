@@ -99,11 +99,11 @@ class RoarPyCameraSensorDataSemanticSegmentation(RoarPyCameraSensorData, RoarPyR
         # we have to normalize this to [0,1]
         # we should rarely call this function
         image_RGB = np.zeros(shape=(*self.image_ss.shape[:-1],3),dtype=np.uint8)
-        for w in self.image_ss.shape[0]:
-            for h in self.image_ss.shape[1]:
+        for w in range(self.image_ss.shape[0]):
+            for h in range(self.image_ss.shape[1]):
                 image_RGB[w,h,:] = self.ss_label_color_map[
                     self.image_ss[w,h,0]
-                ]
+                ][0]
         
         return Image.fromarray(image_RGB,mode="RGB")
     
