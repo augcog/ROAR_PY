@@ -1,4 +1,3 @@
-from roar_py_interface.actors.actor import RoarPyActor, RoarPyResettableActor
 from roar_py_interface.actors.vehicle import *
 from roar_py_interface.sensors import *
 from roar_py_interface.base import roar_py_thread_sync

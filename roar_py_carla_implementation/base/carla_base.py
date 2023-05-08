@@ -58,7 +58,7 @@ class RoarPyCarlaBase:
     def __get_native_carla_world(self) -> carla.World:
         return self._base_actor.get_world()
     
-    def get_carla_world(self) -> RoarPyCarlaWorld:
+    def _get_carla_world(self) -> RoarPyCarlaWorld:
         return self._carla_instance.world
 
     @property
@@ -139,7 +139,7 @@ class RoarPyCarlaBase:
         self._base_actor.set_simulate_physics(enable)
     
     @roar_py_thread_sync
-    def attach_native_carla_actor(
+    def _attach_native_carla_actor(
         self,
         blueprint_id : str, 
         location: np.ndarray,

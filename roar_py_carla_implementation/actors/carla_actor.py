@@ -1,6 +1,6 @@
 from roar_py_interface.actors.actor import RoarPyActor, RoarPyResettableActor
 from roar_py_interface.sensors import *
-from roar_py_interface.base import roar_py_thread_sync
+from roar_py_interface.base import roar_py_thread_sync, roar_py_append_item, roar_py_remove_item
 import typing
 import gymnasium as gym
 import carla
@@ -30,6 +30,7 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
     def get_sensors(self) -> typing.Iterable[RoarPySensor]:
         return self._internal_sensors
 
+    @roar_py_append_item
     @roar_py_thread_sync
     def attach_camera_sensor(
         self,
@@ -43,11 +44,12 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
             raise ValueError(f"Unsupported target data type {target_datatype}")
 
         blueprint_id = RoarPyCarlaCameraSensor.SUPPORTED_TARGET_DATA_TO_BLUEPRINT[target_datatype]
-        new_actor = self.attach_native_carla_actor(blueprint_id, location, roll_pitch_yaw, attachment_type)
+        new_actor = self._attach_native_carla_actor(blueprint_id, location, roll_pitch_yaw, attachment_type)
         new_sensor = RoarPyCarlaCameraSensor(self._carla_instance, new_actor, target_datatype, name=name)
         self._internal_sensors.append(new_sensor)
         return new_sensor
 
+    @roar_py_append_item
     @roar_py_thread_sync
     def attach_collision_sensor(
         self,
@@ -57,11 +59,12 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         name: str = "carla_collision_sensor",
     ):
         blueprint_id = "sensor.other.collision"
-        new_actor = self.attach_native_carla_actor(blueprint_id, location, roll_pitch_yaw, attachment_type)
+        new_actor = self._attach_native_carla_actor(blueprint_id, location, roll_pitch_yaw, attachment_type)
         new_sensor = RoarPyCarlaCollisionSensor(self._carla_instance, new_actor, name=name)
         self._internal_sensors.append(new_sensor)
         return new_sensor
 
+    @roar_py_append_item
     @roar_py_thread_sync
     def attach_accelerometer_sensor(
         self,
@@ -71,17 +74,19 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         self._internal_sensors.append(new_sensor)
         return new_sensor
 
+    @roar_py_append_item
     @roar_py_thread_sync
     def attach_gnss_sensor(
         self,
         name : str = "carla_gnss_sensor",
     ):
         blueprint_id = "sensor.other.gnss"
-        new_actor = self.attach_native_carla_actor(blueprint_id, np.array([0,0,0]), np.array([0,0,0]), carla.AttachmentType.Rigid)
+        new_actor = self._attach_native_carla_actor(blueprint_id, np.array([0,0,0]), np.array([0,0,0]), carla.AttachmentType.Rigid)
         new_sensor = RoarPyCarlaGNSSSensor(self._carla_instance, new_actor, name=name)
         self._internal_sensors.append(new_sensor)
         return new_sensor
 
+    @roar_py_append_item
     @roar_py_thread_sync
     def attach_lidar_sensor(
         self,
@@ -91,11 +96,12 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         name: str = "carla_lidar_sensor",
     ):
         blueprint_id = "sensor.lidar.ray_cast"
-        new_actor = self.attach_native_carla_actor(blueprint_id, location, roll_pitch_yaw, attachment_type)
+        new_actor = self._attach_native_carla_actor(blueprint_id, location, roll_pitch_yaw, attachment_type)
         new_sensor = RoarPyCarlaLiDARSensor(self._carla_instance, new_actor, name=name)
         self._internal_sensors.append(new_sensor)
         return new_sensor
     
+    @roar_py_append_item
     @roar_py_thread_sync
     def attach_roll_pitch_yaw_sensor(
         self,
@@ -105,6 +111,7 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         self._internal_sensors.append(new_sensor)
         return new_sensor
     
+    @roar_py_append_item
     @roar_py_thread_sync
     def attach_framequat_sensor(
         self,
@@ -115,6 +122,7 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         self._internal_sensors.append(new_sensor)
         return new_sensor
     
+    @roar_py_append_item
     @roar_py_thread_sync
     def attach_gyroscope_sensor(
         self,
@@ -124,6 +132,7 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         self._internal_sensors.append(new_sensor)
         return new_sensor
     
+    @roar_py_remove_item
     @roar_py_thread_sync
     def remove_sensor(self, sensor: RoarPySensor):
         self._internal_sensors.remove(sensor)
