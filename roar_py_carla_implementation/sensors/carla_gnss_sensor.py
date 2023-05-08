@@ -24,76 +24,36 @@ class RoarPyCarlaGNSSSensor(RoarPyGNSSSensor, RoarPyCarlaBase):
     
     @property
     def noise_altitude_bias(self) -> float:
-        return self._base_actor.noise_alt_bias
-
-    @noise_altitude_bias.setter
-    @roar_py_thread_sync
-    def noise_altitude_bias(self, value: float) -> None:
-        self._base_actor.noise_alt_bias = value
+        return float(self._base_actor.attributes["noise_alt_bias"])
 
     @property
     def noise_altitude_std(self) -> float:
-        return self._base_actor.noise_alt_stddev
+        return float(self._base_actor.attributes["noise_alt_stddev"])
 
-    @noise_altitude_std.setter
-    @roar_py_thread_sync
-    def noise_altitude_std(self, value: float) -> None:
-        self._base_actor.noise_alt_stddev = value
-    
     @property
     def noise_latitude_bias(self) -> float:
-        return self._base_actor.noise_lat_bias
-    
-    @noise_latitude_bias.setter
-    @roar_py_thread_sync
-    def noise_latitude_bias(self, value: float) -> None:
-        self._base_actor.noise_lat_bias = value
+        return float(self._base_actor.attributes["noise_lat_bias"])
     
     @property
     def noise_latitude_std(self) -> float:
-        return self._base_actor.noise_lat_stddev
-    
-    @noise_latitude_std.setter
-    @roar_py_thread_sync
-    def noise_latitude_std(self, value: float) -> None:
-        self._base_actor.noise_lat_stddev = value
+        return float(self._base_actor.attributes["noise_lat_stddev"])
     
     @property
     def noise_longitude_bias(self) -> float:
-        return self._base_actor.noise_lon_bias
-    
-    @noise_longitude_bias.setter
-    @roar_py_thread_sync
-    def noise_longitude_bias(self, value: float) -> None:
-        self._base_actor.noise_lon_bias = value
+        return float(self._base_actor.attributes["noise_lon_bias"])
 
     @property
     def noise_longitude_std(self) -> float:
-        return self._base_actor.noise_lon_stddev
-    
-    @noise_longitude_std.setter
-    @roar_py_thread_sync
-    def noise_longitude_std(self, value: float) -> None:
-        self._base_actor.noise_lon_stddev = value
+        return float(self._base_actor.attributes["noise_lon_stddev"])
 
     @property
     def noise_seed(self) -> int:
-        return self._base_actor.noise_seed
+        return int(self._base_actor.attributes["noise_seed"])
     
-    @noise_seed.setter
-    @roar_py_thread_sync
-    def noise_seed(self, value: int) -> None:
-        self._base_actor.noise_seed = value
-
     @property
     def control_timestep(self) -> float:
-        return self._base_actor.sensor_tick
+        return float(self._base_actor.attributes["sensor_tick"])
     
-    @control_timestep.setter
-    @roar_py_thread_sync
-    def control_timestep(self, value: float) -> None:
-        self._base_actor.sensor_tick = value
-
     async def receive_observation(self) -> RoarPyGNSSSensorData:
         while self.received_data is None:
             await asyncio.sleep(0.001)
