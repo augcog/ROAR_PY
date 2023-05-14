@@ -138,18 +138,17 @@ class RoarPyCarlaBase:
     @roar_py_thread_sync
     def _attach_native_carla_actor(
         self,
-        blueprint_id : str, 
+        blueprint : carla.ActorBlueprint, 
         location: np.ndarray,
         roll_pitch_yaw: np.ndarray,
         attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid
-    ) -> carla.Actor:
+    ) -> Optional[carla.Actor]:
         assert location.shape == (3,) and roll_pitch_yaw.shape == (3,)
         location = location.astype(float)
-        roll_pitch_yaw = np.rad2deg(roll_pitch_yaw.astype(float))
+        roll_pitch_yaw = np.rad2deg(roll_pitch_yaw).astype(float)
 
-        blueprint = self._get_native_carla_world().get_blueprint_library().find(blueprint_id)
         transform = carla.Transform(carla.Location(*location), carla.Rotation(roll=roll_pitch_yaw[0], pitch=roll_pitch_yaw[1], yaw=roll_pitch_yaw[2]))
-        new_actor = self._get_native_carla_world().spawn_actor(blueprint, transform, self._base_actor, attachment_type)
+        new_actor = self._get_native_carla_world().try_spawn_actor(blueprint, transform, self._base_actor, attachment_type)
         return new_actor
 
     def __str__(self):

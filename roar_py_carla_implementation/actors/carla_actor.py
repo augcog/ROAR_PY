@@ -37,14 +37,27 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         target_datatype: typing.Type[RoarPyCameraSensorData],
         location: np.ndarray,
         roll_pitch_yaw: np.ndarray,
+        fov: float = 90.0,
+        image_width: int = 800,
+        image_height: int = 600,
+        control_timestep: float = 0.0,
         attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid,
         name: str = "carla_camera",
-    ) -> RoarPyCameraSensor:
+    ) -> typing.Optional[RoarPyCameraSensor]:
         if target_datatype not in RoarPyCarlaCameraSensor.SUPPORTED_TARGET_DATA_TO_BLUEPRINT:
             raise ValueError(f"Unsupported target data type {target_datatype}")
 
         blueprint_id = RoarPyCarlaCameraSensor.SUPPORTED_TARGET_DATA_TO_BLUEPRINT[target_datatype]
-        new_actor = self._attach_native_carla_actor(blueprint_id, location, roll_pitch_yaw, attachment_type)
+        blueprint = self._get_carla_world().find_blueprint(blueprint_id)
+        blueprint.set_attribute("image_size_x", str(image_width))
+        blueprint.set_attribute("image_size_y", str(image_height))
+        blueprint.set_attribute("fov", str(fov))
+        blueprint.set_attribute("sensor_tick", str(control_timestep))
+        new_actor = self._attach_native_carla_actor(blueprint, location, roll_pitch_yaw, attachment_type)
+        
+        if new_actor is None:
+            return None
+        
         new_sensor = RoarPyCarlaCameraSensor(self._carla_instance, new_actor, target_datatype, name=name)
         self._internal_sensors.append(new_sensor)
         return new_sensor
@@ -57,9 +70,13 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         roll_pitch_yaw: np.ndarray,
         attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid,
         name: str = "carla_collision_sensor",
-    ):
-        blueprint_id = "sensor.other.collision"
-        new_actor = self._attach_native_carla_actor(blueprint_id, location, roll_pitch_yaw, attachment_type)
+    ) -> typing.Optional[RoarPyCollisionSensor]:
+        blueprint = self._get_carla_world().find_blueprint("sensor.other.collision")
+        new_actor = self._attach_native_carla_actor(blueprint, location, roll_pitch_yaw, attachment_type)
+
+        if new_actor is None:
+            return None
+
         new_sensor = RoarPyCarlaCollisionSensor(self._carla_instance, new_actor, name=name)
         self._internal_sensors.append(new_sensor)
         return new_sensor
@@ -78,10 +95,30 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
     @roar_py_thread_sync
     def attach_gnss_sensor(
         self,
+        noise_altitude_bias: float = 0.0,
+        noise_altitude_std: float = 0.0,
+        noise_latitude_bias: float = 0.0,
+        noise_latitude_std: float = 0.0,
+        noise_longitude_bias: float = 0.0,
+        noise_longitude_std: float = 0.0,
+        noise_seed: int = 0,
+        control_timestep: float = 0.0,
         name : str = "carla_gnss_sensor",
-    ):
-        blueprint_id = "sensor.other.gnss"
-        new_actor = self._attach_native_carla_actor(blueprint_id, np.array([0,0,0]), np.array([0,0,0]), carla.AttachmentType.Rigid)
+    ) -> typing.Optional[RoarPyGNSSSensor]:
+        blueprint = self._get_carla_world().find_blueprint("sensor.other.gnss")
+        blueprint.set_attribute("noise_alt_bias", str(noise_altitude_bias))
+        blueprint.set_attribute("noise_alt_stddev", str(noise_altitude_std))
+        blueprint.set_attribute("noise_lat_bias", str(noise_latitude_bias))
+        blueprint.set_attribute("noise_lat_stddev", str(noise_latitude_std))
+        blueprint.set_attribute("noise_lon_bias", str(noise_longitude_bias))
+        blueprint.set_attribute("noise_lon_stddev", str(noise_longitude_std))
+        blueprint.set_attribute("noise_seed", str(noise_seed))
+        blueprint.set_attribute("sensor_tick", str(control_timestep))
+        new_actor = self._attach_native_carla_actor(blueprint, np.array([0,0,0]), np.array([0,0,0]), carla.AttachmentType.Rigid)
+
+        if new_actor is None:
+            return None
+
         new_sensor = RoarPyCarlaGNSSSensor(self._carla_instance, new_actor, name=name)
         self._internal_sensors.append(new_sensor)
         return new_sensor
@@ -92,11 +129,40 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         self,
         location: np.ndarray,
         roll_pitch_yaw: np.ndarray,
+        num_lasers: int = 32,
+        max_distance: float = 10.0,
+        points_per_second: int = 56000,
+        rotation_frequency: float = 10.0,
+        upper_fov: float = 10.0,
+        lower_fov: float = -30.0,
+        horizontal_fov: float = 360.0,
+        atmosphere_attenuation_rate: float = 0.004,
+        dropoff_general_rate: float = 0.45,
+        dropoff_intensity_limit_below: float = 0.8,
+        control_timestep: float = 0.0,
+        noise_std: float = 0.0,
         attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid,
         name: str = "carla_lidar_sensor",
-    ):
-        blueprint_id = "sensor.lidar.ray_cast"
-        new_actor = self._attach_native_carla_actor(blueprint_id, location, roll_pitch_yaw, attachment_type)
+    ) -> typing.Optional[RoarPyLiDARSensor]:
+        blueprint = self._get_carla_world().find_blueprint("sensor.lidar.ray_cast")
+        blueprint.set_attribute("channels", str(num_lasers))
+        blueprint.set_attribute("range", str(max_distance))
+        blueprint.set_attribute("points_per_second", str(points_per_second))
+        blueprint.set_attribute("rotation_frequency", str(rotation_frequency))
+        blueprint.set_attribute("upper_fov", str(upper_fov))
+        blueprint.set_attribute("lower_fov", str(lower_fov))
+        blueprint.set_attribute("horizontal_fov", str(horizontal_fov))
+        blueprint.set_attribute("atmosphere_attenuation_rate", str(atmosphere_attenuation_rate))
+        blueprint.set_attribute("dropoff_general_rate", str(dropoff_general_rate))
+        blueprint.set_attribute("dropoff_intensity_limit", str(dropoff_intensity_limit_below))
+        blueprint.set_attribute("sensor_tick", str(control_timestep))
+        blueprint.set_attribute("noise_stddev", str(noise_std))
+
+        new_actor = self._attach_native_carla_actor(blueprint, location, roll_pitch_yaw, attachment_type)
+
+        if new_actor is None:
+            return None
+
         new_sensor = RoarPyCarlaLiDARSensor(self._carla_instance, new_actor, name=name)
         self._internal_sensors.append(new_sensor)
         return new_sensor

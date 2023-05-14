@@ -6,9 +6,11 @@ import numpy as np
 
 from roar_py_interface import RoarPyActor, RoarPySensor, roar_py_thread_sync, roar_py_append_item, roar_py_remove_item
 from ..actors import RoarPyCarlaVehicle
+from functools import cached_property
 
 class RoarPyCarlaWorld(RoarPyWorld):
     ASYNC_SLEEP_TIME = 0.005
+    WAYPOINTS_DISTANCE = 1.0
 
     def __init__(
         self,
@@ -122,20 +124,57 @@ class RoarPyCarlaWorld(RoarPyWorld):
     def _set_weather(self, weather : carla.WeatherParameters):
         self.carla_world.set_weather(weather)
 
+    def find_blueprint(self, id: str) -> carla.ActorBlueprint:
+        return self.carla_world.get_blueprint_library().find(id)
+    
+    """
+    Get a list of all available spawn points
+    Output: [(location, rotation), ...]
+    rotation is [roll, pitch, yaw] in radians
+    """
+    @cached_property
+    def spawn_points(self) -> typing.List[typing.Tuple[np.ndarray, np.ndarray]]:
+        native_spawn_points = self._native_carla_map.get_spawn_points()
+        ret = []
+        for native_spawn_point in native_spawn_points:
+            location = np.array([native_spawn_point.location.x, native_spawn_point.location.y, native_spawn_point.location.z])
+            rotation = np.deg2rad(np.array([native_spawn_point.rotation.roll, native_spawn_point.rotation.pitch, native_spawn_point.rotation.yaw]))
+            ret.append((location, rotation))
+        return ret
+
+    """
+    Convert a location in world coordinate to geolocation
+    Output: [latitude (deg), longitude (deg), altitude(m)]
+    """
+    def get_geolocation(self, location : np.ndarray) -> np.ndarray:
+        assert location.shape == (3,)
+        native_location = carla.Location(x=location[0], y=location[1], z=location[2])
+        native_geolocation = self._native_carla_map.transform_to_geolocation(native_location)
+        return np.array([native_geolocation.latitude, native_geolocation.longitude, native_geolocation.altitude])
+
+    @cached_property
+    @roar_py_thread_sync
+    def _native_carla_waypoints(self) -> typing.List[carla.Waypoint]:
+        return self._native_carla_map.generate_waypoints(__class__.WAYPOINTS_DISTANCE)
+
+    @cached_property
+    @roar_py_thread_sync
+    def _native_carla_map(self) -> carla.Map:
+        return self.carla_world.get_map()
+
     @roar_py_thread_sync
     def _attach_native_carla_actor(
         self,
-        blueprint_id : str, 
+        blueprint : carla.ActorBlueprint, 
         location: np.ndarray,
         roll_pitch_yaw: np.ndarray
     ) -> carla.Actor:
         assert location.shape == (3,) and roll_pitch_yaw.shape == (3,)
         location = location.astype(float)
-        roll_pitch_yaw = roll_pitch_yaw.astype(float)
+        roll_pitch_yaw = np.deg2rad(roll_pitch_yaw).astype(float)
 
-        blueprint = self.carla_world.get_blueprint_library().find(blueprint_id)
         transform = carla.Transform(carla.Location(*location), carla.Rotation(roll=roll_pitch_yaw[0], pitch=roll_pitch_yaw[1], yaw=roll_pitch_yaw[2]))
-        new_actor = self.carla_world.spawn_actor(blueprint, transform, None, carla.AttachmentType.Rigid)
+        new_actor = self.carla_world.try_spawn_actor(blueprint, transform, None, carla.AttachmentType.Rigid)
         return new_actor
 
     """
@@ -150,9 +189,23 @@ class RoarPyCarlaWorld(RoarPyWorld):
         location : np.ndarray,
         roll_pitch_yaw : np.ndarray,
         auto_gear: bool = True,
-        name: str = "carla_vehicle"
-    ):
-        new_actor = self._attach_native_carla_actor(blueprint_id, location, roll_pitch_yaw)
+        name: str = "carla_vehicle",
+        rgba: typing.Optional[np.ndarray] = None
+    ) -> typing.Optional[RoarPyCarlaVehicle]:
+        blueprint = self.find_blueprint(blueprint_id)
+        if blueprint is None:
+            return None
+        if not blueprint.has_tag("vehicle"):
+            return None
+        
+        if rgba is not None and rgba.shape == (4,):
+            vehicle_color = carla.Color(r=rgba[0], g=rgba[1], b=rgba[2], a=rgba[3])
+            blueprint.set_attribute("color", str(vehicle_color))
+
+        new_actor = self._attach_native_carla_actor(blueprint, location, roll_pitch_yaw)
+        if new_actor is None:
+            return None
+        
         new_vehicle = RoarPyCarlaVehicle(self.carla_instance, new_actor, auto_gear, name=name)
         self._actors.append(new_vehicle)
         return new_vehicle

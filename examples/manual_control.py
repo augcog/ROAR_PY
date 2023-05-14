@@ -46,11 +46,14 @@ async def main():
     carla_world.set_control_steps(0.05, 0.005)
     carla_world.set_asynchronous(True)
     
+    spawn_point, spawn_rpy = carla_world.spawn_points[
+        np.random.randint(len(carla_world.spawn_points))
+    ]
 
     vehicle = carla_world.spawn_vehicle(
         "vehicle.tesla.model3",
-        np.array([2550,4109.7,140]),
-        np.zeros(3),
+        spawn_point,
+        spawn_rpy,
         True
     )
 
