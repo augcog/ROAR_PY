@@ -22,8 +22,13 @@ class RoarPyCarlaWorld(RoarPyWorld):
         self.carla_instance = carla_instance
         self.tick_callback_id : typing.Optional[int] = None
         self.last_tick_time : typing.Optional[float] = None
-        self.setup_mode(self.is_asynchronous)
         self._actors : typing.List[RoarPyActor] = []
+
+        carla_settings = carla_world.get_settings()
+        self._control_timestep = carla_settings.fixed_delta_seconds
+        self._control_subtimestep = carla_settings.max_substep_delta_time
+        self._is_asynchronous = not carla_settings.synchronous_mode
+        self.setup_mode(self.is_asynchronous)
 
     def get_actors(self) -> typing.Iterable[RoarPyActor]:
         return self._actors.copy()
@@ -39,8 +44,7 @@ class RoarPyCarlaWorld(RoarPyWorld):
     @property
     @roar_py_thread_sync
     def is_asynchronous(self):
-        native_settings = self.carla_world.get_settings()
-        return not native_settings.synchronous_mode
+        return self._is_asynchronous
     
     @roar_py_thread_sync
     def set_asynchronous(self, asynchronous : bool):
@@ -48,6 +52,7 @@ class RoarPyCarlaWorld(RoarPyWorld):
         native_settings = self.carla_world.get_settings()
         native_settings.synchronous_mode = not asynchronous
         self.carla_world.apply_settings(native_settings)
+        self._is_asynchronous = asynchronous
     
     @roar_py_thread_sync
     def setup_mode(self, target_asynchronous : bool):
@@ -63,7 +68,7 @@ class RoarPyCarlaWorld(RoarPyWorld):
     # Time between two server ticks in seconds, 0.0 means variable timestep
     @property
     def control_timestep(self) -> float:
-        return self.carla_world.get_settings().fixed_delta_seconds
+        return self._control_timestep
     
     @control_timestep.setter
     @roar_py_thread_sync
@@ -72,10 +77,11 @@ class RoarPyCarlaWorld(RoarPyWorld):
         native_settings.fixed_delta_seconds = control_timestep
         native_settings.max_substep_delta_time = control_timestep / native_settings.max_substeps
         self.carla_world.apply_settings(native_settings)
+        self._control_timestep = control_timestep
     
     @property
     def contorl_subtimestep(self) -> float:
-        return self.carla_world.get_settings().max_substep_delta_time
+        return self._control_subtimestep
 
     @contorl_subtimestep.setter
     @roar_py_thread_sync
@@ -86,6 +92,7 @@ class RoarPyCarlaWorld(RoarPyWorld):
         native_settings.max_substeps = int(native_settings.fixed_delta_seconds / contorl_subtimestep)
         native_settings.max_substep_delta_time = contorl_subtimestep
         self.carla_world.apply_settings(native_settings)
+        self._control_subtimestep = contorl_subtimestep
     
     @roar_py_thread_sync
     def set_control_steps(self, control_timestep : float, control_substimestep : float):
@@ -95,6 +102,8 @@ class RoarPyCarlaWorld(RoarPyWorld):
         native_settings.max_substeps = int(control_timestep / control_substimestep)
         native_settings.max_substep_delta_time = control_substimestep
         self.carla_world.apply_settings(native_settings)
+        self._control_timestep = control_timestep
+        self._control_subtimestep = control_substimestep
 
     def __on_tick_recv(self, world_snapshot : carla.WorldSnapshot):
         self.last_tick_time = world_snapshot.timestamp.elapsed_seconds
