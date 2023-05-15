@@ -20,7 +20,7 @@ def __convert_carla_image_to_bgra_array(
 def __depth_meters_from_carla_bgra(
     bgra_carla: np.ndarray
 ) -> np.ndarray: #np.NDArray[np.float32]:
-    assert bgra_carla.ndim == 4
+    assert bgra_carla.ndim == 3
     assert bgra_carla.shape[-1] == 4
     bgra_carla = bgra_carla.astype(np.float32)
     # Apply (R + G * 256 + B * 256 * 256) <= This would be in mm
@@ -73,7 +73,7 @@ def _convert_carla_to_roarpy_image(blueprint_id : str, width : int, height : int
         )
     elif target_data_type == RoarPyCameraSensorDataGreyscale:
         assert blueprint_id == "sensor.camera.rgb", "Cannot convert {} to RoarPyCameraSensorDataGreyscale".format(blueprint_id)
-        img = Image.fromarray(ret_image_bgra,mode="BGRA")
+        img = Image.fromarray(ret_image_bgra[:,:,:3][:,:,::-1],mode="RGB")
         grey_img = img.convert("L")
         img.close()
         ret = RoarPyCameraSensorDataGreyscale(

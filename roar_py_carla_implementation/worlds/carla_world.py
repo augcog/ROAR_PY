@@ -171,9 +171,9 @@ class RoarPyCarlaWorld(RoarPyWorld):
     ) -> carla.Actor:
         assert location.shape == (3,) and roll_pitch_yaw.shape == (3,)
         location = location.astype(float)
-        roll_pitch_yaw = np.deg2rad(roll_pitch_yaw).astype(float)
+        roll_pitch_yaw = np.rad2deg(roll_pitch_yaw).astype(float)
 
-        transform = carla.Transform(carla.Location(*location), carla.Rotation(roll=roll_pitch_yaw[0], pitch=roll_pitch_yaw[1], yaw=roll_pitch_yaw[2]))
+        transform = carla.Transform(carla.Location(x=location[0],y=location[1], z=location[2]), carla.Rotation(roll=roll_pitch_yaw[0], pitch=roll_pitch_yaw[1], yaw=roll_pitch_yaw[2]))
         new_actor = self.carla_world.try_spawn_actor(blueprint, transform, None, carla.AttachmentType.Rigid)
         return new_actor
 
@@ -201,7 +201,6 @@ class RoarPyCarlaWorld(RoarPyWorld):
         if rgba is not None and rgba.shape == (4,):
             vehicle_color = carla.Color(r=rgba[0], g=rgba[1], b=rgba[2], a=rgba[3])
             blueprint.set_attribute("color", str(vehicle_color))
-
         new_actor = self._attach_native_carla_actor(blueprint, location, roll_pitch_yaw)
         if new_actor is None:
             return None

@@ -8,3 +8,5 @@ transforms3d==0.4.1
 carla==0.9.12
 rpyc>=5.3.1
 pygame >= 2.4.0
+pytest>=7.3.1
+pytest-asyncio>=0.21.0

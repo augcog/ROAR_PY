@@ -44,7 +44,7 @@ async def main():
     
     carla_world = roar_py_instance.world
     carla_world.set_control_steps(0.05, 0.005)
-    carla_world.set_asynchronous(True)
+    carla_world.set_asynchronous(False)
     
     spawn_point, spawn_rpy = carla_world.spawn_points[
         np.random.randint(len(carla_world.spawn_points))
@@ -53,8 +53,7 @@ async def main():
     vehicle = carla_world.spawn_vehicle(
         "vehicle.tesla.model3",
         spawn_point,
-        spawn_rpy,
-        True
+        spawn_rpy
     )
 
     camera = vehicle.attach_camera_sensor(
@@ -67,11 +66,11 @@ async def main():
 
     try:
         while True:
-            img : roar_py_interface.RoarPyCameraSensorDataRGB = await camera.receive_observation()
             # img.get_image().save("test.png")
-            if not viewer.render(img):
-                return
             await carla_world.step()
+            img : roar_py_interface.RoarPyCameraSensorDataRGB = await camera.receive_observation()
+            if not viewer.render(img):
+                break
     finally:
         roar_py_instance.close()
 
