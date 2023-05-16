@@ -17,7 +17,10 @@ async def main():
     
     waypoints = roar_py_instance.world.maneuverable_waypoints
     for waypoint in waypoints:
-        plt.plot(waypoint.location[0], waypoint.location[1], 'ro')
+        rep_line = waypoint.line_representation
+        rep_line = np.asarray(rep_line)
+        print(rep_line)
+        plt.plot(rep_line[:,0], rep_line[:,1])
     plt.show()
 
 if __name__ == '__main__':
