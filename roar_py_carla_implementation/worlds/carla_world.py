@@ -1,10 +1,11 @@
 from roar_py_interface import RoarPyWorld
 import carla
+from ..carla_agents.navigation.global_route_planner import GlobalRoutePlanner as CarlaGlobalRoutePlanner
 import typing
 import asyncio
 import numpy as np
 
-from roar_py_interface import RoarPyActor, RoarPySensor, roar_py_thread_sync, roar_py_append_item, roar_py_remove_item
+from roar_py_interface import RoarPyActor, RoarPySensor, roar_py_thread_sync, roar_py_append_item, roar_py_remove_item, RoarPyWaypoint
 from ..actors import RoarPyCarlaVehicle
 from functools import cached_property
 
@@ -40,6 +41,23 @@ class RoarPyCarlaWorld(RoarPyWorld):
         for carlabase in self.carla_instance.actor_to_instance_map.values():
             if isinstance(carlabase, RoarPySensor):
                 yield carlabase
+
+    @cached_property
+    @roar_py_thread_sync
+    def maneuverable_waypoints(self) -> typing.List[RoarPyWaypoint]:
+        grp = CarlaGlobalRoutePlanner(self._native_carla_map, self.WAYPOINTS_DISTANCE)
+        spawn_points = self.carla_world.get_map().get_spawn_points()
+        native_ws : typing.List[carla.Waypoint] = grp.trace_route(spawn_points[0].location, spawn_points[-1].location) + grp.trace_route(spawn_points[-1].location, spawn_points[0].location)
+        real_ws = []
+        for native_ww in native_ws:
+            w = native_ww[0]
+            real_w = RoarPyWaypoint(
+                np.array([w.transform.location.x, w.transform.location.y, w.transform.location.z]),
+                np.deg2rad(np.array([w.transform.rotation.roll, w.transform.rotation.pitch, w.transform.rotation.yaw])),
+                w.lane_width
+            )
+            real_ws.append(real_w)
+        return real_ws
 
     @property
     @roar_py_thread_sync

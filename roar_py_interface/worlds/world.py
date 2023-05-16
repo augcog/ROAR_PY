@@ -1,6 +1,7 @@
 import typing
 from ..actors.actor import RoarPyActor
 from ..base import RoarPySensor
+from .waypoint import RoarPyWaypoint
 
 class RoarPyWorld:
     @property
@@ -12,6 +13,10 @@ class RoarPyWorld:
 
     def get_sensors(self) -> typing.Iterable[RoarPySensor]:
         raise NotImplementedError
+    
+    @property
+    def maneuverable_waypoints(self) -> typing.Optional[typing.Iterable[RoarPyWaypoint]]:
+        return None
 
     """
     Steps the world by one step.

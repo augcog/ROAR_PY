@@ -197,4 +197,18 @@ async def test_vehicle_control(
         control = act_spec.sample()
         assert (await carla_vehicle.apply_action(control)) == True
         await carla_instance.world.step()
-    
+
+@pytest.mark.parametrize("is_async", [
+    True,
+    False
+])
+@pytest.mark.asyncio
+async def test_map_manuverable_waypoints(
+    carla_instance : RoarPyCarlaInstance,
+    carla_vehicle : RoarPyCarlaVehicle,
+    is_async : bool
+):
+    carla_instance.world.set_asynchronous(is_async)
+    carla_instance.world.set_control_steps(0.1, 0.05)
+    all_waypoints = carla_instance.world.maneuverable_waypoints
+    assert len(all_waypoints) > 0
