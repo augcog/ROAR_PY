@@ -1,3 +1,4 @@
+from typing_extensions import override
 from roar_py_interface.actors.actor import RoarPyActor, RoarPyResettableActor
 from roar_py_interface.sensors import *
 from roar_py_interface.base import RoarPySensor
@@ -24,7 +25,8 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
     def get_action_spec(self) -> gym.Space:
         raise NotImplementedError()
     
-    async def __apply_action(self, action: typing.Any) -> bool:
+    @override
+    async def _apply_action(self, action: typing.Any) -> bool:
         raise NotImplementedError()
     
     def get_sensors(self) -> typing.Iterable[RoarPySensor]:

@@ -7,36 +7,36 @@ import time
 """
 Helper functions to propose a observation dictionary key for a sensor and modify the dictionary of sensors
 """
-def __propose_name_and_modify_dict(diction: dict, new_name: str, counter: int = 0):
+def propose_name_and_modify_dict(diction: dict, new_name: str, counter: int = 0):
     if counter < 1:
         if new_name + "_1" in diction:
-            return __propose_name_and_modify_dict(diction, new_name, 2)
+            return propose_name_and_modify_dict(diction, new_name, 2)
         else:
             diction[new_name + "_1"] = diction[new_name]
             diction.pop(new_name)
-            return __propose_name_and_modify_dict(diction, new_name, 2)
+            return propose_name_and_modify_dict(diction, new_name, 2)
     else:
         actual_name = new_name + "_" + str(counter)
         if actual_name in diction:
-            return __propose_name_and_modify_dict(diction, new_name, counter + 1)
+            return propose_name_and_modify_dict(diction, new_name, counter + 1)
         else:
             return actual_name
 
 """
 Helper functions to propose a observation dictionary key for a sensor and modify the dictionary of observation keys
 """
-def __propose_name_and_modify_list(list_of_names: list, new_name: str, counter: int = 0):
+def propose_name_and_modify_list(list_of_names: list, new_name: str, counter: int = 0):
     if counter < 1:
         if new_name + "_1" in list_of_names:
-            return __propose_name_and_modify_list(list_of_names, new_name, 2)
+            return propose_name_and_modify_list(list_of_names, new_name, 2)
         else:
             list_of_names.pop(list_of_names.index(new_name))
             list_of_names.append(new_name + "_1")
-            return __propose_name_and_modify_list(list_of_names, new_name, 2)
+            return propose_name_and_modify_list(list_of_names, new_name, 2)
     else:
         actual_name = new_name + "_" + str(counter)
         if actual_name in list_of_names:
-            return __propose_name_and_modify_list(list_of_names, new_name, counter + 1)
+            return propose_name_and_modify_list(list_of_names, new_name, counter + 1)
         else:
             return actual_name
 
@@ -65,6 +65,7 @@ class RoarPyActor:
         self._control_timestep = control_timestep
         self._force_real_control_timestep = force_real_control_timestep
         self._last_action_t = 0.0
+        self._last_obs = None
 
     @property
     def control_timestep(self) -> float:
@@ -86,7 +87,7 @@ class RoarPyActor:
     def get_action_spec(self) -> gym.Space:
         raise NotImplementedError()
     
-    async def __apply_action(self, action: typing.Any) -> bool:
+    async def _apply_action(self, action: typing.Any) -> bool:
         raise NotImplementedError()
 
     def close(self):
@@ -106,7 +107,6 @@ class RoarPyActor:
     Asynchronously apply action to this actor
     """
     async def apply_action(self, action: typing.Any) -> bool:
-        
         if self.force_real_control_timestep:
             t = time.time()
             dt = t - self._last_action_t
@@ -115,7 +115,7 @@ class RoarPyActor:
                 self._last_action_t = self._last_action_t + self.control_timestep
             else:
                 self._last_action_t = t
-        return await self.__apply_action(action)
+        return await self._apply_action(action)
 
     """
     Get observation space specification for this actor
@@ -126,7 +126,7 @@ class RoarPyActor:
     def get_gym_observation_spec(self) -> gym.Space:
         spec_dict = {}
         for sensor in self.get_sensors():
-            store_name = __propose_name_and_modify_dict(spec_dict, sensor.name)
+            store_name = propose_name_and_modify_dict(spec_dict, sensor.name)
             spec_dict[store_name] = sensor.get_gym_observation_spec()
         return gym.spaces.Dict(spec_dict)
 
@@ -136,14 +136,14 @@ class RoarPyActor:
     This does not need to be inherited and implemented again because the actor
     class constructs the observation dictionary from the sensor list
     """
-    async def receive_observation(self, observation: dict) -> typing.Dict[str, typing.Any]:
+    async def receive_observation(self) -> typing.Dict[str, typing.Any]:
         observation_dict = {}
         obs_keys = []
         all_sensors = list(self.get_sensors())
         all_obs_coroutines : list[typing.Coroutine] = []
         
         for sensor in all_sensors:
-            store_name = __propose_name_and_modify_list(obs_keys, sensor.name)
+            store_name = propose_name_and_modify_list(obs_keys, sensor.name)
             obs_keys.append(store_name)
             all_obs_coroutines.append(sensor.receive_observation())
 
@@ -151,34 +151,37 @@ class RoarPyActor:
         for i, obs in enumerate(all_received_obs):
             observation_dict[obs_keys[i]] = obs
         
+        self._last_obs = observation_dict
         return observation_dict
     
     def get_last_observation(self) -> typing.Optional[typing.Dict[str,typing.Any]]:
-        observation_dict = {}
-        for sensor in self.get_sensors():
-            store_name = __propose_name_and_modify_dict(observation_dict, sensor.name)
-            sensor_lastobs = sensor.get_last_observation()
-            if sensor_lastobs is not None:
-                observation_dict[store_name] = sensor.get_last_observation()
-            else:
-                return None
-        return observation_dict
+        # observation_dict = {}
+        # for sensor in self.get_sensors():
+        #     store_name = propose_name_and_modify_dict(observation_dict, sensor.name)
+        #     sensor_lastobs = sensor.get_last_observation()
+        #     if sensor_lastobs is not None:
+        #         observation_dict[store_name] = sensor.get_last_observation()
+        #     else:
+        #         return None
+        # return observation_dict
+        return self._last_obs
     
     def get_last_gym_observation(self) -> typing.Optional[typing.Dict[str,typing.Any]]:
-        observation_dict = {}
-        for sensor in self.get_sensors():
-            store_name = __propose_name_and_modify_dict(observation_dict, sensor.name)
-            sensor_lastobs = sensor.get_last_gym_observation()
-            if sensor_lastobs is not None:
-                observation_dict[store_name] = sensor.get_last_gym_observation()
-            else:
-                return None
-        return observation_dict
+        # observation_dict = {}
+        # for sensor in self.get_sensors():
+        #     store_name = propose_name_and_modify_dict(observation_dict, sensor.name)
+        #     sensor_lastobs = sensor.get_last_gym_observation()
+        #     if sensor_lastobs is not None:
+        #         observation_dict[store_name] = sensor.get_last_gym_observation()
+        #     else:
+        #         return None
+        # return observation_dict
+        return self.convert_obs_to_gym_obs(self._last_obs) if self._last_obs is not None else None
 
     def convert_obs_to_gym_obs(self, observation : typing.Dict[str,typing.Any]) -> typing.Dict[str,typing.Any]:
         obs_gym_dict = {}
         for sensor in self.get_sensors():
-            store_name = __propose_name_and_modify_dict(obs_gym_dict, sensor.name)
+            store_name = propose_name_and_modify_dict(obs_gym_dict, sensor.name)
             obs_gym_dict[store_name] = sensor.convert_obs_to_gym_obs(observation[store_name])
         return obs_gym_dict
     

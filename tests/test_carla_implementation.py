@@ -176,3 +176,25 @@ async def test_lidar_sensor(
     assert lidar_sensor is not None
 
     lidar_sensor.close()
+
+@pytest.mark.parametrize("is_async", [
+    True,
+    False
+])
+@pytest.mark.asyncio
+async def test_vehicle_control(
+    carla_instance : RoarPyCarlaInstance,
+    carla_vehicle : RoarPyCarlaVehicle,
+    is_async : bool
+):
+    carla_instance.world.set_asynchronous(is_async)
+    carla_instance.world.set_control_steps(0.1, 0.05)
+    obs_spec = carla_vehicle.get_gym_observation_spec()
+    act_spec = carla_vehicle.get_action_spec()
+    for _ in range(10*10):
+        await carla_vehicle.receive_observation()
+        obs = carla_vehicle.get_last_gym_observation()
+        control = act_spec.sample()
+        assert (await carla_vehicle.apply_action(control)) == True
+        await carla_instance.world.step()
+    

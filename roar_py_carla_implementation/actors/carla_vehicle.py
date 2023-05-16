@@ -46,7 +46,7 @@ class RoarPyCarlaVehicle(RoarPyCarlaActor):
         return control
 
     @roar_py_thread_sync
-    async def __apply_action(self, action: typing.Any) -> bool:
+    async def _apply_action(self, action: typing.Any) -> bool:
         control = self.translate_action_to_carla_vehicle_control(self.auto_gear,action)
-        self.carla_actor.apply_control(control)
+        self._base_actor.apply_control(control)
         return True
