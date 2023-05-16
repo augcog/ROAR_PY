@@ -36,7 +36,7 @@ class RoarPyCarlaLiDARSensor(RoarPyLiDARSensor, RoarPyCarlaBase):
         RoarPyCarlaBase.__init__(self, carla_instance, sensor)
         self.received_data : typing.Optional[RoarPyLiDARSensorData] = None
         sensor.listen(
-            self.listen_callback
+            self.listen_carla_data
         )
 
 

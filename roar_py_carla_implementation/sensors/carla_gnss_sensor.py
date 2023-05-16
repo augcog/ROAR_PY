@@ -19,7 +19,7 @@ class RoarPyCarlaGNSSSensor(RoarPyGNSSSensor, RoarPyCarlaBase):
         RoarPyCarlaGNSSSensor.__init__(self, name, control_timestep = 0.0)
         self.received_data : typing.Optional[RoarPyGNSSSensorData] = None
         sensor.listen(
-            self.listen_callback
+            self.listen_carla_data
         )
     
     @property
