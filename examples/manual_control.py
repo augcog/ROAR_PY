@@ -5,6 +5,7 @@ import pygame
 from PIL import Image
 import numpy as np
 import asyncio
+from typing import Optional, Dict, Any
 
 class ManualControlViewer:
     def __init__(
@@ -12,29 +13,56 @@ class ManualControlViewer:
     ):
         self.screen = None
         self.clock = None
+        self.last_control = {
+            "throttle": 0.0,
+            "steer": 0.0,
+            "brake": 0.0,
+            "hand_brake": np.array([0]),
+            "reverse": np.array([0])
+        }
     
     def init_pygame(self, x, y) -> None:
         pygame.init()
         self.screen = pygame.display.set_mode((x, y), pygame.HWSURFACE | pygame.DOUBLEBUF)
         pygame.display.set_caption("RoarPy Manual Control Viewer")
+        pygame.key.set_repeat()
         self.clock = pygame.time.Clock()
 
-    def render(self, image : roar_py_interface.RoarPyCameraSensorData) -> bool:
+    def render(self, image : roar_py_interface.RoarPyCameraSensorData) -> Optional[Dict[str, Any]]:
         image_pil : Image = image.get_image()
         if self.screen is None:
             self.init_pygame(image_pil.width, image_pil.height)
         
+        new_control = {
+            "throttle": 0.0,
+            "steer": 0.0,
+            "brake": 0.0,
+            "hand_brake": np.array([0]),
+            "reverse": np.array([0])
+        }
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                return False
+                return None
+        
+        pressed_keys = pygame.key.get_pressed()
+        if pressed_keys[pygame.K_UP]:
+            new_control['throttle'] = 1.0
+        if pressed_keys[pygame.K_DOWN]:
+            new_control['brake'] = 1.0
+        if pressed_keys[pygame.K_LEFT]:
+            new_control['steer'] = -1.0
+        if pressed_keys[pygame.K_RIGHT]:
+            new_control['steer'] = 1.0
         
         image_surface = pygame.image.fromstring(image_pil.tobytes(), image_pil.size, image_pil.mode).convert()
         self.screen.fill((0,0,0))
         self.screen.blit(image_surface, (0, 0))
         pygame.display.flip()
         self.clock.tick(60)
-        return True
+        self.last_control = new_control
+        return new_control
 
 
 async def main():
@@ -69,8 +97,10 @@ async def main():
             # img.get_image().save("test.png")
             await carla_world.step()
             img : roar_py_interface.RoarPyCameraSensorDataRGB = await camera.receive_observation()
-            if not viewer.render(img):
+            control = viewer.render(img)
+            if control is None:
                 break
+            await vehicle.apply_action(control)
     finally:
         roar_py_instance.close()
 
