@@ -72,7 +72,7 @@ async def main():
     
     carla_world = roar_py_instance.world
     carla_world.set_control_steps(0.05, 0.005)
-    carla_world.set_asynchronous(False)
+    carla_world.set_asynchronous(True)
     
     spawn_point, spawn_rpy = carla_world.spawn_points[
         np.random.randint(len(carla_world.spawn_points))

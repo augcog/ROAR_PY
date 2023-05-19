@@ -16,6 +16,7 @@ async def main():
     carla_world.set_asynchronous(False)
     
     waypoints = roar_py_instance.world.maneuverable_waypoints
+    roar_py_instance.close()
     for waypoint in waypoints:
         rep_line = waypoint.line_representation
         rep_line = np.asarray(rep_line)

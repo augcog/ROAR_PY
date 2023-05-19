@@ -112,7 +112,7 @@ class RoarPyCameraSensorDataSemanticSegmentation(RoarPyCameraSensorData, RoarPyR
 
     @staticmethod
     def gym_observation_space(width : int, height : int) -> gym.Space:
-        return gym.spaces.Box(low=0, high=np.inf, shape=(height, width, 1), dtype=np.uint64)
+        return gym.spaces.Box(low=0, high=np.iinfo(np.uint64).max, shape=(height, width, 1), dtype=np.uint64)
 
 class RoarPyCameraSensor(RoarPySensor[RoarPyCameraSensorData]):
     @property

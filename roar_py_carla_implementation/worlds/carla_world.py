@@ -6,8 +6,12 @@ import asyncio
 import numpy as np
 
 from roar_py_interface import RoarPyActor, RoarPySensor, roar_py_thread_sync, roar_py_append_item, roar_py_remove_item, RoarPyWaypoint
-from ..actors import RoarPyCarlaVehicle
+from roar_py_interface.sensors import *
+from ..actors import RoarPyCarlaVehicle, RoarPyCarlaActor
+from ..sensors import *
 from functools import cached_property
+
+import transforms3d as tr3d
 
 class RoarPyCarlaWorld(RoarPyWorld):
     ASYNC_SLEEP_TIME = 0.005
@@ -23,7 +27,8 @@ class RoarPyCarlaWorld(RoarPyWorld):
         self.carla_instance = carla_instance
         self.tick_callback_id : typing.Optional[int] = None
         self.last_tick_time : typing.Optional[float] = None
-        self._actors : typing.List[RoarPyActor] = []
+        self._actors : typing.List[RoarPyCarlaActor] = []
+        self._sensors : typing.List[RoarPySensor] = []
 
         carla_settings = carla_world.get_settings()
         self._control_timestep = carla_settings.fixed_delta_seconds
@@ -46,8 +51,25 @@ class RoarPyCarlaWorld(RoarPyWorld):
     @roar_py_thread_sync
     def maneuverable_waypoints(self) -> typing.List[RoarPyWaypoint]:
         grp = CarlaGlobalRoutePlanner(self._native_carla_map, self.WAYPOINTS_DISTANCE)
-        spawn_points = self.carla_world.get_map().get_spawn_points()
-        native_ws : typing.List[carla.Waypoint] = grp.trace_route(spawn_points[0].location, spawn_points[-1].location) + grp.trace_route(spawn_points[-1].location, spawn_points[0].location)
+        spawn_points = self._native_carla_map.get_spawn_points()
+        print("spawn_points", spawn_points)
+
+        if len(spawn_points) > 1:
+            native_ws : typing.List[carla.Waypoint] = grp.trace_route(spawn_points[0].location, spawn_points[-1].location) + grp.trace_route(spawn_points[-1].location, spawn_points[0].location)
+            
+        elif len(spawn_points) == 1:
+            init_pos = np.array([spawn_points[0].location.x, spawn_points[0].location.y, spawn_points[0].location.z])
+            init_rot = np.deg2rad(np.array([spawn_points[0].rotation.roll, spawn_points[0].rotation.pitch, spawn_points[0].rotation.yaw]))
+
+            pos_y = np.array([0,0.05,0])
+
+            second_pos = init_pos + tr3d.euler.euler2mat(*init_rot).dot(pos_y)
+            native_init_pos = carla.Location(init_pos[0], init_pos[1], init_pos[2])
+            native_second_pos = carla.Location(second_pos[0], second_pos[1], second_pos[2])
+            native_ws : typing.List[carla.Waypoint] = grp.trace_route(native_init_pos, native_second_pos) + grp.trace_route(native_second_pos, native_init_pos)
+        else:
+            return []
+
         real_ws = []
         for native_ww in native_ws:
             w = native_ww[0]
@@ -58,6 +80,7 @@ class RoarPyCarlaWorld(RoarPyWorld):
             )
             real_ws.append(real_w)
         return real_ws
+
 
     @property
     @roar_py_thread_sync
@@ -194,14 +217,16 @@ class RoarPyCarlaWorld(RoarPyWorld):
         self,
         blueprint : carla.ActorBlueprint, 
         location: np.ndarray,
-        roll_pitch_yaw: np.ndarray
+        roll_pitch_yaw: np.ndarray,
+        attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid,
+        bind_to: typing.Optional[carla.Actor] = None
     ) -> carla.Actor:
         assert location.shape == (3,) and roll_pitch_yaw.shape == (3,)
         location = location.astype(float)
         roll_pitch_yaw = np.rad2deg(roll_pitch_yaw).astype(float)
 
         transform = carla.Transform(carla.Location(x=location[0],y=location[1], z=location[2]), carla.Rotation(roll=roll_pitch_yaw[0], pitch=roll_pitch_yaw[1], yaw=roll_pitch_yaw[2]))
-        new_actor = self.carla_world.try_spawn_actor(blueprint, transform, None, carla.AttachmentType.Rigid)
+        new_actor = self.carla_world.try_spawn_actor(blueprint, transform, bind_to, attachment_type)
         return new_actor
 
     """
@@ -235,9 +260,114 @@ class RoarPyCarlaWorld(RoarPyWorld):
         new_vehicle = RoarPyCarlaVehicle(self.carla_instance, new_actor, auto_gear, name=name)
         self._actors.append(new_vehicle)
         return new_vehicle
+
+    @roar_py_append_item
+    @roar_py_thread_sync
+    def attach_camera_sensor(
+        self,
+        target_datatype: typing.Type[RoarPyCameraSensorData],
+        location: np.ndarray,
+        roll_pitch_yaw: np.ndarray,
+        fov: float = 90.0,
+        image_width: int = 800,
+        image_height: int = 600,
+        control_timestep: float = 0.0,
+        attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid,
+        name: str = "carla_camera",
+        bind_to: typing.Optional[RoarPyCarlaActor] = None
+    ) -> typing.Optional[RoarPyCameraSensor]:
+        if target_datatype not in RoarPyCarlaCameraSensor.SUPPORTED_TARGET_DATA_TO_BLUEPRINT:
+            raise ValueError(f"Unsupported target data type {target_datatype}")
+
+        blueprint_id = RoarPyCarlaCameraSensor.SUPPORTED_TARGET_DATA_TO_BLUEPRINT[target_datatype]
+        blueprint = self.find_blueprint(blueprint_id)
+        blueprint.set_attribute("image_size_x", str(image_width))
+        blueprint.set_attribute("image_size_y", str(image_height))
+        blueprint.set_attribute("fov", str(fov))
+        blueprint.set_attribute("sensor_tick", str(control_timestep))
+        new_actor = self._attach_native_carla_actor(blueprint, location, roll_pitch_yaw, attachment_type, bind_to._base_actor if bind_to is not None else None)
+        
+        if new_actor is None:
+            return None
+        
+        new_sensor = RoarPyCarlaCameraSensor(self.carla_instance, new_actor, target_datatype, name=name)
+        
+        if bind_to is not None:
+            bind_to._internal_sensors.append(new_sensor)
+        else:
+            self._sensors.append(new_sensor)
+        return new_sensor
     
+    @roar_py_append_item
+    @roar_py_thread_sync
+    def attach_lidar_sensor(
+        self,
+        location: np.ndarray,
+        roll_pitch_yaw: np.ndarray,
+        num_lasers: int = 32,
+        max_distance: float = 10.0,
+        points_per_second: int = 56000,
+        rotation_frequency: float = 10.0,
+        upper_fov: float = 10.0,
+        lower_fov: float = -30.0,
+        horizontal_fov: float = 360.0,
+        atmosphere_attenuation_rate: float = 0.004,
+        dropoff_general_rate: float = 0.45,
+        dropoff_intensity_limit_below: float = 0.8,
+        control_timestep: float = 0.0,
+        noise_std: float = 0.0,
+        attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid,
+        name: str = "carla_lidar_sensor",
+        bind_to: typing.Optional[RoarPyCarlaActor] = None
+    ) -> typing.Optional[RoarPyLiDARSensor]:
+        blueprint = self.find_blueprint("sensor.lidar.ray_cast")
+        blueprint.set_attribute("channels", str(num_lasers))
+        blueprint.set_attribute("range", str(max_distance))
+        blueprint.set_attribute("points_per_second", str(points_per_second))
+        blueprint.set_attribute("rotation_frequency", str(rotation_frequency))
+        blueprint.set_attribute("upper_fov", str(upper_fov))
+        blueprint.set_attribute("lower_fov", str(lower_fov))
+        blueprint.set_attribute("horizontal_fov", str(horizontal_fov))
+        blueprint.set_attribute("atmosphere_attenuation_rate", str(atmosphere_attenuation_rate))
+        blueprint.set_attribute("dropoff_general_rate", str(dropoff_general_rate))
+        blueprint.set_attribute("dropoff_intensity_limit", str(dropoff_intensity_limit_below))
+        blueprint.set_attribute("sensor_tick", str(control_timestep))
+        blueprint.set_attribute("noise_stddev", str(noise_std))
+
+        new_actor = self._attach_native_carla_actor(blueprint, location, roll_pitch_yaw, attachment_type, bind_to._base_actor if bind_to is not None else None)
+
+        if new_actor is None:
+            return None
+
+        new_sensor = RoarPyCarlaLiDARSensor(self.carla_instance, new_actor, name=name)
+
+        if bind_to is not None:
+            bind_to._internal_sensors.append(new_sensor)
+        else:
+            self._sensors.append(new_sensor)
+        return new_sensor
+
     @roar_py_remove_item
     @roar_py_thread_sync
     def remove_actor(self, actor : RoarPyActor):
         self._actors.remove(actor)
         actor.close()
+    
+    @roar_py_remove_item
+    @roar_py_thread_sync
+    def remove_sensor(self, sensor : RoarPySensor):
+        found_sensor = False
+        if sensor in self._sensors:
+            self._sensors.remove(sensor)
+            found_sensor = True
+        else:
+            for actor in self._actors:
+                if sensor in actor._internal_sensors:
+                    actor._internal_sensors.remove(sensor)
+                    found_sensor = True
+                    break
+        if not found_sensor:
+            raise RuntimeError(f"Sensor {sensor} not found in the world")
+        sensor.close()
+            
+        

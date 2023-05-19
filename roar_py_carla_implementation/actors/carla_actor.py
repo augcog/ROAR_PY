@@ -44,25 +44,20 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         image_height: int = 600,
         control_timestep: float = 0.0,
         attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid,
-        name: str = "carla_camera",
+        name: str = "carla_camera"
     ) -> typing.Optional[RoarPyCameraSensor]:
-        if target_datatype not in RoarPyCarlaCameraSensor.SUPPORTED_TARGET_DATA_TO_BLUEPRINT:
-            raise ValueError(f"Unsupported target data type {target_datatype}")
-
-        blueprint_id = RoarPyCarlaCameraSensor.SUPPORTED_TARGET_DATA_TO_BLUEPRINT[target_datatype]
-        blueprint = self._get_carla_world().find_blueprint(blueprint_id)
-        blueprint.set_attribute("image_size_x", str(image_width))
-        blueprint.set_attribute("image_size_y", str(image_height))
-        blueprint.set_attribute("fov", str(fov))
-        blueprint.set_attribute("sensor_tick", str(control_timestep))
-        new_actor = self._attach_native_carla_actor(blueprint, location, roll_pitch_yaw, attachment_type)
-        
-        if new_actor is None:
-            return None
-        
-        new_sensor = RoarPyCarlaCameraSensor(self._carla_instance, new_actor, target_datatype, name=name)
-        self._internal_sensors.append(new_sensor)
-        return new_sensor
+        return self._get_carla_world().attach_camera_sensor(
+            target_datatype,
+            location,
+            roll_pitch_yaw,
+            fov,
+            image_width,
+            image_height,
+            control_timestep,
+            attachment_type,
+            name,
+            self
+        )
 
     @roar_py_append_item
     @roar_py_thread_sync
@@ -124,7 +119,7 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         new_sensor = RoarPyCarlaGNSSSensor(self._carla_instance, new_actor, name=name)
         self._internal_sensors.append(new_sensor)
         return new_sensor
-
+    
     @roar_py_append_item
     @roar_py_thread_sync
     def attach_lidar_sensor(
@@ -144,31 +139,28 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         control_timestep: float = 0.0,
         noise_std: float = 0.0,
         attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid,
-        name: str = "carla_lidar_sensor",
+        name: str = "carla_lidar_sensor"
     ) -> typing.Optional[RoarPyLiDARSensor]:
-        blueprint = self._get_carla_world().find_blueprint("sensor.lidar.ray_cast")
-        blueprint.set_attribute("channels", str(num_lasers))
-        blueprint.set_attribute("range", str(max_distance))
-        blueprint.set_attribute("points_per_second", str(points_per_second))
-        blueprint.set_attribute("rotation_frequency", str(rotation_frequency))
-        blueprint.set_attribute("upper_fov", str(upper_fov))
-        blueprint.set_attribute("lower_fov", str(lower_fov))
-        blueprint.set_attribute("horizontal_fov", str(horizontal_fov))
-        blueprint.set_attribute("atmosphere_attenuation_rate", str(atmosphere_attenuation_rate))
-        blueprint.set_attribute("dropoff_general_rate", str(dropoff_general_rate))
-        blueprint.set_attribute("dropoff_intensity_limit", str(dropoff_intensity_limit_below))
-        blueprint.set_attribute("sensor_tick", str(control_timestep))
-        blueprint.set_attribute("noise_stddev", str(noise_std))
+        return self._get_carla_world().attach_lidar_sensor(
+            location,
+            roll_pitch_yaw,
+            num_lasers,
+            max_distance,
+            points_per_second,
+            rotation_frequency,
+            upper_fov,
+            lower_fov,
+            horizontal_fov,
+            atmosphere_attenuation_rate,
+            dropoff_general_rate,
+            dropoff_intensity_limit_below,
+            control_timestep,
+            noise_std,
+            attachment_type,
+            name,
+            self
+        )
 
-        new_actor = self._attach_native_carla_actor(blueprint, location, roll_pitch_yaw, attachment_type)
-
-        if new_actor is None:
-            return None
-
-        new_sensor = RoarPyCarlaLiDARSensor(self._carla_instance, new_actor, name=name)
-        self._internal_sensors.append(new_sensor)
-        return new_sensor
-    
     @roar_py_append_item
     @roar_py_thread_sync
     def attach_roll_pitch_yaw_sensor(

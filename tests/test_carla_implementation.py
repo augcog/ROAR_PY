@@ -4,6 +4,7 @@ import carla
 import pytest
 import numpy as np
 from typing import List, Dict, Any, Tuple, Optional
+import logging
 
 @pytest.fixture(scope="session")
 def carla_instance() -> RoarPyCarlaInstance:

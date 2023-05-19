@@ -162,7 +162,7 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
         )
 
     def get_gym_observation_spec(self) -> gym.Space:
-        return self._target_data_type.gym_observation_space()
+        return self._target_data_type.gym_observation_space(self.image_size_width, self.image_size_height)
     
     async def receive_observation(self) -> RoarPyCameraSensorData:
         while self.received_data is None:

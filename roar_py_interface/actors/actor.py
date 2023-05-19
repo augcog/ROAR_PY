@@ -12,9 +12,12 @@ def propose_name_and_modify_dict(diction: dict, new_name: str, counter: int = 0)
         if new_name + "_1" in diction:
             return propose_name_and_modify_dict(diction, new_name, 2)
         else:
-            diction[new_name + "_1"] = diction[new_name]
-            diction.pop(new_name)
-            return propose_name_and_modify_dict(diction, new_name, 2)
+            if new_name in diction:
+                diction[new_name + "_1"] = diction[new_name]
+                diction.pop(new_name)
+                return propose_name_and_modify_dict(diction, new_name, 2)
+            else:
+                return new_name
     else:
         actual_name = new_name + "_" + str(counter)
         if actual_name in diction:
@@ -30,9 +33,12 @@ def propose_name_and_modify_list(list_of_names: list, new_name: str, counter: in
         if new_name + "_1" in list_of_names:
             return propose_name_and_modify_list(list_of_names, new_name, 2)
         else:
-            list_of_names.pop(list_of_names.index(new_name))
-            list_of_names.append(new_name + "_1")
-            return propose_name_and_modify_list(list_of_names, new_name, 2)
+            if new_name in list_of_names:
+                list_of_names.pop(list_of_names.index(new_name))
+                list_of_names.append(new_name + "_1")
+                return propose_name_and_modify_list(list_of_names, new_name, 2)
+            else:
+                return new_name
     else:
         actual_name = new_name + "_" + str(counter)
         if actual_name in list_of_names:
