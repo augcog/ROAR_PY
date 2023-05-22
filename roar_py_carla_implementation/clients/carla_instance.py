@@ -52,6 +52,7 @@ class RoarPyCarlaInstance:
 
     @roar_py_thread_sync
     def __cleanup_actor_instance_map(self):
+        print("ROAR_PY_CARLA: Cleaning up actor instance map")
         all_actors = list(self.actor_to_instance_map.values())
         for actor in all_actors:
             if not actor.is_closed():

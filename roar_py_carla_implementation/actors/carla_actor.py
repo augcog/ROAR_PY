@@ -20,7 +20,7 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
     ):
         RoarPyActor.__init__(self, control_timestep=0.0, force_real_control_timestep=False, name=name)
         RoarPyCarlaBase.__init__(self, carla_instance, carla_actor)
-        self._internal_sensors = []
+        self._internal_sensors : typing.List[RoarPySensor] = []
 
     def get_action_spec(self) -> gym.Space:
         raise NotImplementedError()
@@ -29,14 +29,22 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
     async def _apply_action(self, action: typing.Any) -> bool:
         raise NotImplementedError()
     
+    def _refresh_sensor_list(self):
+        new_sensor_list = []
+        for sensor in self._internal_sensors:
+            if not sensor.is_closed():
+                new_sensor_list.append(sensor)
+        self._internal_sensors = new_sensor_list
+
     def get_sensors(self) -> typing.Iterable[RoarPySensor]:
-        return self._internal_sensors
+        self._refresh_sensor_list()
+        return self._internal_sensors.copy()
 
     @roar_py_append_item
     @roar_py_thread_sync
     def attach_camera_sensor(
         self,
-        target_datatype: typing.Type[RoarPyCameraSensorData],
+        target_datatype_name: str,
         location: np.ndarray,
         roll_pitch_yaw: np.ndarray,
         fov: float = 90.0,
@@ -47,7 +55,7 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         name: str = "carla_camera"
     ) -> typing.Optional[RoarPyCameraSensor]:
         return self._get_carla_world().attach_camera_sensor(
-            target_datatype,
+            target_datatype_name,
             location,
             roll_pitch_yaw,
             fov,

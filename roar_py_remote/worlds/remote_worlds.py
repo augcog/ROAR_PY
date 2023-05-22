@@ -6,10 +6,11 @@ import time
 import weakref
 
 class RoarPyRemoteMaskedWorld(RoarPyWorld):
-    def __init__(self, server_world : "RoarPyRemoteServer", shared_lock : threading.RLock):
+    def __init__(self, server_world : "RoarPyRemoteServer", underlying_world : RoarPyWorld, shared_lock : threading.RLock):
         super().__init__()
         self.__shared_lock = shared_lock
         self.__server_world = server_world
+        self.__underlying_world = underlying_world
         self._actors : typing.List[RoarPyActor] = []
         self._sensors : typing.List[RoarPySensor] = []
         self._ready_step = False
@@ -18,11 +19,11 @@ class RoarPyRemoteMaskedWorld(RoarPyWorld):
     def __getattr__(self, __name: str):
         if __name.startswith("_"):
             raise AttributeError("Cannot access private attribute")
-        attr_val = getattr(self.__server_world.__carla_world, __name)
+        attr_val = getattr(self.__underlying_world, __name)
         if callable(attr_val) and ((hasattr(attr_val, "is_append_item") and getattr(attr_val,"is_append_item")) or (hasattr(attr_val,"is_remove_item") and getattr(attr_val,"is_remove_item"))):
             def fn_wrapper(*args, **kwargs):
                 with self.__shared_lock:
-                    self.__server_world._last_subworld_modified = self
+                    self.__server_world._last_subworld_modified = weakref.proxy(self, self.__server_world._del_masked_world)
                 return attr_val(*args, **kwargs)
 
             setattr(self, __name, fn_wrapper)
@@ -34,11 +35,27 @@ class RoarPyRemoteMaskedWorld(RoarPyWorld):
     def is_asynchronous(self):
         return self.__server_world.is_asynchronous
     
+    def _refresh_actor_list(self):
+        new_actor_list = []
+        for actor in self._actors:
+            if not actor.is_closed():
+                new_actor_list.append(actor)
+        self._actors = new_actor_list
+    
+    def _refresh_sensor_list(self):
+        new_sensor_list = []
+        for sensor in self._sensors:
+            if not sensor.is_closed():
+                new_sensor_list.append(sensor)
+        self._sensors = new_sensor_list
+
     def get_actors(self) -> typing.Iterable[RoarPyActor]:
-        return self._actors
+        self._refresh_actor_list()
+        return self._actors.copy()
 
     def get_sensors(self) -> typing.Iterable[RoarPySensor]:
-        return self._sensors
+        self._refresh_sensor_list()
+        return self._sensors.copy()
 
     async def step(self) -> float:
         with self.__shared_lock:
@@ -50,29 +67,36 @@ class RoarPyRemoteMaskedWorld(RoarPyWorld):
         return ret
 
     def close(self):
-        with self.__shared_lock:
-            for actor in self._actors:
-                if not actor.is_closed():
-                    actor.close()
-            self._actors.clear()
-            for sensor in self._sensors:
-                if not sensor.is_closed():
-                    sensor.close()
-            self._sensors.clear()
-            self.__server_world._masked_worlds.remove(self)
+        try:
+            with self.__shared_lock:
+                for actor in self._actors:
+                    if not actor.is_closed():
+                        actor.close()
+                self._actors.clear()
+                for sensor in self._sensors:
+                    if not sensor.is_closed():
+                        sensor.close()
+                self._sensors.clear()
+                if self in self.__server_world._masked_worlds:
+                    self.__server_world._masked_worlds.remove(self)
+        except:
+            pass
+    
+    def __del__(self):
+        self.close()
 
 class RoarPyRemoteServer:
     def __init__(
         self, 
-        carla_world : RoarPyWorld, 
+        world : RoarPyWorld, 
         is_asynchronous : bool,
         sync_wait_time_max : float = 5.0,
-        constructor_to_subworld : typing.Callable[["RoarPyRemoteServer", threading.RLock], RoarPyRemoteMaskedWorld] = RoarPyRemoteMaskedWorld
+        constructor_to_subworld : typing.Callable[["RoarPyRemoteServer", RoarPyWorld, threading.RLock], RoarPyRemoteMaskedWorld] = RoarPyRemoteMaskedWorld
     ):
         super().__init__()
-        assert carla_world is not None and carla_world.is_asynchronous == False
+        assert world is not None
         self.__shared_lock = threading.RLock()
-        self.__carla_world = RoarPyAddItemWrapper(RoarPyThreadSafeWrapper(carla_world, self.__shared_lock), self.__add_item_callback, self.__remove_item_callback)
+        self.__underlying_world = RoarPyAddItemWrapper(RoarPyThreadSafeWrapper(world, self.__shared_lock), self.__add_item_callback, self.__remove_item_callback)
         self.__is_asynchronous = is_asynchronous
         self._masked_worlds : typing.List[RoarPyRemoteMaskedWorld] = []
         self._sync_wait_time_max = sync_wait_time_max
@@ -85,14 +109,18 @@ class RoarPyRemoteServer:
 
     def get_world(self) -> RoarPyRemoteMaskedWorld:
         with self.__shared_lock:
-            new_masked_world = self._constructor_to_subworld(self, self.__shared_lock)
-            self._masked_worlds.append(weakref.proxy(new_masked_world,self.del_masked_world))
+            new_masked_world = self._constructor_to_subworld(self, self.__underlying_world, self.__shared_lock)
+            self._masked_worlds.append(weakref.proxy(new_masked_world,self._del_masked_world))
+            print("Creating new masked world", len(self._masked_worlds))
             return new_masked_world
         
-    def del_masked_world(self,world : RoarPyRemoteMaskedWorld):
+    def _del_masked_world(self,world : RoarPyRemoteMaskedWorld):
         with self.__shared_lock:
             if world in self._masked_worlds:
                 self._masked_worlds.remove(world)
+            if self._last_subworld_modified is world:
+                self._last_subworld_modified = None
+            print("Deleting masked world", len(self._masked_worlds))
 
     def __add_item_callback(self, item):
         if self._last_subworld_modified is None:
@@ -110,7 +138,7 @@ class RoarPyRemoteServer:
         elif isinstance(item, RoarPySensor):
             self._last_subworld_modified._sensors.remove(item)
 
-    def _step(self) -> float:
+    async def _step(self) -> float:
         if not self.is_asynchronous:
             not_ready_subworlds = self._masked_worlds.copy()
             start_time = time.time()
@@ -126,7 +154,7 @@ class RoarPyRemoteServer:
         
         # Step the world
         with self.__shared_lock:
-            stepped_dt = self.__carla_world.step()
+            stepped_dt = await self.__underlying_world.step()
             for masked_world in self._masked_worlds:
                 masked_world._last_step_dt += stepped_dt
                 masked_world._ready_step = False

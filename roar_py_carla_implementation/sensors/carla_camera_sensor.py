@@ -115,6 +115,12 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
         RoarPyCameraSensorDataDepth: "sensor.camera.depth",
         RoarPyCameraSensorDataSemanticSegmentation: "sensor.camera.semantic_segmentation"
     }
+    TARGET_DATA_NAME_TO_TARGET_DATA_TYPE = {
+        "RGB": RoarPyCameraSensorDataRGB,
+        "greyscale": RoarPyCameraSensorDataGreyscale,
+        "depth": RoarPyCameraSensorDataDepth,
+        "semantic_segmentation": RoarPyCameraSensorDataSemanticSegmentation
+    }
     def __init__(
         self, 
         carla_instance: "RoarPyCarlaInstance",

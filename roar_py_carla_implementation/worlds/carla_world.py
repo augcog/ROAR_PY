@@ -36,11 +36,27 @@ class RoarPyCarlaWorld(RoarPyWorld):
         self._is_asynchronous = not carla_settings.synchronous_mode
         self.setup_mode(self.is_asynchronous)
 
+    def _refresh_actor_list(self):
+        new_actor_list = []
+        for actor in self._actors:
+            if not actor.is_closed():
+                new_actor_list.append(actor)
+        self._actors = new_actor_list
+    
+    def _refresh_sensor_list(self):
+        new_sensor_list = []
+        for sensor in self._sensors:
+            if not sensor.is_closed():
+                new_sensor_list.append(sensor)
+        self._sensors = new_sensor_list
+
     def get_actors(self) -> typing.Iterable[RoarPyActor]:
+        self._refresh_actor_list()
         return self._actors.copy()
 
     def get_sensors(self) -> typing.Iterable[RoarPySensor]:
-        return []
+        self._refresh_sensor_list()
+        return self._sensors.copy()
         
     def get_all_sensors(self) -> typing.Iterable[RoarPySensor]:
         for carlabase in self.carla_instance.actor_to_instance_map.values():
@@ -137,10 +153,13 @@ class RoarPyCarlaWorld(RoarPyWorld):
     
     @roar_py_thread_sync
     def set_control_steps(self, control_timestep : float, control_substimestep : float):
-        assert control_substimestep <= control_timestep and control_timestep % control_substimestep < 1e-6
+        assert (
+            (control_substimestep <= control_timestep and control_timestep % control_substimestep < 1e-6) or 
+            (control_timestep <= 0)
+        )
         native_settings = self.carla_world.get_settings()
-        native_settings.fixed_delta_seconds = control_timestep
-        native_settings.max_substeps = int(control_timestep / control_substimestep)
+        native_settings.fixed_delta_seconds = control_timestep if control_timestep > 0 else None
+        native_settings.max_substeps = int(control_timestep / control_substimestep) if control_timestep > 0 else 100
         native_settings.max_substep_delta_time = control_substimestep
         self.carla_world.apply_settings(native_settings)
         self._control_timestep = control_timestep
@@ -265,7 +284,7 @@ class RoarPyCarlaWorld(RoarPyWorld):
     @roar_py_thread_sync
     def attach_camera_sensor(
         self,
-        target_datatype: typing.Type[RoarPyCameraSensorData],
+        target_datatype_name: str,
         location: np.ndarray,
         roll_pitch_yaw: np.ndarray,
         fov: float = 90.0,
@@ -276,8 +295,10 @@ class RoarPyCarlaWorld(RoarPyWorld):
         name: str = "carla_camera",
         bind_to: typing.Optional[RoarPyCarlaActor] = None
     ) -> typing.Optional[RoarPyCameraSensor]:
-        if target_datatype not in RoarPyCarlaCameraSensor.SUPPORTED_TARGET_DATA_TO_BLUEPRINT:
-            raise ValueError(f"Unsupported target data type {target_datatype}")
+        
+        if target_datatype_name not in RoarPyCarlaCameraSensor.TARGET_DATA_NAME_TO_TARGET_DATA_TYPE.keys():
+            raise ValueError("Unsupported target data type {}".format(target_datatype_name))
+        target_datatype = RoarPyCarlaCameraSensor.TARGET_DATA_NAME_TO_TARGET_DATA_TYPE[target_datatype_name]
 
         blueprint_id = RoarPyCarlaCameraSensor.SUPPORTED_TARGET_DATA_TO_BLUEPRINT[target_datatype]
         blueprint = self.find_blueprint(blueprint_id)
