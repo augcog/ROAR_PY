@@ -284,7 +284,7 @@ class RoarPyCarlaWorld(RoarPyWorld):
     @roar_py_thread_sync
     def attach_camera_sensor(
         self,
-        target_datatype_name: str,
+        target_datatype: typing.Type[RoarPyCameraSensorData],
         location: np.ndarray,
         roll_pitch_yaw: np.ndarray,
         fov: float = 90.0,
@@ -296,9 +296,8 @@ class RoarPyCarlaWorld(RoarPyWorld):
         bind_to: typing.Optional[RoarPyCarlaActor] = None
     ) -> typing.Optional[RoarPyCameraSensor]:
         
-        if target_datatype_name not in RoarPyCarlaCameraSensor.TARGET_DATA_NAME_TO_TARGET_DATA_TYPE.keys():
-            raise ValueError("Unsupported target data type {}".format(target_datatype_name))
-        target_datatype = RoarPyCarlaCameraSensor.TARGET_DATA_NAME_TO_TARGET_DATA_TYPE[target_datatype_name]
+        if target_datatype not in RoarPyCarlaCameraSensor.SUPPORTED_TARGET_DATA_TO_BLUEPRINT:
+            raise ValueError(f"Unsupported target data type {target_datatype}")
 
         blueprint_id = RoarPyCarlaCameraSensor.SUPPORTED_TARGET_DATA_TO_BLUEPRINT[target_datatype]
         blueprint = self.find_blueprint(blueprint_id)

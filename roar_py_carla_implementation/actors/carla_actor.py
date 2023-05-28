@@ -44,7 +44,7 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
     @roar_py_thread_sync
     def attach_camera_sensor(
         self,
-        target_datatype_name: str,
+        target_datatype: typing.Type[RoarPyCameraSensorData],
         location: np.ndarray,
         roll_pitch_yaw: np.ndarray,
         fov: float = 90.0,
@@ -55,7 +55,7 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         name: str = "carla_camera"
     ) -> typing.Optional[RoarPyCameraSensor]:
         return self._get_carla_world().attach_camera_sensor(
-            target_datatype_name,
+            target_datatype,
             location,
             roll_pitch_yaw,
             fov,
