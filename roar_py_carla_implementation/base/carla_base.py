@@ -1,5 +1,5 @@
 import carla
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, List, Tuple, Union
 from dataclasses import dataclass
 import numpy as np
 from roar_py_interface.wrappers import roar_py_thread_sync
@@ -32,6 +32,13 @@ class RoarPyCarlaBase:
         self._carla_instance = carla_instance
         carla_instance.register_actor(base_actor.id, self)
     
+    @property
+    def parent(self) -> Optional["RoarPyCarlaBase"]:
+        if self._base_actor.parent is None:
+            return None
+        else:
+            return self._carla_instance.search_actor(self._base_actor.parent.id)
+
     @property
     @roar_py_thread_sync
     def carla_attributes(self) -> Dict:
@@ -107,11 +114,17 @@ class RoarPyCarlaBase:
     # Get the rotation of the actor in radians
     def get_roll_pitch_yaw(self) -> np.ndarray:
         rot = self._base_actor.get_transform().rotation
-        return np.deg2rad(np.array([rot.roll, rot.pitch, rot.yaw]))
+        if self.parent is not None:
+            return np.deg2rad(np.array([rot.roll, rot.pitch, -rot.yaw]))
+        else:
+            return np.deg2rad(np.array([rot.roll, rot.pitch, -rot.yaw + 90.0]))
     
     @roar_py_thread_sync
     def set_roll_pitch_yaw(self, new_rotation_rpy : np.ndarray) -> None:
         new_rot_deg = np.rad2deg(new_rotation_rpy)
+        new_rot_deg[2] = -new_rot_deg[2]
+        if self.parent is None:
+            new_rot_deg[2] += 90.0
         transform = carla.Transform(
             location=self._base_actor.get_location(),
             rotation=carla.Rotation(roll=new_rot_deg[0], pitch=new_rot_deg[1], yaw=new_rot_deg[2])
@@ -121,6 +134,9 @@ class RoarPyCarlaBase:
     @roar_py_thread_sync
     def set_transform(self, new_location : np.ndarray, new_rotation : np.ndarray) -> None:
         new_rot_deg = np.rad2deg(new_rotation)
+        new_rot_deg[2] = -new_rot_deg[2]
+        if self.parent is None:
+            new_rot_deg[2] += 90.0
         transform = carla.Transform(
             location=carla.Location(x=new_location[0], y=new_location[1], z=new_location[2]),
             rotation=carla.Rotation(roll=new_rot_deg[0], pitch=new_rot_deg[1], yaw=new_rot_deg[2])
@@ -147,7 +163,7 @@ class RoarPyCarlaBase:
         location = location.astype(float)
         roll_pitch_yaw = np.rad2deg(roll_pitch_yaw).astype(float)
 
-        transform = carla.Transform(carla.Location(*location), carla.Rotation(roll=roll_pitch_yaw[0], pitch=roll_pitch_yaw[1], yaw=roll_pitch_yaw[2]))
+        transform = carla.Transform(carla.Location(*location), carla.Rotation(roll=roll_pitch_yaw[0], pitch=roll_pitch_yaw[1], yaw=-roll_pitch_yaw[2]))
         new_actor = self._get_native_carla_world().try_spawn_actor(blueprint, transform, self._base_actor, attachment_type)
         return new_actor
 

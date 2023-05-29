@@ -5,23 +5,35 @@ import numpy as np
 import asyncio
 from typing import Optional, Dict, Any
 import matplotlib.pyplot as plt
+import transforms3d as tr3d
 
 async def main():
     carla_client = carla.Client('localhost', 2000)
-    carla_client.set_timeout(5.0)
+    carla_client.set_timeout(15.0)
     roar_py_instance = roar_py_carla_implementation.RoarPyCarlaInstance(carla_client)
     
     carla_world = roar_py_instance.world
     carla_world.set_control_steps(0.05, 0.005)
     carla_world.set_asynchronous(False)
     
+    print("Map Name", carla_world.map_name)
     waypoints = roar_py_instance.world.maneuverable_waypoints
+    spawn_points = roar_py_instance.world.spawn_points
     roar_py_instance.close()
     for waypoint in waypoints:
         rep_line = waypoint.line_representation
         rep_line = np.asarray(rep_line)
-        print(rep_line)
         plt.plot(rep_line[:,0], rep_line[:,1])
+    for spawn_point in spawn_points:
+        spawn_point_heading = tr3d.euler.euler2mat(0,0,spawn_point[1][2]) @ np.array([1,0,0])
+        plt.arrow(
+            spawn_point[0][0], 
+            spawn_point[0][1], 
+            spawn_point_heading[0] * 50, 
+            spawn_point_heading[1] * 50, 
+            width=20, 
+            color='r'
+        )
     plt.show()
 
 if __name__ == '__main__':

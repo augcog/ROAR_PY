@@ -12,14 +12,15 @@ import transforms3d
 def normalize_rad(rad : float):
     return (rad + np.pi) % (2 * np.pi) - np.pi
 
-def filter_waypoints(location : np.ndarray, waypoints : List[roar_py_interface.RoarPyWaypoint]):
+def filter_waypoints(location : np.ndarray, current_idx: int, waypoints : List[roar_py_interface.RoarPyWaypoint]) -> int:
     def dist_to_waypoint(waypoint : roar_py_interface.RoarPyWaypoint):
         return np.linalg.norm(
             location[:2] - waypoint.location[:2]
         )
-    list_of_dist = [dist_to_waypoint(w) for w in waypoints]
-    min_idx = np.argmin(list_of_dist)
-    return waypoints[(min_idx + 3) % len(waypoints)]
+    for i in range(current_idx, len(waypoints) + current_idx):
+        if dist_to_waypoint(waypoints[i%len(waypoints)]) < 6:
+            return i % len(waypoints)
+    return current_idx
 
 class ManualControlViewer:
     def __init__(
@@ -58,52 +59,84 @@ async def main():
     manual_viewer = ManualControlViewer()
     
     carla_world = roar_py_instance.world
-    carla_world.set_control_steps(0.05, 0.005)
     carla_world.set_asynchronous(True)
+    carla_world.set_control_steps(0.0, 0.01)
     
     way_points = carla_world.maneuverable_waypoints
     vehicle = carla_world.spawn_vehicle(
         "vehicle.audi.a2",
-        way_points[0].location + np.array([0,0,5]),
-        way_points[0].roll_pitch_yaw
+        way_points[10].location + np.array([0,0,1]),
+        way_points[10].roll_pitch_yaw
     )
+    current_waypoint_idx = 10
     assert vehicle is not None
     camera = vehicle.attach_camera_sensor(
         roar_py_interface.RoarPyCameraSensorDataRGB,
-        np.array([0, 0, 2.0]),
-        np.array([0, 0, 0]),
+        np.array([0.2, 0, 2.0]),
+        np.array([0, -5 / 180 * np.pi, 0]),
         120,
         1024,
         768
     )
     assert camera is not None
     try:
-        while True:
-            await carla_world.step()
-            camera_data = await camera.receive_observation()
-            render_ret = manual_viewer.render(camera_data)
-            if render_ret is None:
-                break
-            waypoint_to_follow = filter_waypoints(
-                vehicle.get_3d_location(),
-                way_points
+        with plt.ion():
+            plt.xlim(2000,6000)
+            plt.ylim(2000,6000)
+            vehicle_location = vehicle.get_3d_location()
+            vehicle_rotation = vehicle.get_roll_pitch_yaw()
+            vehicle_heading = transforms3d.euler.euler2mat(0,0,vehicle_rotation[2]) @ np.array([1,0,0])
+            arrow_heading = plt.arrow(
+                vehicle_location[0], 
+                vehicle_location[1], 
+                vehicle_heading[0] * 100, 
+                vehicle_heading[1] * 100, 
+                width=50, 
+                color='r'
             )
-            vector_to_waypoint = (waypoint_to_follow.location - vehicle.get_3d_location())[:2]
-            heading_to_waypoint = np.arctan2(vector_to_waypoint[1],vector_to_waypoint[0])
-            delta_heading = normalize_rad(heading_to_waypoint - vehicle.get_roll_pitch_yaw()[2])
-            print(heading_to_waypoint, vehicle.get_roll_pitch_yaw())
-            steer_control = (
-                2 * delta_heading
-            )
-            control = {
-                "throttle": 0.4,
-                "steer": steer_control,
-                "brake": 0.0,
-                "hand_brake": 0.0,
-                "reverse": 0,
-                "target_gear": 0
-            }
-            await vehicle.apply_action(control)
+            for waypoint in way_points:
+                rep_line = waypoint.line_representation
+                rep_line = np.asarray(rep_line)
+                plt.plot(rep_line[:,0], rep_line[:,1])
+            while True:
+                vehicle_location = vehicle.get_3d_location()
+                vehicle_rotation = vehicle.get_roll_pitch_yaw()
+                vehicle_heading = transforms3d.euler.euler2mat(0,0,vehicle_rotation[2]) @ np.array([1,0,0])
+                arrow_heading.set_data(
+                    x=vehicle_location[0],
+                    y=vehicle_location[1],
+                    dx=vehicle_heading[0] * 100,
+                    dy=vehicle_heading[1] * 100
+                )
+                await carla_world.step()
+                camera_data = await camera.receive_observation()
+                render_ret = manual_viewer.render(camera_data)
+                if render_ret is None:
+                    break
+                current_waypoint_idx = filter_waypoints(
+                    vehicle_location,
+                    current_waypoint_idx,
+                    way_points
+                )
+                waypoint_to_follow = way_points[current_waypoint_idx + 5]
+                vector_to_waypoint = (waypoint_to_follow.location - vehicle_location)[:2]
+                heading_to_waypoint = np.arctan2(vector_to_waypoint[1],vector_to_waypoint[0])
+                delta_heading = normalize_rad(heading_to_waypoint - vehicle_rotation[2])
+                print(heading_to_waypoint, vehicle_rotation)
+                steer_control = (
+                    0.5 * delta_heading
+                )
+                control = {
+                    "throttle": 0.2,
+                    "steer": steer_control,
+                    "brake": 0.0,
+                    "hand_brake": 0.0,
+                    "reverse": 0,
+                    "target_gear": 0
+                }
+                await vehicle.apply_action(control)
+                plt.show()
+                plt.pause(0.01)
     finally:
         roar_py_instance.close()
 

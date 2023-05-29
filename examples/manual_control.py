@@ -80,7 +80,7 @@ async def main():
 
     vehicle = carla_world.spawn_vehicle(
         "vehicle.tesla.model3",
-        spawn_point,
+        spawn_point + np.array([0, 0, 0.5]),
         spawn_rpy
     )
 

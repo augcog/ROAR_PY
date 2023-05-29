@@ -4,18 +4,21 @@ from ..carla_agents.navigation.global_route_planner import GlobalRoutePlanner as
 import typing
 import asyncio
 import numpy as np
+import os.path
 
 from roar_py_interface import RoarPyActor, RoarPySensor, roar_py_thread_sync, roar_py_append_item, roar_py_remove_item, RoarPyWaypoint
 from roar_py_interface.sensors import *
 from ..actors import RoarPyCarlaVehicle, RoarPyCarlaActor
 from ..sensors import *
 from functools import cached_property
+import networkx as nx
 
 import transforms3d as tr3d
 
 class RoarPyCarlaWorld(RoarPyWorld):
     ASYNC_SLEEP_TIME = 0.005
     WAYPOINTS_DISTANCE = 1.0
+    ASSET_DIR = os.path.dirname(os.path.dirname(__file__)) + "/assets"
 
     def __init__(
         self,
@@ -67,15 +70,23 @@ class RoarPyCarlaWorld(RoarPyWorld):
     @roar_py_thread_sync
     def maneuverable_waypoints(self) -> typing.List[RoarPyWaypoint]:
         grp = CarlaGlobalRoutePlanner(self._native_carla_map, self.WAYPOINTS_DISTANCE)
-        spawn_points = self._native_carla_map.get_spawn_points()
-        print("spawn_points", spawn_points)
-
-        if len(spawn_points) > 1:
-            native_ws : typing.List[carla.Waypoint] = grp.trace_route(spawn_points[0].location, spawn_points[-1].location) + grp.trace_route(spawn_points[-1].location, spawn_points[0].location)
-            
-        elif len(spawn_points) == 1:
-            init_pos = np.array([spawn_points[0].location.x, spawn_points[0].location.y, spawn_points[0].location.z])
-            init_rot = np.deg2rad(np.array([spawn_points[0].rotation.roll, spawn_points[0].rotation.pitch, spawn_points[0].rotation.yaw]))
+        spawn_points = self.spawn_points
+        num_spawn_points = len(spawn_points)
+        if num_spawn_points > 1:
+            try:
+                native_ws = []
+                for i in range(num_spawn_points):
+                    loc_1 = carla.Location(spawn_points[i][0][0], spawn_points[i][0][1], spawn_points[i][0][2])
+                    loc_2 = carla.Location(spawn_points[(i+1)%num_spawn_points][0][0], spawn_points[(i+1)%num_spawn_points][0][1], spawn_points[(i+1)%num_spawn_points][0][2])
+                    native_ws += grp.trace_route(loc_1, loc_2)
+            except nx.NetworkXNoPath:
+                loc_1 = carla.Location(spawn_points[0][0][0], spawn_points[0][0][1], spawn_points[0][0][2])
+                loc_2 = carla.Location(spawn_points[-1][0][0], spawn_points[-1][0][1], spawn_points[-1][0][2])
+                native_ws : typing.List[carla.Waypoint] = grp.trace_route(loc_1, loc_2) + grp.trace_route(loc_2, loc_1)
+                
+        elif num_spawn_points == 1:
+            init_pos = spawn_points[0][0]
+            init_rot = spawn_points[0][1]
 
             pos_y = np.array([0,0.05,0])
 
@@ -91,12 +102,19 @@ class RoarPyCarlaWorld(RoarPyWorld):
             w = native_ww[0]
             real_w = RoarPyWaypoint(
                 np.array([w.transform.location.x, w.transform.location.y, w.transform.location.z]),
-                np.deg2rad(np.array([w.transform.rotation.roll, w.transform.rotation.pitch, w.transform.rotation.yaw])),
+                np.deg2rad(np.array([w.transform.rotation.roll, w.transform.rotation.pitch, -w.transform.rotation.yaw + 90])),
                 w.lane_width
             )
             real_ws.append(real_w)
         return real_ws
 
+    @cached_property
+    def map_name(self):
+        native_name = self._native_carla_map.name
+        if "/" in native_name:
+            return native_name.split("/")[-1]
+        else:
+            return native_name
 
     @property
     @roar_py_thread_sync
@@ -195,7 +213,7 @@ class RoarPyCarlaWorld(RoarPyWorld):
 
     def find_blueprint(self, id: str) -> carla.ActorBlueprint:
         return self.carla_world.get_blueprint_library().find(id)
-    
+
     """
     Get a list of all available spawn points
     Output: [(location, rotation), ...]
@@ -203,11 +221,23 @@ class RoarPyCarlaWorld(RoarPyWorld):
     """
     @cached_property
     def spawn_points(self) -> typing.List[typing.Tuple[np.ndarray, np.ndarray]]:
+        # Check if there exists any overriding asset
+        spawn_point_asset_dir = __class__.ASSET_DIR + "/spawn_points"
+        spawn_point_file = spawn_point_asset_dir + "/" + self.map_name + ".npz"
+        if os.path.exists(spawn_point_file):
+            spawn_points = np.load(spawn_point_file)
+            ret = []
+            for i in range(len(spawn_points["locations"])):
+                location = spawn_points["locations"][i]
+                rotation = spawn_points["rotations"][i]
+                ret.append((location, rotation))
+            return ret
+
         native_spawn_points = self._native_carla_map.get_spawn_points()
         ret = []
         for native_spawn_point in native_spawn_points:
             location = np.array([native_spawn_point.location.x, native_spawn_point.location.y, native_spawn_point.location.z])
-            rotation = np.deg2rad(np.array([native_spawn_point.rotation.roll, native_spawn_point.rotation.pitch, native_spawn_point.rotation.yaw]))
+            rotation = np.deg2rad(np.array([native_spawn_point.rotation.roll, native_spawn_point.rotation.pitch, -native_spawn_point.rotation.yaw + 90.0]))
             ret.append((location, rotation))
         return ret
 
@@ -243,8 +273,10 @@ class RoarPyCarlaWorld(RoarPyWorld):
         assert location.shape == (3,) and roll_pitch_yaw.shape == (3,)
         location = location.astype(float)
         roll_pitch_yaw = np.rad2deg(roll_pitch_yaw).astype(float)
-
-        transform = carla.Transform(carla.Location(x=location[0],y=location[1], z=location[2]), carla.Rotation(roll=roll_pitch_yaw[0], pitch=roll_pitch_yaw[1], yaw=roll_pitch_yaw[2]))
+        if bind_to is None:
+            transform = carla.Transform(carla.Location(x=location[0],y=location[1], z=location[2]), carla.Rotation(roll=roll_pitch_yaw[0], pitch=roll_pitch_yaw[1], yaw=-roll_pitch_yaw[2] + 90.0))
+        else:
+            transform = carla.Transform(carla.Location(x=location[0],y=location[1], z=location[2]), carla.Rotation(roll=roll_pitch_yaw[0], pitch=roll_pitch_yaw[1], yaw=-roll_pitch_yaw[2]))
         new_actor = self.carla_world.try_spawn_actor(blueprint, transform, bind_to, attachment_type)
         return new_actor
 

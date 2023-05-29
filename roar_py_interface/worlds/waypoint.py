@@ -16,9 +16,8 @@ class RoarPyWaypoint:
     
     @cached_property
     def line_representation(self) -> Tuple[np.ndarray, np.ndarray]:
-        
         mid_point = self.location
-        local_coordinate_pos = np.array([self.lane_width/2, 0, 0])
+        local_coordinate_pos = np.array([0, self.lane_width/2, 0])
         local_coordinate_neg = -local_coordinate_pos
         rotation_matrix = tr3d.euler.euler2mat(*self.roll_pitch_yaw)
         global_coordinate_pos = mid_point + rotation_matrix.dot(local_coordinate_pos)
