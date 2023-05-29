@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Tuple
+from typing import Tuple, List
 import transforms3d as tr3d
 from functools import cached_property
 
@@ -24,3 +24,21 @@ class RoarPyWaypoint:
         global_coordinate_neg = mid_point + rotation_matrix.dot(local_coordinate_neg)
         
         return global_coordinate_pos, global_coordinate_neg
+
+    @staticmethod
+    def load_waypoint_list(waypoint_dict : dict) -> List['RoarPyWaypoint']:
+        flattened_lane_widths = waypoint_dict['lane_widths'].flatten()
+        return [RoarPyWaypoint(
+            waypoint_dict['locations'][i],
+            waypoint_dict['rotations'][i],
+            flattened_lane_widths[i]
+        ) for i in range(len(waypoint_dict['locations']))]
+
+    @staticmethod
+    def save_waypoint_list(waypoints: List['RoarPyWaypoint']) -> dict:
+        return {
+            'locations': np.stack([waypoint.location for waypoint in waypoints], axis=0),
+            'rotations': np.stack([waypoint.roll_pitch_yaw for waypoint in waypoints], axis=0),
+            'lane_widths': np.stack([waypoint.lane_width for waypoint in waypoints], axis=0)
+        }
+    

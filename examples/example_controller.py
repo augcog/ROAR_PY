@@ -18,7 +18,7 @@ def filter_waypoints(location : np.ndarray, current_idx: int, waypoints : List[r
             location[:2] - waypoint.location[:2]
         )
     for i in range(current_idx, len(waypoints) + current_idx):
-        if dist_to_waypoint(waypoints[i%len(waypoints)]) < 6:
+        if dist_to_waypoint(waypoints[i%len(waypoints)]) < 3:
             return i % len(waypoints)
     return current_idx
 
@@ -81,32 +81,36 @@ async def main():
     assert camera is not None
     try:
         with plt.ion():
-            plt.xlim(2000,6000)
-            plt.ylim(2000,6000)
+            plt.xlim(-20,20)
+            plt.ylim(-20,20)
             vehicle_location = vehicle.get_3d_location()
             vehicle_rotation = vehicle.get_roll_pitch_yaw()
             vehicle_heading = transforms3d.euler.euler2mat(0,0,vehicle_rotation[2]) @ np.array([1,0,0])
             arrow_heading = plt.arrow(
-                vehicle_location[0], 
-                vehicle_location[1], 
-                vehicle_heading[0] * 100, 
-                vehicle_heading[1] * 100, 
-                width=50, 
+                0, 
+                0, 
+                vehicle_heading[0], 
+                vehicle_heading[1], 
+                width=0.05, 
                 color='r'
             )
-            for waypoint in way_points:
-                rep_line = waypoint.line_representation
-                rep_line = np.asarray(rep_line)
-                plt.plot(rep_line[:,0], rep_line[:,1])
+            current_waypoint_line = np.asarray(way_points[current_waypoint_idx].line_representation)
+            current_waypoint_plt = plt.plot(
+                current_waypoint_line[:,0] - vehicle_location[0],
+                current_waypoint_line[:,1] - vehicle_location[1]
+            )
+            current_lookahead_waypoint_line = np.asarray(way_points[(current_waypoint_idx + 3) % len(way_points)].line_representation)
+            lookahead_waypoint_plt = plt.plot(
+                current_lookahead_waypoint_line[:,0] - vehicle_location[0],
+                current_lookahead_waypoint_line[:,1] - vehicle_location[1]
+            )
             while True:
                 vehicle_location = vehicle.get_3d_location()
                 vehicle_rotation = vehicle.get_roll_pitch_yaw()
                 vehicle_heading = transforms3d.euler.euler2mat(0,0,vehicle_rotation[2]) @ np.array([1,0,0])
                 arrow_heading.set_data(
-                    x=vehicle_location[0],
-                    y=vehicle_location[1],
-                    dx=vehicle_heading[0] * 100,
-                    dy=vehicle_heading[1] * 100
+                    dx=vehicle_heading[0],
+                    dy=vehicle_heading[1]
                 )
                 await carla_world.step()
                 camera_data = await camera.receive_observation()
@@ -118,18 +122,31 @@ async def main():
                     current_waypoint_idx,
                     way_points
                 )
-                waypoint_to_follow = way_points[current_waypoint_idx + 5]
+                current_waypoint_line = np.asarray(way_points[current_waypoint_idx].line_representation)
+                current_waypoint_plt[0].set_data(
+                    current_waypoint_line[:,0] - vehicle_location[0],
+                    current_waypoint_line[:,1] - vehicle_location[1]
+                )
+                current_lookahead_waypoint_line = np.asarray(way_points[(current_waypoint_idx + 3) % len(way_points)].line_representation)
+                lookahead_waypoint_plt[0].set_data(
+                    current_lookahead_waypoint_line[:,0] - vehicle_location[0],
+                    current_lookahead_waypoint_line[:,1] - vehicle_location[1]
+                )
+                waypoint_to_follow = way_points[(current_waypoint_idx + 3) % len(way_points)]
                 vector_to_waypoint = (waypoint_to_follow.location - vehicle_location)[:2]
                 heading_to_waypoint = np.arctan2(vector_to_waypoint[1],vector_to_waypoint[0])
                 delta_heading = normalize_rad(heading_to_waypoint - vehicle_rotation[2])
                 print(heading_to_waypoint, vehicle_rotation)
                 steer_control = (
-                    0.5 * delta_heading
+                    -8.0 / np.sqrt(np.linalg.norm(vehicle.get_linear_3d_velocity())) * delta_heading / np.pi
                 )
+                steer_control = np.clip(steer_control, -1.0, 1.0)
+                throttle_control = 0.02 * (40 - np.linalg.norm(vehicle.get_linear_3d_velocity()))
+
                 control = {
-                    "throttle": 0.2,
+                    "throttle": np.clip(throttle_control, 0.0, 1.0),
                     "steer": steer_control,
-                    "brake": 0.0,
+                    "brake": np.clip(-throttle_control, 0.0, 1.0),
                     "hand_brake": 0.0,
                     "reverse": 0,
                     "target_gear": 0

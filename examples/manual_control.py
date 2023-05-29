@@ -48,13 +48,13 @@ class ManualControlViewer:
         
         pressed_keys = pygame.key.get_pressed()
         if pressed_keys[pygame.K_UP]:
-            new_control['throttle'] = 1.0
+            new_control['throttle'] = 0.2
         if pressed_keys[pygame.K_DOWN]:
-            new_control['brake'] = 1.0
+            new_control['brake'] = 0.2
         if pressed_keys[pygame.K_LEFT]:
-            new_control['steer'] = -1.0
+            new_control['steer'] = -0.2
         if pressed_keys[pygame.K_RIGHT]:
-            new_control['steer'] = 1.0
+            new_control['steer'] = 0.2
         
         image_surface = pygame.image.fromstring(image_pil.tobytes(), image_pil.size, image_pil.mode).convert()
         self.screen.fill((0,0,0))

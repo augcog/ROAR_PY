@@ -3,6 +3,7 @@ from typing import Optional, Dict, Any, List, Tuple, Union
 from dataclasses import dataclass
 import numpy as np
 from roar_py_interface.wrappers import roar_py_thread_sync
+from ..utils import *
 
 @dataclass
 class RoarPyCarlaBoundingBox:
@@ -75,72 +76,60 @@ class RoarPyCarlaBase:
         bdBox = self._base_actor.bounding_box
         return RoarPyCarlaBoundingBox(
             extent=np.array([bdBox.extent.x, bdBox.extent.y, bdBox.extent.z]),
-            location=np.array([bdBox.location.x, bdBox.location.y, bdBox.location.z]),
-            rotation=np.deg2rad(np.array([bdBox.rotation.roll, bdBox.rotation.pitch, bdBox.rotation.yaw]))
+            location=location_from_carla(bdBox.location),
+            rotation=rotation_from_carla(bdBox.rotation)
         )
 
     def get_acceleration(self) -> np.ndarray:
         acc = self._base_actor.get_acceleration()
-        return np.array([acc.x, acc.y, acc.z])
+        return location_from_carla(carla.Location(x=acc.x, y=acc.y, z=acc.z))
     
     # Angular velocity in radians per second
     def get_angular_velocity(self) -> np.ndarray:
         ang_vel = self._base_actor.get_angular_velocity()
-        return np.deg2rad(np.array([ang_vel.x, ang_vel.y, ang_vel.z]))
+        return rotation_from_carla(carla.Rotation(roll=ang_vel.x, pitch=ang_vel.y, yaw=ang_vel.z))
     
     # Angular velocity in radians per second
     @roar_py_thread_sync
     def set_angular_velocity(self, target_angular_velocity : np.ndarray):
-        ang_vel = np.rad2deg(target_angular_velocity)
-        self._base_actor.set_target_angular_velocity(carla.Vector3D(x=ang_vel[0], y=ang_vel[1], z=ang_vel[2]))
+        ang_vel = rotation_to_carla(target_angular_velocity)
+        self._base_actor.set_target_angular_velocity(carla.Vector3D(x=ang_vel.roll, y=ang_vel.pitch, z=ang_vel.yaw))
     
     # Linear velocity in meters per second (in world frame)
     def get_linear_3d_velocity(self) -> np.ndarray:
         vel = self._base_actor.get_velocity()
-        return np.array([vel.x, vel.y, vel.z])
+        return location_from_carla(vel)
     
     @roar_py_thread_sync
     def set_linear_3d_velocity(self, target_linear_velocity : np.ndarray) -> None:
+        target_linear_velocity = location_to_carla(target_linear_velocity)
         self._base_actor.set_target_velocity(carla.Vector3D(x=target_linear_velocity[0], y=target_linear_velocity[1], z=target_linear_velocity[2]))
     
     def get_3d_location(self) -> np.ndarray:
         loc = self._base_actor.get_location()
-        return np.array([loc.x, loc.y, loc.z])
+        return location_from_carla(loc)
     
     @roar_py_thread_sync
     def set_3d_location(self, new_location: np.ndarray) -> None:
-        self._base_actor.set_location(carla.Location(x=new_location[0], y=new_location[1], z=new_location[2]))
+        new_location = location_to_carla(new_location)
+        self._base_actor.set_location(new_location)
     
     # Get the rotation of the actor in radians
     def get_roll_pitch_yaw(self) -> np.ndarray:
         rot = self._base_actor.get_transform().rotation
-        if self.parent is not None:
-            return np.deg2rad(np.array([rot.roll, rot.pitch, -rot.yaw]))
-        else:
-            return np.deg2rad(np.array([rot.roll, rot.pitch, -rot.yaw + 90.0]))
+        return rotation_from_carla(rot)
     
     @roar_py_thread_sync
     def set_roll_pitch_yaw(self, new_rotation_rpy : np.ndarray) -> None:
-        new_rot_deg = np.rad2deg(new_rotation_rpy)
-        new_rot_deg[2] = -new_rot_deg[2]
-        if self.parent is None:
-            new_rot_deg[2] += 90.0
         transform = carla.Transform(
             location=self._base_actor.get_location(),
-            rotation=carla.Rotation(roll=new_rot_deg[0], pitch=new_rot_deg[1], yaw=new_rot_deg[2])
+            rotation=rotation_to_carla(new_rotation_rpy)
         )
         self._base_actor.set_transform(transform)
     
     @roar_py_thread_sync
     def set_transform(self, new_location : np.ndarray, new_rotation : np.ndarray) -> None:
-        new_rot_deg = np.rad2deg(new_rotation)
-        new_rot_deg[2] = -new_rot_deg[2]
-        if self.parent is None:
-            new_rot_deg[2] += 90.0
-        transform = carla.Transform(
-            location=carla.Location(x=new_location[0], y=new_location[1], z=new_location[2]),
-            rotation=carla.Rotation(roll=new_rot_deg[0], pitch=new_rot_deg[1], yaw=new_rot_deg[2])
-        )
+        transform = transform_to_carla(new_location, new_rotation)
         self._base_actor.set_transform(transform)
 
     @roar_py_thread_sync
@@ -160,10 +149,7 @@ class RoarPyCarlaBase:
         attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid
     ) -> Optional[carla.Actor]:
         assert location.shape == (3,) and roll_pitch_yaw.shape == (3,)
-        location = location.astype(float)
-        roll_pitch_yaw = np.rad2deg(roll_pitch_yaw).astype(float)
-
-        transform = carla.Transform(carla.Location(*location), carla.Rotation(roll=roll_pitch_yaw[0], pitch=roll_pitch_yaw[1], yaw=-roll_pitch_yaw[2]))
+        transform = transform_to_carla(location, roll_pitch_yaw)
         new_actor = self._get_native_carla_world().try_spawn_actor(blueprint, transform, self._base_actor, attachment_type)
         return new_actor
 
