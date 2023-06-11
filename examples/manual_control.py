@@ -90,13 +90,13 @@ async def main():
 
     camera = vehicle.attach_camera_sensor(
         roar_py_interface.RoarPyCameraSensorDataRGB, # Specify what kind of data you want to receive
-        np.array([0.5, 0.0, 9.5]), # relative position
-        np.array([0, np.pi/2, 0]), # relative rotation
+        np.array([-0.5, 0.0, 3.5]), # relative position
+        np.array([0, np.pi/10, 0]), # relative rotation
     )
     depth_camera = vehicle.attach_camera_sensor(
         roar_py_interface.RoarPyCameraSensorDataDepth,
-        np.array([0.5, 0.0, 9.5]),
-        np.array([0, np.pi/2, 0])
+        np.array([-0.5, 0.0, 3.5]),
+        np.array([0, np.pi/10, 0])
     )
 
     viewer = ManualControlViewer()
