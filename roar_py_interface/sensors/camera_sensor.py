@@ -75,9 +75,10 @@ class RoarPyCameraSensorDataDepth(RoarPyCameraSensorData, RoarPyRemoteSupportedS
     def get_image(self) -> Image:
         # we have to normalize this to [0,1]
         # we should rarely call this function
-        min, max = 0, np.max(self.image_depth)
+        min, max = np.min(self.image_depth), np.max(self.image_depth)
         normalized_image = (self.image_depth) / (max-min)
-        return Image.fromarray(normalized_image,mode="F")
+        normalized_image = (normalized_image * 255).astype(np.uint8)
+        return Image.fromarray(normalized_image,mode="L")
     
     def to_gym(self) -> np.ndarray:
         return self.image_depth

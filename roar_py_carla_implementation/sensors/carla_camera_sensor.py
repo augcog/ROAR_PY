@@ -21,14 +21,14 @@ def __depth_meters_from_carla_bgra(
     bgra_carla: np.ndarray
 ) -> np.ndarray: #np.NDArray[np.float32]:
     assert bgra_carla.ndim == 3
-    assert bgra_carla.shape[-1] == 4
-    bgra_carla = bgra_carla.astype(np.float32)
+    assert bgra_carla.shape[-1] >= 3
+    #bgra_carla = bgra_carla.astype(np.float32)
     # Apply (R + G * 256 + B * 256 * 256) <= This would be in mm
     normalized_depth = np.dot(bgra_carla[:, :, :3], [65536.0, 256.0, 1.0])
     # We omit the following normalizing step in carla
-    # normalized_depth /= 16777215.0  # (256.0 * 256.0 * 256.0 - 1.0)
+    normalized_depth /= 16777215.0  # (256.0 * 256.0 * 256.0 - 1.0)
     # Then we transform the depth in meters
-    normalized_depth /= 1000.0
+    normalized_depth *= 1000.0
     return normalized_depth
 
 #https://carla.readthedocs.io/en/0.9.14/ref_sensors/#semantic-segmentation-camera
@@ -69,7 +69,7 @@ def _convert_carla_to_roarpy_image(blueprint_id : str, width : int, height : int
     if target_data_type == RoarPyCameraSensorDataRGB:
         assert blueprint_id == "sensor.camera.rgb", "Cannot convert {} to RoarPyCameraSensorDataRGB".format(blueprint_id)
         return RoarPyCameraSensorDataRGB(
-            ret_image_bgra[:,:,:3][:,:,::-1]
+            ret_image_bgra[:,:,2::-1] #[:,:,:3][:,:,::-1]
         )
     elif target_data_type == RoarPyCameraSensorDataGreyscale:
         assert blueprint_id == "sensor.camera.rgb", "Cannot convert {} to RoarPyCameraSensorDataGreyscale".format(blueprint_id)

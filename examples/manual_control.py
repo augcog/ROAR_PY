@@ -48,7 +48,7 @@ class ManualControlViewer:
         
         pressed_keys = pygame.key.get_pressed()
         if pressed_keys[pygame.K_UP]:
-            new_control['throttle'] = 0.2
+            new_control['throttle'] = 0.4
         if pressed_keys[pygame.K_DOWN]:
             new_control['brake'] = 0.2
         if pressed_keys[pygame.K_LEFT]:
@@ -74,20 +74,29 @@ async def main():
     carla_world.set_control_steps(0.05, 0.005)
     carla_world.set_asynchronous(True)
     
-    spawn_point, spawn_rpy = carla_world.spawn_points[
-        np.random.randint(len(carla_world.spawn_points))
-    ]
+    # spawn_point, spawn_rpy = carla_world.spawn_points[
+    #     np.random.randint(len(carla_world.spawn_points))
+    # ]
+
+    spawn_point, spawn_rpy =carla_world.spawn_points[1]
+    
+    print("Spawning vehicle at", spawn_point, spawn_rpy)
 
     vehicle = carla_world.spawn_vehicle(
         "vehicle.tesla.model3",
-        spawn_point + np.array([0, 0, 0.5]),
+        spawn_point + np.array([0, 0, 2.0]),
         spawn_rpy
     )
 
     camera = vehicle.attach_camera_sensor(
         roar_py_interface.RoarPyCameraSensorDataRGB, # Specify what kind of data you want to receive
         np.array([0.5, 0.0, 9.5]), # relative position
-        np.array([0, -np.pi/2, 0]), # relative rotation
+        np.array([0, np.pi/2, 0]), # relative rotation
+    )
+    depth_camera = vehicle.attach_camera_sensor(
+        roar_py_interface.RoarPyCameraSensorDataDepth,
+        np.array([0.5, 0.0, 9.5]),
+        np.array([0, np.pi/2, 0])
     )
 
     viewer = ManualControlViewer()
@@ -97,7 +106,9 @@ async def main():
             # img.get_image().save("test.png")
             await carla_world.step()
             img : roar_py_interface.RoarPyCameraSensorDataRGB = await camera.receive_observation()
+            depth_img : roar_py_interface.RoarPyCameraSensorDataDepth = await depth_camera.receive_observation()
             control = viewer.render(img)
+            depth_img.get_image().convert("L").save("test.jpg")
             if control is None:
                 break
             await vehicle.apply_action(control)
