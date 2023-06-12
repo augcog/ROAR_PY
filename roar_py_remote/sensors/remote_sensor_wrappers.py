@@ -1,6 +1,6 @@
 from .remote_sensors import RoarPyRemoteSharedSensor
 from roar_py_interface.wrappers import RoarPyWrapper
-from roar_py_interface import RoarPySensor
+from roar_py_interface import RoarPySensor, RoarPyCollisionSensorData
 import gymnasium as gym
 import typing
 
@@ -17,12 +17,20 @@ class RoarPyRemoteSharedSensorWrapper(typing.Generic[_ObsT], RoarPyRemoteSharedS
     @property
     def name(self) -> str:
         return self._wrapped_object.name
-
+    
     def get_gym_observation_spec(self) -> gym.Space:
         return self._wrapped_object.get_gym_observation_spec()
     
     def get_last_observation(self) -> typing.Optional[_ObsT]:
-        return self._wrapped_object.get_last_observation()
+        last_obs = self._wrapped_object.get_last_observation()
+        if last_obs is not None and isinstance(last_obs, RoarPyCollisionSensorData):
+            # Mask out collided objects
+            last_obs = RoarPyCollisionSensorData(
+                actor=None,
+                other_actor=None,
+                impulse_normal=last_obs.impulse_normal,
+            )
+        return last_obs
 
     def convert_obs_to_gym_obs(self, obs: _ObsT):
         return self._wrapped_object.convert_obs_to_gym_obs(obs)

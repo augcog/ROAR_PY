@@ -6,9 +6,10 @@ pyserde[all]==0.10.4
 Pillow==9.5.0
 transforms3d==0.4.1
 carla==0.9.12
-rpyc>=5.3.1
 pygame >= 2.4.0
 pytest>=7.3.1
 pytest-asyncio>=0.21.0
 networkx==3.1
 matplotlib
+websockets >= 11.0.1
+typing_inspect >= 0.8.0

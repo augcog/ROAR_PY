@@ -1,11 +1,13 @@
 from ..actors import RoarPyActor
 from ..base import RoarPySensor, RoarPyRemoteSupportedSensorData
+from ..base.sensor import remote_support_sensor_data_register
 from serde import serde
 from dataclasses import dataclass
 import numpy as np
 import gymnasium as gym
 import typing
 
+@remote_support_sensor_data_register
 @serde
 @dataclass
 class RoarPyCollisionSensorData(RoarPyRemoteSupportedSensorData):
@@ -15,6 +17,17 @@ class RoarPyCollisionSensorData(RoarPyRemoteSupportedSensorData):
     other_actor: typing.Optional[RoarPyActor]
     # impulse (x,y,z local axis) in N*s
     impulse_normal: np.ndarray #np.NDArray[np.float32]
+
+    def get_gym_observation_spec(self) -> gym.Space:
+        return gym.spaces.Box(
+            low = -np.inf,
+            high=np.inf,
+            shape=(3,),
+            dtype=np.float32
+        )
+
+    def convert_obs_to_gym_obs(self):
+        return self.impulse_normal
 
 
 class RoarPyCollisionSensor(RoarPySensor[RoarPyCollisionSensorData]):
@@ -34,4 +47,4 @@ class RoarPyCollisionSensor(RoarPySensor[RoarPyCollisionSensorData]):
         )
 
     def convert_obs_to_gym_obs(self, obs: RoarPyCollisionSensorData):
-        return obs.impulse_normal
+        return obs.convert_obs_to_gym_obs()

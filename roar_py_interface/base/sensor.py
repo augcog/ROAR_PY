@@ -20,6 +20,7 @@ class RoarPyRemoteSupportedSensorSerializationScheme(Enum):
     INTERNAL_COMPRESSED = 64,
 
 class RoarPyRemoteSupportedSensorData:
+    _supported_data_types : typing.Dict[str, typing.Type["RoarPyRemoteSupportedSensorData"]] = {}
     def to_data(self, scheme : RoarPyRemoteSupportedSensorSerializationScheme) -> typing.Any:
         # Not compressed data types
         if scheme == RoarPyRemoteSupportedSensorSerializationScheme.DICT:
@@ -69,6 +70,16 @@ class RoarPyRemoteSupportedSensorData:
             raise NotImplementedError()
         
         return ret
+    
+    def get_gym_observation_spec(self) -> gym.Space:
+        raise NotImplementedError()
+
+    def convert_obs_to_gym_obs(self):
+        raise NotImplementedError()
+
+def remote_support_sensor_data_register(cls: typing.Type["RoarPyRemoteSupportedSensorData"]):
+    RoarPyRemoteSupportedSensorData._supported_data_types[cls.__name__] = cls
+    return cls
 
 _ObsT = typing.TypeVar("_ObsT")
 class RoarPySensor(typing.Generic[_ObsT]):

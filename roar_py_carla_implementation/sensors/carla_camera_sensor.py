@@ -123,13 +123,12 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
         name: str = "carla_camera",
     ):
         RoarPyCarlaBase.__init__(self, carla_instance, sensor)
-        RoarPyCameraSensor.__init__(self, name = name, control_timestep = 0.0)
-
         assert sensor.type_id in __class__.SUPPORTED_BLUEPRINT_TO_TARGET_DATA.keys(), "Unsupported blueprint_id: {} for carla camera sensor support".format(sensor.type_id)
         if target_data_type is None:
             target_data_type = __class__.SUPPORTED_BLUEPRINT_TO_TARGET_DATA[sensor.type_id][0]
         assert target_data_type in __class__.SUPPORTED_BLUEPRINT_TO_TARGET_DATA[sensor.type_id], "Unsupported target_data_type: {} for blueprint_id: {}".format(target_data_type, sensor.type_id)
 
+        RoarPyCameraSensor.__init__(self, name = name, control_timestep = 0.0, target_data_type = target_data_type)
         self._target_data_type = target_data_type
         sensor.listen(
             self.listen_carla_data

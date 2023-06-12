@@ -9,6 +9,14 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+## Code Structures
+
+| Folder | Description |
+| --- | --- |
+| `roar_py_interface` | Contains all the interfaces that interacts with a simulator / real world. |
+| `roar_py_carla_implementation` | Contains all the implementations of the interfaces for Carla. |
+| `roar_py_remote` | Contains all interface / wrappers for supporting remote + shared ownership control. |
+
 ## Examples & Documents
 
 Please refer to `examples/` folder for examples and `docs/` folder for documents.
