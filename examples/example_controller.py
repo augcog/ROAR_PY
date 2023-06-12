@@ -71,12 +71,11 @@ async def main():
     current_waypoint_idx = 10
     assert vehicle is not None
     camera = vehicle.attach_camera_sensor(
-        roar_py_interface.RoarPyCameraSensorDataRGB,
-        np.array([0.2, 0, 2.0]),
-        np.array([0, -5 / 180 * np.pi, 0]),
-        120,
-        1024,
-        768
+        roar_py_interface.RoarPyCameraSensorDataRGB, # Specify what kind of data you want to receive
+        np.array([-0.5, 0.0, 3.5]), # relative position
+        np.array([0, np.pi/10, 0]), # relative rotation
+        image_width=1024,
+        image_height=768
     )
     assert camera is not None
     try:
