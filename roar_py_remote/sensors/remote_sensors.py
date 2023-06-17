@@ -86,8 +86,7 @@ class RoarPyRemoteClientSensor(RoarPySensor[_ObsTClient], Generic[_ObsTClient], 
         self._new_data = None
         self._obs_spec = None
         self.new_request : RoarPyRemoteSensorObsInfoRequest = RoarPyRemoteSensorObsInfoRequest(
-            False,
-            False
+            close = False
         )
         self._depack_info(start_info)
     
