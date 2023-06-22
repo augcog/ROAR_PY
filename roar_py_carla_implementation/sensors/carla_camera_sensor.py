@@ -173,10 +173,10 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
     
     @roar_py_thread_sync
     def close(self):
-        if self._base_actor is not None and self._base_actor.is_listening:
+        if self._base_actor is not None and self._base_actor.is_alive:
             self._base_actor.stop()
         RoarPyCarlaBase.close(self)
     
     @roar_py_thread_sync
     def is_closed(self) -> bool:
-        return self._base_actor is None or not self._base_actor.is_listening
+        return self._base_actor is None or not self._base_actor.is_alive

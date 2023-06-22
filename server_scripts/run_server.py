@@ -72,6 +72,10 @@ async def _main():
             except websockets.exceptions.ConnectionClosed:
                 await service.client_disconnected(websocket)
                 break
+            except Exception as e:
+                print("Error while receiving message from client: {}".format(e))
+                await service.client_disconnected(websocket)
+                break
 
             await service.client_message_received(websocket, msg)
     

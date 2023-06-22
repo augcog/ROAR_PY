@@ -43,7 +43,7 @@ class RoarPyStreamingService(Generic[_CommT]):
             return
         stream_object = self.client_to_stream_object[client]
         try:
-            msg_received = from_msgpack(stream_object._in_msg_type, message)
+            msg_received = from_msgpack(stream_object._in_msg_type, message, strict_map_key=False)
         except Exception as e:
             print("Error Decoding Message",e)
             await self.disconnect_client(client)
@@ -93,7 +93,7 @@ class RoarPyStreamingClient(Generic[_CommClientT]):
 
     async def server_message_received(self, connection : _CommClientT, message: bytes):
         try:
-            msg_received = from_msgpack(self.target_type._in_msg_type, message)
+            msg_received = from_msgpack(self.target_type._in_msg_type, message, strict_map_key=False)
         except Exception as e:
             print("Error Decoding Message",e)
             await self.disconnect_from_server(connection)

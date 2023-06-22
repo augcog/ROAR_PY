@@ -123,6 +123,5 @@ class RoarPyRemoteServerActorWrapper(RoarPyWrapper, RoarPyActor, RoarPyObjectWit
 
     def _pack_info(self) -> RoarPyRemoteActorObsInfo:
         self._refresh_sensor_list()
-        print("Packing actor info, ", self.sensors_map)
         sensor_map = dict([(idx, sensor._pack_info()) for idx, sensor in self.sensors_map.items()])
         return RoarPyRemoteActorObsInfo.from_actor(self._wrapped_object, sensor_map)

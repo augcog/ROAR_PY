@@ -12,16 +12,16 @@ import serde.pickle
 import zlib
 
 class RoarPyRemoteSupportedSensorSerializationScheme(Enum):
-    DICT = 1,
-    JSON = 2,
-    YAML = 4,
-    TOML = 8,
-    MSGPACK = 16,
-    INTERNAL_COMPRESSED = 64,
-    JSON_COMPRESSED = 2 | 64,
-    YAML_COMPRESSED = 4 | 64,
-    TOML_COMPRESSED = 8 | 64,
-    MSGPACK_COMPRESSED = 16 | 64,
+    DICT = 1
+    JSON = 2
+    YAML = 4
+    TOML = 8
+    MSGPACK = 16
+    INTERNAL_COMPRESSED = 64
+    JSON_COMPRESSED = 2 | 64
+    YAML_COMPRESSED = 4 | 64
+    TOML_COMPRESSED = 8 | 64
+    MSGPACK_COMPRESSED = 16 | 64
 
 
 class RoarPyRemoteSupportedSensorData:

@@ -92,7 +92,6 @@ class RoarPyRemoteClientSensor(RoarPySensor[_ObsTClient], Generic[_ObsTClient], 
         self._depack_info(start_info)
     
     def _depack_info(self, data: RoarPyRemoteSensorObsInfo) -> bool:
-        assert data.last_data_type in RoarPyRemoteSupportedSensorData._supported_data_types, f"Unsupported data type {data.last_data_type}"
         self._control_timestep = data.control_timestep
         
         new_data = data.get_last_obs()
