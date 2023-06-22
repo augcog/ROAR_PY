@@ -6,6 +6,7 @@ from serde import serde
 from dataclasses import dataclass
 import pickle
 import zlib
+import base64
 import asyncio
 import copy
 
@@ -28,15 +29,15 @@ class RoarPyRemoteSharedSensor(RoarPySensor[_ObsT], Generic[_ObsT]):
 class RoarPyRemoteSensorObsInfo:
     name: Optional[str]
     control_timestep: float
-    last_data: Optional[bytes]
+    last_data: Optional[str]
     last_data_type: str
-    obs_spec: Optional[bytes]
+    obs_spec: Optional[str]
     is_closed: bool
 
     def get_obs_spec(self) -> Optional[gym.Space]:
         if self.obs_spec is None:
             return None
-        return pickle.loads(zlib.decompress(self.obs_spec))
+        return pickle.loads(zlib.decompress(base64.b64decode(self.obs_spec)))
     
     def get_last_obs(self) -> Optional[RoarPyRemoteSupportedSensorData]:
         if self.last_data is None:
@@ -47,7 +48,7 @@ class RoarPyRemoteSensorObsInfo:
         last_data_type_real = RoarPyRemoteSupportedSensorData._supported_data_types[self.last_data_type]
         try:
             self._new_data = last_data_type_real.from_data(
-                self.last_data,
+                base64.b64decode(self.last_data),
                 RoarPyRemoteSupportedSensorSerializationScheme.MSGPACK_COMPRESSED
             )
         except Exception as e:
@@ -56,13 +57,13 @@ class RoarPyRemoteSensorObsInfo:
     @staticmethod
     def from_sensor(sensor: RoarPySensor) -> "RoarPyRemoteSensorObsInfo":
         last_obs = sensor.get_last_observation()
-        assert last_obs is not None and isinstance(last_obs, RoarPyRemoteSupportedSensorData)
+        assert last_obs is None or isinstance(last_obs, RoarPyRemoteSupportedSensorData)
         return RoarPyRemoteSensorObsInfo(
             name = sensor.name,
             control_timestep = sensor.control_timestep,
-            last_data = last_obs.to_data(RoarPyRemoteSupportedSensorSerializationScheme.MSGPACK_COMPRESSED),
+            last_data = base64.b64encode(last_obs.to_data(RoarPyRemoteSupportedSensorSerializationScheme.MSGPACK_COMPRESSED)).decode("ascii") if last_obs is not None else None,
             last_data_type = last_obs.__class__.__name__,
-            obs_spec = zlib.compress(pickle.dumps(sensor.get_gym_observation_spec(), protocol=pickle.DEFAULT_PROTOCOL)),
+            obs_spec = base64.b64encode(zlib.compress(pickle.dumps(sensor.get_gym_observation_spec(), protocol=pickle.DEFAULT_PROTOCOL))).decode("ascii"),
             is_closed = sensor.is_closed()
         )
 

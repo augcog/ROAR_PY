@@ -1,6 +1,7 @@
 import carla
 import roar_py_carla_implementation
 import roar_py_remote
+import roar_py_interface
 import roar_py_remote.services.websocket_service
 import threading
 import asyncio
@@ -34,7 +35,16 @@ class RoarPyWebsocketServerImpl(roar_py_remote.services.websocket_service.RoarPy
                 True,
                 "roar_py_remote_vehicle"
             )
-        return new_vehicle
+        
+        camera = new_vehicle.attach_camera_sensor(
+            roar_py_interface.RoarPyCameraSensorDataRGB, # Specify what kind of data you want to receive
+            np.array([-0.5, 0.0, 3.5]), # relative position
+            np.array([0, np.pi/10, 0]), # relative rotation
+            image_width=1024,
+            image_height=768
+        )
+        
+        return roar_py_remote.RoarPyRemoteServerActorWrapper(new_vehicle)
 
     async def client_disconnected(self, client):
         await super().client_disconnected(client)
@@ -72,6 +82,7 @@ async def _main():
         async with websockets.serve(websocket_handler, "", 8080):
             while True:
                 await roar_py_server_manager._step()
+                await service.tick()
     finally:
         roar_py_instance.close()
 

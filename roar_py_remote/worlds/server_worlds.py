@@ -120,11 +120,14 @@ class RoarPyRemoteServerWorldManager:
         
     def _del_masked_world(self,world : RoarPyRemoteMaskedWorld):
         with self.__shared_lock:
-            if world in self._masked_worlds:
-                self._masked_worlds.remove(world)
-            if self._last_subworld_modified is world:
-                self._last_subworld_modified = None
-            print("Deleting masked world", len(self._masked_worlds))
+            try:
+                print("Deleting masked world", len(self._masked_worlds))
+                if world in self._masked_worlds:
+                    self._masked_worlds.remove(world)
+                if self._last_subworld_modified is world:
+                    self._last_subworld_modified = None
+            except:
+                pass
 
     def __add_item_callback(self, item):
         if self._last_subworld_modified is None:

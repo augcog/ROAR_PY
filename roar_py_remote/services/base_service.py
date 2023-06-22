@@ -23,7 +23,7 @@ class RoarPyStreamingService(Generic[_CommT]):
         pass
     
     async def new_client_connected(self, client: _CommT):
-        new_streamable_object = self.generate_streamable_object(client)
+        new_streamable_object = await self.generate_streamable_object(client)
         self.client_to_stream_object[client] = new_streamable_object
 
         # Send the initial message
@@ -68,7 +68,7 @@ class RoarPyStreamingService(Generic[_CommT]):
             serialized_msg = to_msgpack(packed_msg)
             send_coroutines.append(self.send_message_to_client(client, serialized_msg))
         
-        await asyncio.gather(*send_coroutines)
+        await asyncio.gather(*send_coroutines, return_exceptions=False)
 
 
 _CommClientT = TypeVar("_CommClientT")
