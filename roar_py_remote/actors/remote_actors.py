@@ -43,7 +43,7 @@ class RoarPyRemoteSharedActor(RoarPyActor):
 class RoarPyRemoteActorObsInfo:
     name: typing.Optional[str]
     control_timestep: float
-    sensors_map = typing.Dict[int, RoarPyRemoteSensorObsInfo]
+    sensors_map : typing.Dict[int, RoarPyRemoteSensorObsInfo]
     is_closed: bool
     action_spec: typing.Optional[str]
 
@@ -124,7 +124,7 @@ class RoarPyRemoteClientActor(RoarPyActor, RoarPyObjectWithRemoteMessage[RoarPyR
 
     def get_sensors(self) -> typing.Iterable[RoarPySensor]:
         self._refresh_sensor_list()
-        return self._internal_sensors_map.values()
+        return list(self._internal_sensors_map.values())
 
     def get_action_spec(self) -> gym.Space:
         return self._internal_action_spec

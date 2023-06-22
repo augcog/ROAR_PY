@@ -48,6 +48,7 @@ class RoarPyWebsocketServerImpl(roar_py_remote.services.websocket_service.RoarPy
 
     async def client_disconnected(self, client):
         await super().client_disconnected(client)
+        print("Client {} disconnected, closing world...".format(client))
         self._client_to_world_map[client].close()
         del self._client_to_world_map[client]
 
@@ -65,7 +66,13 @@ async def _main():
     service = RoarPyWebsocketServerImpl(roar_py_server_manager)
     async def websocket_handler(websocket):
         await service.new_client_connected(websocket)
-        for msg in await websocket:
+        while True:
+            try:
+                msg = await websocket.recv()
+            except websockets.exceptions.ConnectionClosed:
+                await service.client_disconnected(websocket)
+                break
+
             await service.client_message_received(websocket, msg)
     
     # def step_world_runner():

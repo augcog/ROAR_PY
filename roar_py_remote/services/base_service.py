@@ -68,7 +68,7 @@ class RoarPyStreamingService(Generic[_CommT]):
             serialized_msg = to_msgpack(packed_msg)
             send_coroutines.append(self.send_message_to_client(client, serialized_msg))
         
-        await asyncio.gather(*send_coroutines, return_exceptions=False)
+        await asyncio.gather(*send_coroutines, return_exceptions=True)
 
 
 _CommClientT = TypeVar("_CommClientT")

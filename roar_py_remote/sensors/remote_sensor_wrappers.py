@@ -69,7 +69,7 @@ class RoarPyRemoteServerSensorWrapper(typing.Generic[_ObsTServer], RoarPySensor[
 
     @property
     def control_timestep(self) -> float:
-        return super().control_timestep()
+        return super().control_timestep
     
     def get_gym_observation_spec(self) -> gym.Space:
         return self._wrapped_object.get_gym_observation_spec()
