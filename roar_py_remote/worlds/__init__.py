@@ -1,1 +1,1 @@
-from .remote_worlds import RoarPyRemoteMaskedWorld, RoarPyRemoteServer
+from .server_worlds import RoarPyRemoteMaskedWorld, RoarPyRemoteServerWorldManager

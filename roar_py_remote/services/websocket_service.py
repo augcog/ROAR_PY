@@ -1,16 +1,16 @@
+from .base_service import RoarPyStreamingService, RoarPyStreamingClient
 import websockets
-from roar_py_interface.base import RoarPyRemoteSupportedSensorData, RoarPySensor, RoarPyRemoteSupportedSensorSerializationScheme
-from serde import serde
-from dataclasses import dataclass
-import enum
 
-class RoarPyWebsocketCommunicationCommand(enum.IntEnum):
-    CLIENT_TRY_READ_VEHICLE = 0
-    CLIENT_READ_SENSOR_OBSERVATION = 1
+class RoarPyWebsocketStreamingService(RoarPyStreamingService):
+    async def send_message_to_client(self, client, message: bytes):
+        await client.send(message)
 
-@serde
-@dataclass
-class RoarPyWebsocketCommunicationData:
-    command: RoarPyWebsocketCommunicationCommand
+    async def disconnect_client(self, client):
+        await client.close()
 
+class RoarPyWebsocketStreamingClient(RoarPyStreamingClient):
+    async def send_message_to_server(self, connection, message: bytes):
+        await connection.send(message)
 
+    async def disconnect_from_server(self, connection):
+        await connection.close()

@@ -12,9 +12,9 @@ from dataclasses import dataclass
 import pickle
 import zlib
 
-from roar_py_remote.actors.remote_actors import RoarPyRemoteActorObsInfo, RoarPyRemoteActorObsInfoRequest
 from ..base import RoarPyObjectWithRemoteMessage, register_object_with_remote_message
 from ..sensors.remote_sensors import RoarPyRemoteSensorObsInfo, RoarPyRemoteSensorObsInfoRequest, RoarPyRemoteClientSensor
+from ..sensors.remote_sensor_wrappers import RoarPyRemoteServerSensorWrapper
 
 class RoarPyRemoteSharedActor(RoarPyActor):
     async def apply_action(self, action: typing.Any) -> bool:
@@ -138,3 +138,61 @@ class RoarPyRemoteClientActor(RoarPyActor, RoarPyObjectWithRemoteMessage[RoarPyR
 
     def is_closed(self) -> bool:
         return self._closed
+    
+@register_object_with_remote_message(RoarPyRemoteActorObsInfoRequest, RoarPyRemoteActorObsInfo)
+class RoarPyRemoteServerActorPacker(RoarPyObjectWithRemoteMessage[RoarPyRemoteActorObsInfoRequest, RoarPyRemoteActorObsInfo]):
+    def __init__(self, actor : RoarPyActor) -> None:
+        super().__init__()
+
+        self.actor = actor
+        self.sensors_map : typing.Dict[int, RoarPyRemoteServerSensorWrapper] = {}
+        self._last_sensor_id = 0
+        self._refresh_sensor_list()
+    
+    def _refresh_sensor_list(self) -> None:
+        new_map = {}
+        actor_sensors = self.actor.get_sensors()
+        for sensor in actor_sensors:
+            found_in_map = False
+            for oid, osensor in self.sensors_map:
+                if sensor is osensor:
+                    new_map[oid] = osensor
+                    found_in_map = True
+                    break
+            if not found_in_map:
+                new_map[self._last_sensor_id] = RoarPyRemoteServerSensorWrapper(sensor)
+                self._last_sensor_id += 1
+        self.sensors_map = new_map
+    
+    def _depack_info(self, data: RoarPyRemoteActorObsInfoRequest) -> bool:
+        if data.action is not None:
+            action_spec = self.actor.get_action_spec()
+            try:
+                real_action = gym.spaces.unflatten(action_spec, data.action)
+            except:
+                return False
+            
+            if action_spec.contains(real_action):
+                self.actor.apply_action(real_action)
+            else:
+                return False
+        
+        if data.close:
+            self.actor.close()
+        
+        self._refresh_sensor_list()
+        for idx, sensor_req in data.sensors_request.items():
+            if idx in self.sensors_map:
+                self.sensors_map[idx]._depack_info(sensor_req)
+        
+        return True
+
+    def _pack_info(self) -> RoarPyRemoteActorObsInfo:
+        self._refresh_sensor_list()
+        return RoarPyRemoteActorObsInfo(
+            name=self.actor.name,
+            control_timestep=self.actor.control_timestep,
+            sensors_map={idx: sensor._pack_info() for idx, sensor in self.sensors_map.items()},
+            is_closed=self.actor.is_closed(),
+            action_spec=zlib.compress(pickle.dumps(self.actor.get_action_spec()))
+        )

@@ -1,4 +1,4 @@
-from roar_py_interface import RoarPyWorld, RoarPySensor, RoarPyActor, RoarPyThreadSafeWrapper, RoarPyAddItemWrapper
+from roar_py_interface import RoarPyWorld, RoarPySensor, RoarPyActor, RoarPyThreadSafeWrapper, RoarPyAddItemWrapper, RoarPyWaypoint
 import typing
 import threading
 import asyncio
@@ -6,7 +6,7 @@ import time
 import weakref
 
 class RoarPyRemoteMaskedWorld(RoarPyWorld):
-    def __init__(self, server_world : "RoarPyRemoteServer", underlying_world : RoarPyWorld, shared_lock : threading.RLock):
+    def __init__(self, server_world : "RoarPyRemoteServerWorldManager", underlying_world : RoarPyWorld, shared_lock : threading.RLock):
         super().__init__()
         self.__shared_lock = shared_lock
         self.__server_world = server_world
@@ -57,6 +57,10 @@ class RoarPyRemoteMaskedWorld(RoarPyWorld):
         self._refresh_sensor_list()
         return self._sensors.copy()
 
+    @property
+    def maneuverable_waypoints(self) -> typing.Optional[typing.Iterable[RoarPyWaypoint]]:
+        return self.__underlying_world.maneuverable_waypoints
+
     async def step(self) -> float:
         with self.__shared_lock:
             self._ready_step = True
@@ -85,13 +89,13 @@ class RoarPyRemoteMaskedWorld(RoarPyWorld):
     def __del__(self):
         self.close()
 
-class RoarPyRemoteServer:
+class RoarPyRemoteServerWorldManager:
     def __init__(
         self, 
         world : RoarPyWorld, 
         is_asynchronous : bool,
         sync_wait_time_max : float = 5.0,
-        constructor_to_subworld : typing.Callable[["RoarPyRemoteServer", RoarPyWorld, threading.RLock], RoarPyRemoteMaskedWorld] = RoarPyRemoteMaskedWorld
+        constructor_to_subworld : typing.Callable[["RoarPyRemoteServerWorldManager", RoarPyWorld, threading.RLock], RoarPyRemoteMaskedWorld] = RoarPyRemoteMaskedWorld
     ):
         super().__init__()
         assert world is not None

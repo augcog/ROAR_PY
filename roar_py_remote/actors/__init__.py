@@ -1,2 +1,2 @@
-from .remote_actors import RoarPyRemoteSharedActor
+from .remote_actors import RoarPyRemoteSharedActor, RoarPyRemoteClientActor, RoarPyRemoteServerActorPacker, RoarPyRemoteActorObsInfo, RoarPyRemoteActorObsInfoRequest
 from .remote_actor_wrappers import RoarPyRemoteSharedActorWrapper
