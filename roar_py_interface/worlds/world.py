@@ -18,6 +18,10 @@ class RoarPyWorld:
     def maneuverable_waypoints(self) -> typing.Optional[typing.Iterable[RoarPyWaypoint]]:
         return None
 
+    @property
+    def last_tick_elapsed_seconds(self) -> float:
+        raise NotImplementedError
+
     """
     Steps the world by one step.
     This can be used to update the world state and inside actor/sensor states

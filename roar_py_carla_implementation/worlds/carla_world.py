@@ -209,8 +209,14 @@ class RoarPyCarlaWorld(RoarPyWorld):
             return dt
         else:
             self.carla_world.tick(seconds=60.0) # server waits 60s for client to finish the tick
+            # self.last_tick_time = self.carla_world.get_snapshot().timestamp.elapsed_seconds # get the timestamp of the last tick
+            self.last_tick_time += self.control_timestep
             return self.control_timestep
     
+    @property
+    def last_tick_elapsed_seconds(self) -> float:
+        return self.last_tick_time
+
     @roar_py_thread_sync
     def _get_weather(self) -> carla.WeatherParameters:
         return self.carla_world.get_weather()
