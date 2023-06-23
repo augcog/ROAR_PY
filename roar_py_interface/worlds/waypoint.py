@@ -1,18 +1,16 @@
 import numpy as np
 from typing import Tuple, List
 import transforms3d as tr3d
+from serde import serde
+from dataclasses import dataclass
 from functools import cached_property
 
+@serde
+@dataclass
 class RoarPyWaypoint:
-    def __init__(
-        self,
-        location: np.ndarray,
-        roll_pitch_yaw: np.ndarray, # rpy of the road in radians, note that a road in the forward direction of the robot means their rpys are the same
-        lane_width: float # in meters
-    ):
-        self.location = location
-        self.roll_pitch_yaw = roll_pitch_yaw
-        self.lane_width = lane_width
+    location: np.ndarray
+    roll_pitch_yaw: np.ndarray # rpy of the road in radians, note that a road in the forward direction of the robot means their rpys are the same
+    lane_width: float
     
     @cached_property
     def line_representation(self) -> Tuple[np.ndarray, np.ndarray]:

@@ -1,11 +1,6 @@
-import websockets
-from roar_py_interface.base import RoarPyRemoteSupportedSensorData, RoarPySensor, RoarPyRemoteSupportedSensorSerializationScheme
-from ..base import RoarPyObjectWithRemoteMessage
-from serde import serde
+from ...base import RoarPyObjectWithRemoteMessage
 from serde.msgpack import from_msgpack, to_msgpack
-from dataclasses import dataclass
-import enum
-from typing import Callable, Optional, TypeVar, Generic, Dict, Type, List
+from typing import Optional, TypeVar, Generic, Dict, Type, List
 import asyncio
 
 _CommT = TypeVar("_CommT")
@@ -20,11 +15,15 @@ class RoarPyStreamingService(Generic[_CommT]):
     async def disconnect_client(self, client: _CommT):
         pass
 
-    async def generate_streamable_object(self, client: _CommT) -> RoarPyObjectWithRemoteMessage:
+    async def generate_streamable_object(self, client: _CommT) -> Optional[RoarPyObjectWithRemoteMessage]:
         pass
     
     async def new_client_connected(self, client: _CommT):
         new_streamable_object = await self.generate_streamable_object(client)
+        if new_streamable_object is None:
+            await self.disconnect_client(client)
+            return
+        
         self.client_to_stream_object[client] = new_streamable_object
 
         # We should dump a new message to the client on the next tick
@@ -107,12 +106,11 @@ class RoarPyStreamingClient(Generic[_CommClientT]):
             self._connection = connection
             self.stream_object = self.target_type(msg_received)
         else:
-            self.stream_object._depack_info(msg_received)
+            await asyncio.get_event_loop().run_in_executor(None, self.stream_object._depack_info, msg_received)
 
     async def tick(self):
         if self.stream_object is None or self._connection is None:
             return
         await self.stream_object._tick_remote()
-        packed_msg = self.stream_object._pack_info()
-        serialized_msg = to_msgpack(packed_msg)
+        serialized_msg = await asyncio.get_event_loop().run_in_executor(None, lambda: to_msgpack(self.stream_object._pack_info()))
         await self.send_message_to_server(self._connection,serialized_msg)

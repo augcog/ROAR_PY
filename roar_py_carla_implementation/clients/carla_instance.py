@@ -2,6 +2,7 @@ import carla
 from typing import Dict, List, Optional
 from roar_py_interface.wrappers import roar_py_thread_sync
 from ..worlds import RoarPyCarlaWorld
+import weakref
 
 class RoarPyCarlaInstance:
     actor_to_instance_map : Dict[int,"RoarPyCarlaBase"] = {}
@@ -61,7 +62,7 @@ class RoarPyCarlaInstance:
     
     @roar_py_thread_sync
     def register_actor(self, actor_id : int, actor_instance : "RoarPyCarlaBase"):
-        self.actor_to_instance_map[actor_id] = actor_instance
+        self.actor_to_instance_map[actor_id] = weakref.ref(actor_instance, lambda x: self.unregister_actor(actor_id, x))
     
     @roar_py_thread_sync
     def unregister_actor(self, actor_id : int, actor_instance : "RoarPyCarlaBase"):

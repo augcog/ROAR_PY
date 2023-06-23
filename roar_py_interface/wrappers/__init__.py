@@ -1,1 +1,1 @@
-from .wrapper_base import RoarPyWrapper, RoarPyThreadSafeWrapper, roar_py_thread_sync, RoarPyAddItemWrapper, roar_py_append_item, roar_py_remove_item
+from .wrapper_base import RoarPyWrapper, RoarPyActorWrapper, RoarPySensorWrapper, RoarPyWorldWrapper, RoarPyThreadSafeWrapper, roar_py_thread_sync, RoarPyAddItemWrapper, roar_py_append_item, roar_py_remove_item

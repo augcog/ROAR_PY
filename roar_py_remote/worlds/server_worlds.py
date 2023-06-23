@@ -1,4 +1,4 @@
-from roar_py_interface import RoarPyWorld, RoarPySensor, RoarPyActor, RoarPyThreadSafeWrapper, RoarPyAddItemWrapper, RoarPyWaypoint
+from roar_py_interface import RoarPyWorld, RoarPySensor, RoarPyActor, RoarPyThreadSafeWrapper, RoarPyAddItemWrapper, RoarPyWaypoint, RoarPyWrapper
 import typing
 import threading
 import asyncio
@@ -64,8 +64,8 @@ class RoarPyRemoteMaskedWorld(RoarPyWorld):
     async def step(self) -> float:
         with self.__shared_lock:
             self._ready_step = True
-        while self._ready_step:
-            await asyncio.sleep(0.001)
+        # while self._ready_step:
+        #     await asyncio.sleep(0.1)
         ret = self._last_step_dt
         self._last_step_dt = 0.0
         return ret
@@ -100,7 +100,7 @@ class RoarPyRemoteServerWorldManager:
         super().__init__()
         assert world is not None
         self.__shared_lock = threading.RLock()
-        self.__underlying_world = RoarPyAddItemWrapper(RoarPyThreadSafeWrapper(world, self.__shared_lock), self.__add_item_callback, self.__remove_item_callback)
+        self.__underlying_world : RoarPyWorld = RoarPyAddItemWrapper(RoarPyThreadSafeWrapper(world, self.__shared_lock), self.__add_item_callback, self.__remove_item_callback)
         self.__is_asynchronous = is_asynchronous
         self._masked_worlds : typing.List[RoarPyRemoteMaskedWorld] = []
         self._sync_wait_time_max = sync_wait_time_max
@@ -132,18 +132,29 @@ class RoarPyRemoteServerWorldManager:
     def __add_item_callback(self, item):
         if self._last_subworld_modified is None:
             return
-        if isinstance(item, RoarPyActor):
-            self._last_subworld_modified._actors.append(item)
-        elif isinstance(item, RoarPySensor):
-            self._last_subworld_modified._sensors.append(item)
+        
+        item_unwrapped = item if not isinstance(item, RoarPyWrapper) else item.unwrapped
+        
+        if isinstance(item_unwrapped, RoarPyActor):
+            actors_in_underlying_world = self.__underlying_world.get_actors()
+            unwrapped_actors_in_underlying_world = [actor if not isinstance(actor, RoarPyWrapper) else actor.unwrapped for actor in actors_in_underlying_world]
+            if item_unwrapped in unwrapped_actors_in_underlying_world:
+                self._last_subworld_modified._actors.append(item)
+        elif isinstance(item_unwrapped, RoarPySensor):
+            sensors_in_underlying_world = self.__underlying_world.get_sensors()
+            unwrapped_sensors_in_underlying_world = [sensor if not isinstance(sensor, RoarPyWrapper) else sensor.unwrapped for sensor in sensors_in_underlying_world]
+            if item_unwrapped in unwrapped_sensors_in_underlying_world:
+                self._last_subworld_modified._sensors.append(item)
 
     def __remove_item_callback(self, item):
         if self._last_subworld_modified is None:
             return
         if isinstance(item, RoarPyActor):
-            self._last_subworld_modified._actors.remove(item)
+            if item in self._last_subworld_modified._actors:
+                self._last_subworld_modified._actors.remove(item)
         elif isinstance(item, RoarPySensor):
-            self._last_subworld_modified._sensors.remove(item)
+            if item in self._last_subworld_modified._sensors:
+                self._last_subworld_modified._sensors.remove(item)
 
     async def _step(self) -> float:
         if not self.is_asynchronous:
@@ -152,7 +163,7 @@ class RoarPyRemoteServerWorldManager:
             while time.time() - start_time > self._sync_wait_time_max and len(not_ready_subworlds) > 0:
                 not_ready_subworlds = filter(lambda x: x._ready_step == False, not_ready_subworlds)
             
-            # if len(not_ready_subworlds) > 0:   
+            # if len(not_ready_subworlds) > 0:
             #     print("Worlds not ready: ", not_ready_subworlds)
             #     print("Kicking them out of the list")
             #     for subworld in not_ready_subworlds:

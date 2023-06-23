@@ -162,4 +162,4 @@ class RoarPyCarlaBase:
         self._carla_instance.unregister_actor(self._base_actor.id, self)
 
     def is_closed(self) -> bool:
-        return self._base_actor.is_alive
+        return not self._base_actor.is_alive
