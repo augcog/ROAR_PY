@@ -107,7 +107,7 @@ class RoarPyCarlaWorld(RoarPyWorld):
         for native_ww in native_ws:
             w = native_ww[0]
             transform_w = transform_from_carla(w.transform)
-            transform_w[1][2] += np.pi/2
+            # Interestingly carla's waypoint also has x axis pointing to the "forward" of the road
             real_w = RoarPyWaypoint(
                 transform_w[0],
                 transform_w[1],
@@ -254,7 +254,7 @@ class RoarPyCarlaWorld(RoarPyWorld):
     """
     def get_geolocation(self, location : np.ndarray) -> np.ndarray:
         assert location.shape == (3,)
-        native_location = carla.Location(x=location[0], y=location[1], z=location[2])
+        native_location = location_to_carla(location)
         native_geolocation = self._native_carla_map.transform_to_geolocation(native_location)
         return np.array([native_geolocation.latitude, native_geolocation.longitude, native_geolocation.altitude])
 
