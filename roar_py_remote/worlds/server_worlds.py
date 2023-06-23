@@ -115,15 +115,15 @@ class RoarPyRemoteServerWorldManager:
         with self.__shared_lock:
             new_masked_world = self._constructor_to_subworld(self, self.__underlying_world, self.__shared_lock)
             self._masked_worlds.append(weakref.proxy(new_masked_world,self._del_masked_world))
-            print("Creating new masked world", len(self._masked_worlds))
+            print("Creating new masked world => new masked world count {}".format(len(self._masked_worlds)))
             return new_masked_world
         
     def _del_masked_world(self,world : RoarPyRemoteMaskedWorld):
         with self.__shared_lock:
             try:
-                print("Deleting masked world", len(self._masked_worlds))
                 if world in self._masked_worlds:
                     self._masked_worlds.remove(world)
+                    print("Deleted masked world => new masked world count {}".format(len(self._masked_worlds)))
                 if self._last_subworld_modified is world:
                     self._last_subworld_modified = None
             except:

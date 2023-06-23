@@ -27,7 +27,7 @@ class RoarPyWebsocketServerImpl(roar_py_remote.services.websocket_service.RoarPy
         
         new_vehicle = None
         while new_vehicle is None:
-            spawning_waypoint = waypoints[np.random.randint(len(waypoints))]
+            spawning_waypoint = waypoints[0]
             new_vehicle = masked_world.spawn_vehicle(
                 "vehicle.tesla.model3",
                 spawning_waypoint.location + np.array([0,0,1.5]), # spawn 1.5m above the ground
@@ -40,8 +40,8 @@ class RoarPyWebsocketServerImpl(roar_py_remote.services.websocket_service.RoarPy
             roar_py_interface.RoarPyCameraSensorDataRGB, # Specify what kind of data you want to receive
             np.array([-0.5, 0.0, 3.5]), # relative position
             np.array([0, np.pi/10, 0]), # relative rotation
-            image_width=1024,
-            image_height=768
+            image_width=600,
+            image_height=400
         )
         
         return roar_py_remote.RoarPyRemoteServerActorWrapper(new_vehicle)

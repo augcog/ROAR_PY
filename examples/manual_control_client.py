@@ -51,7 +51,7 @@ class ManualControlViewer:
         
         pressed_keys = pygame.key.get_pressed()
         if pressed_keys[pygame.K_UP]:
-            new_control['throttle'] = 0.4
+            new_control['throttle'] = 0.5
         if pressed_keys[pygame.K_DOWN]:
             new_control['brake'] = 0.2
         if pressed_keys[pygame.K_LEFT]:

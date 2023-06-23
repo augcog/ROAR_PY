@@ -57,8 +57,8 @@ class RoarPyStreamingService(Generic[_CommT]):
         for client, stream_object in self.client_to_stream_object.items():
             if hasattr(stream_object, "receive_observation"):
                 tick_coroutines.append(stream_object.receive_observation())
-            elif hasattr(stream_object, "step"):
-                tick_coroutines.append(stream_object.step())
+            # elif hasattr(stream_object, "step"):
+            #     tick_coroutines.append(stream_object.step())
         
         await asyncio.gather(*tick_coroutines)
 

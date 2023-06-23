@@ -1,4 +1,5 @@
-from ..base import RoarPySensor, RoarPyRemoteSupportedSensorData
+from roar_py_interface.base.sensor import RoarPyRemoteSupportedSensorSerializationScheme
+from ..base import RoarPySensor, RoarPyRemoteSupportedSensorData, RoarPyRemoteSupportedSensorSerializationScheme
 from ..base.sensor import remote_support_sensor_data_register
 from serde import serde
 from dataclasses import dataclass
@@ -6,6 +7,7 @@ from PIL import Image
 import numpy as np
 import typing
 import gymnasium as gym
+import io
 
 class RoarPyCameraSensorData(RoarPyRemoteSupportedSensorData):
     """
@@ -58,6 +60,19 @@ class RoarPyCameraSensorDataRGB(RoarPyCameraSensorData):
             np.asarray(image.convert("RGB"), dtype=np.uint8)
         )
 
+    def to_data(self, scheme: RoarPyRemoteSupportedSensorSerializationScheme) -> bytes:
+        saved_image = io.BytesIO()
+        self.get_image().save(saved_image, format="JPEG")
+        return saved_image.getvalue()
+
+    @staticmethod
+    def from_data_custom(data : bytes, scheme : RoarPyRemoteSupportedSensorSerializationScheme):
+        image_bytes = io.BytesIO(data)
+        image_bytes.seek(0)
+        img = Image.open(image_bytes)
+        return __class__.from_image(img)
+
+
 @remote_support_sensor_data_register
 @serde
 @dataclass
@@ -83,6 +98,18 @@ class RoarPyCameraSensorDataGreyscale(RoarPyCameraSensorData):
         return __class__(
             np.asarray(image.convert("L"),dtype=np.uint8)
         )
+
+    def to_data(self, scheme: RoarPyRemoteSupportedSensorSerializationScheme) -> bytes:
+        saved_image = io.BytesIO()
+        self.get_image().save(saved_image, format="JPEG")
+        return saved_image.getvalue()
+
+    @staticmethod
+    def from_data_custom(data : bytes, scheme : RoarPyRemoteSupportedSensorSerializationScheme):
+        image_bytes = io.BytesIO(data)
+        image_bytes.seek(0)
+        img = Image.open(image_bytes)
+        return __class__.from_image(img)
 
 @remote_support_sensor_data_register
 @serde

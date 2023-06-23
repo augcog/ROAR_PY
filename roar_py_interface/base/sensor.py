@@ -55,6 +55,10 @@ class RoarPyRemoteSupportedSensorData:
     @classmethod
     def from_data(cls: typing.Type["RoarPyRemoteSupportedSensorData"], data: bytes, scheme: RoarPyRemoteSupportedSensorSerializationScheme) -> "RoarPyRemoteSupportedSensorData":
         # Not compressed data types
+        if hasattr(cls, "from_data_custom"):
+            ret = cls.from_data_custom(data, scheme)
+            return ret
+        
         if scheme == RoarPyRemoteSupportedSensorSerializationScheme.DICT:
             ret = serde.from_dict(cls, data)
             return ret
