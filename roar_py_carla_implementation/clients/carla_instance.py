@@ -62,7 +62,7 @@ class RoarPyCarlaInstance:
     
     @roar_py_thread_sync
     def register_actor(self, actor_id : int, actor_instance : "RoarPyCarlaBase"):
-        self.actor_to_instance_map[actor_id] = weakref.ref(actor_instance, lambda x: self.unregister_actor(actor_id, x))
+        self.actor_to_instance_map[actor_id] = weakref.proxy(actor_instance, lambda x: self.unregister_actor(actor_id, x))
     
     @roar_py_thread_sync
     def unregister_actor(self, actor_id : int, actor_instance : "RoarPyCarlaBase"):

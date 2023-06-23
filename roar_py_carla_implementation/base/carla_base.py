@@ -74,8 +74,9 @@ class RoarPyCarlaBase:
     @property
     def bounding_box(self) -> RoarPyCarlaBoundingBox:
         bdBox = self._base_actor.bounding_box
+        
         return RoarPyCarlaBoundingBox(
-            extent=np.array([bdBox.extent.x, bdBox.extent.y, bdBox.extent.z]),
+            extent=np.abs(location_from_carla(bdBox.extent)),#np.array([bdBox.extent.x, bdBox.extent.y, bdBox.extent.z]),
             location=location_from_carla(bdBox.location),
             rotation=rotation_from_carla(bdBox.rotation)
         )
