@@ -11,5 +11,5 @@ pytest>=7.3.1
 pytest-asyncio>=0.21.0
 networkx==3.1
 matplotlib
-websockets >= 11.0.1
-typing_inspect >= 0.8.0
+websockets>=11.0.1
+typing_inspect>=0.8.0
