@@ -2,6 +2,10 @@
 
 Supports python >= 3.8, carla >= 0.9.12
 
+## Documentation
+
+Please go to our [Documentation Website](https://roar.gitbook.io/roar_py-documentation/) for more info
+
 ## Installation
 
 ```bash
