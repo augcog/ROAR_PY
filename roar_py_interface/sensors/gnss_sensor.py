@@ -1,9 +1,11 @@
 from ..base import RoarPySensor,RoarPyRemoteSupportedSensorData
+from ..base.sensor import remote_support_sensor_data_register
 from serde import serde
 from dataclasses import dataclass
 import numpy as np
 import gymnasium as gym
 
+@remote_support_sensor_data_register
 @serde
 @dataclass
 class RoarPyGNSSSensorData(RoarPyRemoteSupportedSensorData):
@@ -15,6 +17,21 @@ class RoarPyGNSSSensorData(RoarPyRemoteSupportedSensorData):
 
     # degrees east(+)/west(-) on the map from prime meridian
     longitude: float
+
+    def get_gym_observation_spec(self) -> gym.Space:
+        return gym.spaces.Box(
+            low =np.array([-np.inf,-90,-180]),
+            high=np.array([np.inf,90,180]),
+            shape=(3,),
+            dtype=np.float32
+        )
+
+    def convert_obs_to_gym_obs(self):
+        return np.array([
+            self.altitude,
+            self.latitude,
+            self.longitude
+        ])
 
 class RoarPyGNSSSensor(RoarPySensor[RoarPyGNSSSensorData]):
     def __init__(
@@ -33,8 +50,4 @@ class RoarPyGNSSSensor(RoarPySensor[RoarPyGNSSSensorData]):
         )
 
     def convert_obs_to_gym_obs(self, obs: RoarPyGNSSSensorData):
-        return np.array([
-            obs.altitude,
-            obs.latitude,
-            obs.longitude
-        ])
+        return obs.convert_obs_to_gym_obs()

@@ -27,8 +27,8 @@ async def main():
         plt.arrow(
             waypoint.location[0], 
             waypoint.location[1], 
-            waypoint_heading[0] * 10, 
-            waypoint_heading[1] * 10, 
+            waypoint_heading[0] * 1, 
+            waypoint_heading[1] * 1, 
             width=0.5, 
             color='r'
         )

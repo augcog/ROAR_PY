@@ -1,4 +1,5 @@
 from ..base import RoarPySensor, RoarPyRemoteSupportedSensorData
+from ..base.sensor import remote_support_sensor_data_register
 from serde import serde
 from dataclasses import dataclass
 import numpy as np
@@ -6,11 +7,23 @@ import gymnasium as gym
 import transforms3d as tr3d
 import typing
 
+@remote_support_sensor_data_register
 @serde
 @dataclass
 class RoarPyFrameQuatSensorData(RoarPyRemoteSupportedSensorData):
     # Normalized frame quaternion (w,x,y,z)
     frame_quaternion: np.ndarray #np.NDArray[np.float32]
+
+    def get_gym_observation_spec(self) -> gym.Space:
+        return gym.spaces.Box(
+            low =-1.0,
+            high=1.0,
+            shape=(4,),
+            dtype=np.float32
+        )
+    
+    def convert_obs_to_gym_obs(self):
+        return self.frame_quaternion
 
 class RoarPyFrameQuatSensor(RoarPySensor[RoarPyFrameQuatSensorData]):
     def __init__(
@@ -29,7 +42,7 @@ class RoarPyFrameQuatSensor(RoarPySensor[RoarPyFrameQuatSensorData]):
         )
 
     def convert_obs_to_gym_obs(self, obs: RoarPyFrameQuatSensorData):
-        return obs.frame_quaternion
+        return obs.convert_obs_to_gym_obs()
 
 @serde
 @dataclass
@@ -37,6 +50,17 @@ class RoarPyRollPitchYawSensorData(RoarPyRemoteSupportedSensorData):
     # Normalized[-pi,pi) roll,pitch,yaw
     roll_pitch_yaw: np.ndarray #np.NDArray[np.float32]
 
+    def get_gym_observation_spec(self) -> gym.Space:
+        return gym.spaces.Box(
+            low =-np.pi,
+            high=np.pi,
+            shape=(3,),
+            dtype=np.float32
+        )
+    
+    def convert_obs_to_gym_obs(self):
+        return self.roll_pitch_yaw
+    
 class RoarPyRollPitchYawSensor(RoarPySensor[RoarPyRollPitchYawSensorData]):
     def __init__(
         self, 
@@ -54,7 +78,7 @@ class RoarPyRollPitchYawSensor(RoarPySensor[RoarPyRollPitchYawSensorData]):
         )
     
     def convert_obs_to_gym_obs(self, obs: RoarPyRollPitchYawSensorData):
-        return obs.roll_pitch_yaw
+        return obs.convert_obs_to_gym_obs()
 
 class RoarPyRollPitchYawSensorFromFrameQuat(RoarPyRollPitchYawSensor):
     def __init__(

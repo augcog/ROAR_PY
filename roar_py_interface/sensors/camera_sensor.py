@@ -1,12 +1,15 @@
-from ..base import RoarPySensor, RoarPyRemoteSupportedSensorData
+from roar_py_interface.base.sensor import RoarPyRemoteSupportedSensorSerializationScheme
+from ..base import RoarPySensor, RoarPyRemoteSupportedSensorData, RoarPyRemoteSupportedSensorSerializationScheme
+from ..base.sensor import remote_support_sensor_data_register
 from serde import serde
 from dataclasses import dataclass
 from PIL import Image
 import numpy as np
 import typing
 import gymnasium as gym
+import io
 
-class RoarPyCameraSensorData:
+class RoarPyCameraSensorData(RoarPyRemoteSupportedSensorData):
     """
     Returns the image as a numpy array.
 
@@ -14,16 +17,27 @@ class RoarPyCameraSensorData:
     def get_image(self) -> Image:
         raise NotImplementedError()
     
-    def to_gym(self) -> np.ndarray:
+    def to_gym(self) -> typing.Any:
         raise NotImplementedError()
+    
+    def get_size(self) -> typing.Tuple[int, int]:
+        return self.get_image().size
 
     @staticmethod
     def gym_observation_space(width : int, height : int) -> gym.Space:
         raise NotImplementedError()
+    
+    def get_gym_observation_spec(self) -> gym.Space:
+        img = self.get_image()
+        return self.__class__.gym_observation_space(*self.get_size())
 
-@dataclass
+    def convert_obs_to_gym_obs(self):
+        return self.to_gym()
+
+@remote_support_sensor_data_register
 @serde
-class RoarPyCameraSensorDataRGB(RoarPyCameraSensorData, RoarPyRemoteSupportedSensorData):
+@dataclass
+class RoarPyCameraSensorDataRGB(RoarPyCameraSensorData):
     # RGB image W*H*3, each r/g/b value in range [0,255]
     image_rgb: np.ndarray #np.NDArray[np.uint8]
 
@@ -32,6 +46,9 @@ class RoarPyCameraSensorDataRGB(RoarPyCameraSensorData, RoarPyRemoteSupportedSen
 
     def to_gym(self) -> np.ndarray:
         return self.image_rgb
+    
+    def get_size(self) -> typing.Tuple[int, int]:
+        return self.image_rgb.shape[1::-1]
 
     @staticmethod
     def gym_observation_space(width : int, height : int) -> gym.Space:
@@ -43,9 +60,23 @@ class RoarPyCameraSensorDataRGB(RoarPyCameraSensorData, RoarPyRemoteSupportedSen
             np.asarray(image.convert("RGB"), dtype=np.uint8)
         )
 
-@dataclass
+    def to_data(self, scheme: RoarPyRemoteSupportedSensorSerializationScheme) -> bytes:
+        saved_image = io.BytesIO()
+        self.get_image().save(saved_image, format="JPEG")
+        return saved_image.getvalue()
+
+    @staticmethod
+    def from_data_custom(data : bytes, scheme : RoarPyRemoteSupportedSensorSerializationScheme):
+        image_bytes = io.BytesIO(data)
+        image_bytes.seek(0)
+        img = Image.open(image_bytes)
+        return __class__.from_image(img)
+
+
+@remote_support_sensor_data_register
 @serde
-class RoarPyCameraSensorDataGreyscale(RoarPyCameraSensorData, RoarPyRemoteSupportedSensorData):
+@dataclass
+class RoarPyCameraSensorDataGreyscale(RoarPyCameraSensorData):
     # Greyscale image W*H*1, each pixel in range[0,255]
     image_greyscale: np.ndarray #np.NDArray[np.uint8]
 
@@ -54,6 +85,9 @@ class RoarPyCameraSensorDataGreyscale(RoarPyCameraSensorData, RoarPyRemoteSuppor
     
     def to_gym(self) -> np.ndarray:
         return self.image_greyscale
+    
+    def get_size(self) -> typing.Tuple[int, int]:
+        return self.image_greyscale.shape[1::-1]
 
     @staticmethod
     def gym_observation_space(width : int, height : int) -> gym.Space:
@@ -65,9 +99,22 @@ class RoarPyCameraSensorDataGreyscale(RoarPyCameraSensorData, RoarPyRemoteSuppor
             np.asarray(image.convert("L"),dtype=np.uint8)
         )
 
-@dataclass
+    def to_data(self, scheme: RoarPyRemoteSupportedSensorSerializationScheme) -> bytes:
+        saved_image = io.BytesIO()
+        self.get_image().save(saved_image, format="JPEG")
+        return saved_image.getvalue()
+
+    @staticmethod
+    def from_data_custom(data : bytes, scheme : RoarPyRemoteSupportedSensorSerializationScheme):
+        image_bytes = io.BytesIO(data)
+        image_bytes.seek(0)
+        img = Image.open(image_bytes)
+        return __class__.from_image(img)
+
+@remote_support_sensor_data_register
 @serde
-class RoarPyCameraSensorDataDepth(RoarPyCameraSensorData, RoarPyRemoteSupportedSensorData):
+@dataclass
+class RoarPyCameraSensorDataDepth(RoarPyCameraSensorData):
     # unit in m, W*H*1
     image_depth: np.ndarray #np.NDArray[np.float32]
     is_log_scale: bool
@@ -82,15 +129,19 @@ class RoarPyCameraSensorDataDepth(RoarPyCameraSensorData, RoarPyRemoteSupportedS
     
     def to_gym(self) -> np.ndarray:
         return self.image_depth
+    
+    def get_size(self) -> typing.Tuple[int, int]:
+        return self.image_depth.shape[1::-1]
 
     @staticmethod
     def gym_observation_space(width : int, height : int) -> gym.Space:
         return gym.spaces.Box(low=0, high=np.inf, shape=(height, width, 1), dtype=np.float32)
 
 
-@dataclass
+@remote_support_sensor_data_register
 @serde
-class RoarPyCameraSensorDataSemanticSegmentation(RoarPyCameraSensorData, RoarPyRemoteSupportedSensorData):
+@dataclass
+class RoarPyCameraSensorDataSemanticSegmentation(RoarPyCameraSensorData):
     # Semantic Segmentation(SS) Frame, W*H*1
     image_ss: np.ndarray #np.NDArray[np.uint64]
     # Dictionary mapping each pixel in SS Frame to a RGB array of color and a label
@@ -110,12 +161,24 @@ class RoarPyCameraSensorDataSemanticSegmentation(RoarPyCameraSensorData, RoarPyR
     
     def to_gym(self) -> np.ndarray:
         return self.image_ss
+    
+    def get_size(self) -> typing.Tuple[int, int]:
+        return self.image_ss.shape[1::-1]
 
     @staticmethod
     def gym_observation_space(width : int, height : int) -> gym.Space:
         return gym.spaces.Box(low=0, high=np.iinfo(np.uint64).max, shape=(height, width, 1), dtype=np.uint64)
 
 class RoarPyCameraSensor(RoarPySensor[RoarPyCameraSensorData]):
+    def __init__(
+        self,
+        name: str,
+        control_timestep: float,
+        target_data_type: typing.Type[RoarPyCameraSensorData]
+    ):
+        super().__init__(name, control_timestep)
+        self._target_data_type = target_data_type
+
     @property
     def image_size_width(self) -> int:
         raise NotImplementedError()
@@ -127,6 +190,9 @@ class RoarPyCameraSensor(RoarPySensor[RoarPyCameraSensorData]):
     @property
     def fov(self) -> float:
         raise NotImplementedError()
+    
+    def get_gym_observation_spec(self) -> gym.Space:
+        return self._target_data_type.gym_observation_space(self.image_size_width, self.image_size_height)
 
     def convert_obs_to_gym_obs(self, obs: RoarPyCameraSensorData):
         return obs.to_gym()

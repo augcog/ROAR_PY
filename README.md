@@ -2,12 +2,24 @@
 
 Supports python >= 3.8, carla >= 0.9.12
 
+## Documentation
+
+Please go to our [Documentation Website](https://roar.gitbook.io/roar_py-documentation/) for more info
+
 ## Installation
 
 ```bash
 pip install -r requirements.txt
 pip install -e .
 ```
+
+## Code Structures
+
+| Folder | Description |
+| --- | --- |
+| `roar_py_interface` | Contains all the interfaces that interacts with a simulator / real world. |
+| `roar_py_carla_implementation` | Contains all the implementations of the interfaces for Carla. |
+| `roar_py_remote` | Contains all interface / wrappers for supporting remote + shared ownership control. |
 
 ## Examples & Documents
 
