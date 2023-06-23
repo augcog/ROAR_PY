@@ -95,12 +95,15 @@ class RoarPyRemoteServerWorldManager:
         world : RoarPyWorld, 
         is_asynchronous : bool,
         sync_wait_time_max : float = 5.0,
-        constructor_to_subworld : typing.Callable[["RoarPyRemoteServerWorldManager", RoarPyWorld, threading.RLock], RoarPyRemoteMaskedWorld] = RoarPyRemoteMaskedWorld
+        constructor_to_subworld : typing.Callable[["RoarPyRemoteServerWorldManager", RoarPyWorld, threading.RLock], RoarPyRemoteMaskedWorld] = RoarPyRemoteMaskedWorld,
+        thread_safe = True
     ):
         super().__init__()
         assert world is not None
         self.__shared_lock = threading.RLock()
-        self.__underlying_world : RoarPyWorld = RoarPyAddItemWrapper(RoarPyThreadSafeWrapper(world, self.__shared_lock), self.__add_item_callback, self.__remove_item_callback)
+
+        ts_world = RoarPyThreadSafeWrapper(world, self.__shared_lock) if thread_safe else world
+        self.__underlying_world : RoarPyWorld = RoarPyAddItemWrapper(ts_world, self.__add_item_callback, self.__remove_item_callback)
         self.__is_asynchronous = is_asynchronous
         self._masked_worlds : typing.List[RoarPyRemoteMaskedWorld] = []
         self._sync_wait_time_max = sync_wait_time_max
@@ -136,10 +139,10 @@ class RoarPyRemoteServerWorldManager:
         item_unwrapped = item if not isinstance(item, RoarPyWrapper) else item.unwrapped
         
         if isinstance(item_unwrapped, RoarPyActor):
-            actors_in_underlying_world = self.__underlying_world.get_actors()
-            unwrapped_actors_in_underlying_world = [actor if not isinstance(actor, RoarPyWrapper) else actor.unwrapped for actor in actors_in_underlying_world]
-            if item_unwrapped in unwrapped_actors_in_underlying_world:
-                self._last_subworld_modified._actors.append(item)
+            # actors_in_underlying_world = self.__underlying_world.get_actors()
+            # unwrapped_actors_in_underlying_world = [actor if not isinstance(actor, RoarPyWrapper) else actor.unwrapped for actor in actors_in_underlying_world]
+            # if item_unwrapped in unwrapped_actors_in_underlying_world:
+            self._last_subworld_modified._actors.append(item)
         elif isinstance(item_unwrapped, RoarPySensor):
             sensors_in_underlying_world = self.__underlying_world.get_sensors()
             unwrapped_sensors_in_underlying_world = [sensor if not isinstance(sensor, RoarPyWrapper) else sensor.unwrapped for sensor in sensors_in_underlying_world]

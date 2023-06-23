@@ -49,7 +49,7 @@ async def _main():
     roar_py_instance.world.set_asynchronous(True)
     roar_py_instance.world.set_control_steps(0.0, 0.005)
 
-    roar_py_server_manager = roar_py_remote.RoarPyRemoteServerWorldManager(roar_py_instance.world, IS_ASYNC, SYNC_WAIT_TIME)
+    roar_py_server_manager = roar_py_remote.RoarPyRemoteServerWorldManager(roar_py_instance.world, IS_ASYNC, SYNC_WAIT_TIME, thread_safe=False)
 
     print("Initializing websocket server...")
     roar_py_websocket_server = ServerInst(roar_py_server_manager)
