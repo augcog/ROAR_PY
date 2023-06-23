@@ -82,7 +82,7 @@ class RoarPyRemoteMaskedWorld(RoarPyWorld):
                         sensor.close()
                 self._sensors.clear()
                 if self in self.__server_world._masked_worlds:
-                    self.__server_world._masked_worlds.remove(self)
+                    self.__server_world._del_masked_world(self)
         except:
             pass
     

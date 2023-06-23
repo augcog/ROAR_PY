@@ -4,14 +4,14 @@ from roar_py_interface.sensors import *
 from roar_py_interface.base import RoarPySensor
 import typing
 import gymnasium as gym
-import carla
-import transforms3d as tr3d
 import numpy as np
 from serde import serde
 from dataclasses import dataclass
 import pickle
 import zlib
 import base64
+import asyncio
+
 
 from ..base import RoarPyObjectWithRemoteMessage, register_object_with_remote_message
 from ..sensors.remote_sensors import RoarPyRemoteSensorObsInfo, RoarPyRemoteSensorObsInfoRequest, RoarPyRemoteClientSensor
@@ -53,20 +53,21 @@ class RoarPyRemoteActorObsInfo:
         return pickle.loads(zlib.decompress(base64.b64decode(self.action_spec)))
 
     @staticmethod
-    def from_actor(actor: RoarPyActor, sensor_data_map : typing.Dict[int, RoarPyRemoteSensorObsInfo]) -> "RoarPyRemoteActorObsInfo":
+    def from_actor(actor: RoarPyActor, sensor_data_map : typing.Dict[int, RoarPyRemoteSensorObsInfo], pack_action_spec : bool) -> "RoarPyRemoteActorObsInfo":
         return RoarPyRemoteActorObsInfo(
             name=actor.name,
             control_timestep=actor.control_timestep,
             sensors_map=sensor_data_map,
             is_closed=actor.is_closed(),
-            action_spec=base64.b64encode(zlib.compress(pickle.dumps(actor.get_action_spec()))).decode("ascii")
+            action_spec=base64.b64encode(zlib.compress(pickle.dumps(actor.get_action_spec()))).decode("ascii") if pack_action_spec else None
         )
 
 @serde
 @dataclass
 class RoarPyRemoteActorObsInfoRequest:
     close: bool
-    sensors_request: typing.Dict[int, typing.Optional[RoarPyRemoteSensorObsInfoRequest]]
+    sensors_request: typing.Dict[int, RoarPyRemoteSensorObsInfoRequest]
+    need_action_space_spec : bool
     action: typing.Optional[np.ndarray]
 
 @register_object_with_remote_message(RoarPyRemoteActorObsInfo, RoarPyRemoteActorObsInfoRequest)
@@ -77,6 +78,7 @@ class RoarPyRemoteClientActor(RoarPyActor, RoarPyObjectWithRemoteMessage[RoarPyR
         self.new_request_info = RoarPyRemoteActorObsInfoRequest(
             close=False,
             sensors_request={},
+            need_action_space_spec=True,
             action=None
         )
         self._closed = False
@@ -88,11 +90,13 @@ class RoarPyRemoteClientActor(RoarPyActor, RoarPyObjectWithRemoteMessage[RoarPyR
     def _depack_info(self, data: RoarPyRemoteActorObsInfo) -> bool:
         self._control_timestep = data.control_timestep
         self._closed = data.is_closed
+        
         for id, sensor_obs in data.sensors_map.items(): # Update sensors
             if id not in self._internal_sensors_map:
                 self._internal_sensors_map[id] = RoarPyRemoteClientSensor(sensor_obs)
             else:
                 self._internal_sensors_map[id]._depack_info(sensor_obs)
+        
         for id, sensor in self._internal_sensors_map.items(): # Close sensors that are not in the new list
             if id not in data.sensors_map:
                 sensor._closed = True
@@ -101,6 +105,8 @@ class RoarPyRemoteClientActor(RoarPyActor, RoarPyObjectWithRemoteMessage[RoarPyR
         new_action_spec = data.get_action_spec()
         if new_action_spec is not None:
             self._internal_action_spec = new_action_spec
+            self.new_request_info.need_action_space_spec = False
+        return True
 
     def _pack_info(self) -> RoarPyRemoteActorObsInfoRequest:
         self.new_request_info.sensors_request = {}

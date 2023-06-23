@@ -50,14 +50,16 @@ class RoarPyRemoteServerSensorWrapper(typing.Generic[_ObsTServer], RoarPySensor[
         RoarPyWrapper.__init__(self, sensor, "RoarPyRemoteServerSensor")
         RoarPySensor.__init__(self, sensor.name, sensor.control_timestep)
         RoarPyObjectWithRemoteMessage.__init__(self)
+        self._pack_obs_spec = True
     
     def _depack_info(self, data: RoarPyRemoteSensorObsInfoRequest) -> bool:
         if data.close:
             self.close()
+        self._pack_obs_spec = data.need_obs_spec
         return True
     
     def _pack_info(self) -> RoarPyRemoteSensorObsInfo:
-        return RoarPyRemoteSensorObsInfo.from_sensor(self)
+        return RoarPyRemoteSensorObsInfo.from_sensor(self, self._pack_obs_spec)
 
     @property
     def name(self) -> str:

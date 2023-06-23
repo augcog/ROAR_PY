@@ -90,7 +90,7 @@ async def _main():
     # step_world_process = threading.Thread(target=step_world_runner, daemon=True)
     # step_world_process.start()
     try:
-        async with websockets.serve(websocket_handler, "", 8080):
+        async with websockets.serve(websocket_handler, "", 8080, max_size=None):
             while True:
                 await roar_py_server_manager._step()
                 await service.tick()

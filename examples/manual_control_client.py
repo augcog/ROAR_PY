@@ -70,7 +70,7 @@ class ManualControlViewer:
 WEBSOCKET_URI = "ws://localhost:8080"
 
 async def main():
-    async with websockets.connect(WEBSOCKET_URI) as websocket_client:
+    async with websockets.connect(WEBSOCKET_URI, max_size=None) as websocket_client:
         roar_py_remote_client = roar_py_remote.services.websocket_service.RoarPyWebsocketStreamingClient(
             roar_py_remote.RoarPyRemoteClientActor
         ) # Receive a client that can be used to send and receive messages from the server
@@ -93,14 +93,18 @@ async def main():
                 msg = await websocket_client.recv()
             except websockets.exceptions.ConnectionClosed:
                 print("Connection closed while receiving")
-                roar_py_remote_client.disconnected_from_server()
+                await roar_py_remote_client.disconnected_from_server()
                 return
             await roar_py_remote_client.server_message_received(websocket_client, msg)
+            
 
             img : roar_py_interface.RoarPyCameraSensorDataRGB = await camera.receive_observation()
             control = viewer.render(img)
             if control is None:
                 break
             await vehicle.apply_action(control)
+
+            await roar_py_remote_client.tick()
+            
 if __name__ == '__main__':
     asyncio.run(main())

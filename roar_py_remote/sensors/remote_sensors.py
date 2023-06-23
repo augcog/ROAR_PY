@@ -47,15 +47,17 @@ class RoarPyRemoteSensorObsInfo:
         
         last_data_type_real = RoarPyRemoteSupportedSensorData._supported_data_types[self.last_data_type]
         try:
-            self._new_data = last_data_type_real.from_data(
+            new_data = last_data_type_real.from_data(
                 base64.b64decode(self.last_data),
                 RoarPyRemoteSupportedSensorSerializationScheme.MSGPACK_COMPRESSED
             )
         except Exception as e:
+            print(f"Failed to deserialize data of type {self.last_data_type} with error {e}")
             return None
+        return new_data
     
     @staticmethod
-    def from_sensor(sensor: RoarPySensor) -> "RoarPyRemoteSensorObsInfo":
+    def from_sensor(sensor: RoarPySensor, pack_obs_spec : bool) -> "RoarPyRemoteSensorObsInfo":
         last_obs = sensor.get_last_observation()
         assert last_obs is None or isinstance(last_obs, RoarPyRemoteSupportedSensorData)
         return RoarPyRemoteSensorObsInfo(
@@ -63,7 +65,7 @@ class RoarPyRemoteSensorObsInfo:
             control_timestep = sensor.control_timestep,
             last_data = base64.b64encode(last_obs.to_data(RoarPyRemoteSupportedSensorSerializationScheme.MSGPACK_COMPRESSED)).decode("ascii") if last_obs is not None else None,
             last_data_type = last_obs.__class__.__name__,
-            obs_spec = base64.b64encode(zlib.compress(pickle.dumps(sensor.get_gym_observation_spec(), protocol=pickle.DEFAULT_PROTOCOL))).decode("ascii"),
+            obs_spec = base64.b64encode(zlib.compress(pickle.dumps(sensor.get_gym_observation_spec(), protocol=pickle.DEFAULT_PROTOCOL))).decode("ascii") if pack_obs_spec else None,
             is_closed = sensor.is_closed()
         )
 
@@ -71,6 +73,7 @@ class RoarPyRemoteSensorObsInfo:
 @dataclass
 class RoarPyRemoteSensorObsInfoRequest:
     close : bool
+    need_obs_spec : bool
 
 _ObsTClient = TypeVar("_ObsTClient", bound=RoarPyRemoteSupportedSensorData)
 
@@ -87,7 +90,8 @@ class RoarPyRemoteClientSensor(RoarPySensor[_ObsTClient], Generic[_ObsTClient], 
         self._new_data = None
         self._obs_spec = None
         self.new_request : RoarPyRemoteSensorObsInfoRequest = RoarPyRemoteSensorObsInfoRequest(
-            close = False
+            close = False,
+            need_obs_spec = True
         )
         self._depack_info(start_info)
     
@@ -101,12 +105,13 @@ class RoarPyRemoteClientSensor(RoarPySensor[_ObsTClient], Generic[_ObsTClient], 
         new_obs_spec = data.get_obs_spec()
         if new_obs_spec is not None:
             self._obs_spec = new_obs_spec
+            self.new_request.need_obs_spec = False
         
         self._closed = data.is_closed
         return True
     
     def _pack_info(self) -> RoarPyRemoteSensorObsInfoRequest:
-        return copy.copy(self.new_request)
+        return self.new_request
 
     def get_gym_observation_spec(self) -> gym.Space:
         if self._obs_spec is None:
