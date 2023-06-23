@@ -6,6 +6,9 @@ class RoarPyObjectWithRemoteMessage(Generic[_InMsgT, _OutMsgT]):
     def _depack_info(self, data: _InMsgT) -> bool:
         raise NotImplementedError()
     
+    async def _tick_remote(self) -> None:
+        return
+
     def _pack_info(self) -> _OutMsgT:
         raise NotImplementedError()
 

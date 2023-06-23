@@ -60,6 +60,9 @@ class RoarPyRemoteServerSensorWrapper(typing.Generic[_ObsTServer], RoarPySensor[
     
     def _pack_info(self) -> RoarPyRemoteSensorObsInfo:
         return RoarPyRemoteSensorObsInfo.from_sensor(self, self._pack_obs_spec)
+    
+    async def _tick_remote(self):
+        await self.receive_observation()
 
     @property
     def name(self) -> str:

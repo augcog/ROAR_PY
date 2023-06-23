@@ -145,3 +145,6 @@ class RoarPyRemoteServerActorWrapper(RoarPyWrapper, RoarPyActor, RoarPyObjectWit
         self._refresh_sensor_list()
         sensor_map = dict([(idx, sensor._pack_info()) for idx, sensor in self.sensors_map.items()])
         return RoarPyRemoteActorObsInfo.from_actor(self._wrapped_object, sensor_map, self._need_action_space_spec)
+
+    async def _tick_remote(self):
+        await self.receive_observation()

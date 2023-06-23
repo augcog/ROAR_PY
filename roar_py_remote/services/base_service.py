@@ -5,13 +5,14 @@ from serde import serde
 from serde.msgpack import from_msgpack, to_msgpack
 from dataclasses import dataclass
 import enum
-from typing import Callable, Optional, TypeVar, Generic, Dict, Type
+from typing import Callable, Optional, TypeVar, Generic, Dict, Type, List
 import asyncio
 
 _CommT = TypeVar("_CommT")
 class RoarPyStreamingService(Generic[_CommT]):
     def __init__(self):
         self.client_to_stream_object : Dict[_CommT, RoarPyObjectWithRemoteMessage] = {}
+        self.next_update_client : List[_CommT] = []
     
     async def send_message_to_client(self, client: _CommT, message: bytes):
         pass
@@ -26,10 +27,8 @@ class RoarPyStreamingService(Generic[_CommT]):
         new_streamable_object = await self.generate_streamable_object(client)
         self.client_to_stream_object[client] = new_streamable_object
 
-        # Send the initial message
-        packed_msg = new_streamable_object._pack_info()
-        serialized_msg = to_msgpack(packed_msg)
-        await self.send_message_to_client(client, serialized_msg)
+        # We should dump a new message to the client on the next tick
+        self.next_update_client.append(client)
 
     async def client_disconnected(self, client: _CommT):
         if client in self.client_to_stream_object:
@@ -51,12 +50,14 @@ class RoarPyStreamingService(Generic[_CommT]):
             return
 
         stream_object._depack_info(msg_received)
+        # We should dump a new message to the client on the next tick
+        self.next_update_client.append(client)
 
     async def tick(self):
         tick_coroutines = []
         for client, stream_object in self.client_to_stream_object.items():
-            if hasattr(stream_object, "receive_observation"):
-                tick_coroutines.append(stream_object.receive_observation())
+            if client in self.next_update_client:
+                tick_coroutines.append(stream_object._tick_remote())
             # elif hasattr(stream_object, "step"):
             #     tick_coroutines.append(stream_object.step())
         
@@ -64,11 +65,13 @@ class RoarPyStreamingService(Generic[_CommT]):
 
         send_coroutines = []
         for client, stream_object in self.client_to_stream_object.items():
-            packed_msg = stream_object._pack_info()
-            serialized_msg = to_msgpack(packed_msg)
-            send_coroutines.append(self.send_message_to_client(client, serialized_msg))
+            if client in self.next_update_client:
+                packed_msg = stream_object._pack_info()
+                serialized_msg = to_msgpack(packed_msg)
+                send_coroutines.append(self.send_message_to_client(client, serialized_msg))
         
         await asyncio.gather(*send_coroutines, return_exceptions=True)
+        self.next_update_client = []
 
 
 _CommClientT = TypeVar("_CommClientT")
@@ -109,6 +112,7 @@ class RoarPyStreamingClient(Generic[_CommClientT]):
     async def tick(self):
         if self.stream_object is None or self._connection is None:
             return
+        await self.stream_object._tick_remote()
         packed_msg = self.stream_object._pack_info()
         serialized_msg = to_msgpack(packed_msg)
         await self.send_message_to_server(self._connection,serialized_msg)

@@ -10,6 +10,7 @@ import base64
 import asyncio
 import copy
 
+# Permission Control for Remotely Shared Sensors
 _ObsT = TypeVar("_ObsT")
 class RoarPyRemoteSharedSensor(RoarPySensor[_ObsT], Generic[_ObsT]):
     async def receive_observation(self) -> Any:
