@@ -141,6 +141,10 @@ class RoarPyWorldWrapper(RoarPyWrapper[RoarPyWorld], RoarPyWorld):
 
     async def step(self) -> float:
         return await self._wrapped_object.step()
+    
+    @property
+    def last_tick_elapsed_seconds(self) -> float:
+        return self._wrapped_object.last_tick_elapsed_seconds
 
 _TSWrapped = TypeVar("_TSWrapped")
 class RoarPyThreadSafeWrapper(RoarPyWrapper[_TSWrapped], Generic[_TSWrapped]):

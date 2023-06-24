@@ -14,7 +14,9 @@ class RoarPyRemoteMaskedWorld(RoarPyWorld):
         self._actors : typing.List[RoarPyActor] = []
         self._sensors : typing.List[RoarPySensor] = []
         self._ready_step = False
-        self._last_step_dt = 0.0
+        self._next_step_dt = 0.0
+        self._last_step_timestamp = underlying_world.last_tick_elapsed_seconds
+        self._next_step_timestamp = self._last_step_timestamp
     
     def __getattr__(self, __name: str):
         if __name.startswith("_"):
@@ -61,13 +63,18 @@ class RoarPyRemoteMaskedWorld(RoarPyWorld):
     def maneuverable_waypoints(self) -> typing.Optional[typing.Iterable[RoarPyWaypoint]]:
         return self.__underlying_world.maneuverable_waypoints
 
+    @property
+    def last_tick_elapsed_seconds(self) -> float:
+        return self._last_step_timestamp
+
     async def step(self) -> float:
         with self.__shared_lock:
             self._ready_step = True
         # while self._ready_step:
         #     await asyncio.sleep(0.1)
-        ret = self._last_step_dt
-        self._last_step_dt = 0.0
+        ret = self._next_step_dt
+        self._last_step_timestamp = self._next_step_timestamp
+        self._next_step_dt = 0.0
         return ret
 
     def close(self):
@@ -177,6 +184,7 @@ class RoarPyRemoteServerWorldManager:
         with self.__shared_lock:
             stepped_dt = await self.__underlying_world.step()
             for masked_world in self._masked_worlds:
-                masked_world._last_step_dt += stepped_dt
+                masked_world._next_step_dt += stepped_dt
                 masked_world._ready_step = False
+                masked_world._next_step_timestamp = self.__underlying_world.last_tick_elapsed_seconds
             return stepped_dt

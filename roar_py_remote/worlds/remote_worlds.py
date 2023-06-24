@@ -24,6 +24,7 @@ class RoarPyRemoteWorldObsInfo:
     stepped_dt : float
     actor_info_map : Dict[int, RoarPyRemoteActorObsInfo]
     sensor_info_map : Dict[int, RoarPyRemoteSensorObsInfo]
+    last_step_t : float
 
 @serde
 @dataclass
@@ -130,7 +131,8 @@ class RoarPyRemoteServerWorldWrapper(RoarPyObjectWithRemoteMessage[RoarPyRemoteW
             stepped=self._stepped,
             stepped_dt=self._stepped_dt,
             actor_info_map=actor_info_map,
-            sensor_info_map=sensor_info_map
+            sensor_info_map=sensor_info_map,
+            last_step_t=self.last_tick_elapsed_seconds
         )
         # self._stepped = False
         return ret
@@ -143,6 +145,7 @@ class RoarPyRemoteClientWorld(RoarPyWorld, RoarPyObjectWithRemoteMessage[RoarPyR
         self._actor_map : Dict[int, RoarPyRemoteClientActor] = {}
         self._sensor_map : Dict[int, RoarPyRemoteClientSensor] = {}
         self._is_asynchronous = False
+        self._last_step_t = 0.0
         self._maneuverable_waypoints = None
 
         self._new_info : Optional[RoarPyRemoteWorldObsInfo] = None
@@ -206,10 +209,15 @@ class RoarPyRemoteClientWorld(RoarPyWorld, RoarPyObjectWithRemoteMessage[RoarPyR
 
         self._depack_actor_infos(self._new_info.actor_info_map)
         self._depack_sensor_infos(self._new_info.sensor_info_map)
+        self._last_step_t = self._new_info.last_step_t
 
         dt = self._new_info.stepped_dt
         self._new_info = None # Clear the new info after we have processed it, so that we can receive new info by stepping on the server side
         return dt
+    
+    @property
+    def last_tick_elapsed_seconds(self) -> float:
+        return self._last_step_t
 
     def _depack_info(self, data: RoarPyRemoteWorldObsInfo) -> bool:
         if data.init_info is not None:
