@@ -13,11 +13,11 @@ class RoarPyOccupancyMap:
         global_coordinate_pos, global_coordinate_neg = waypoint.line_representation
         global_coordinate_pos = global_coordinate_pos[:2].astype(int)
         global_coordinate_neg = global_coordinate_neg[:2].astype(int)
-        if 0 <= global_coordinate_pos[0] < self.size and 0 <= global_coordinate_pos[1] < self.size:
+        if (0 <= global_coordinate_pos[0] < self.size) and (0 <= global_coordinate_pos[1] < self.size):
             self.map[global_coordinate_pos[0], global_coordinate_pos[1]] = 1
         else:
             print("Waypoint out of bounds")
-        if 0 <= global_coordinate_neg[0] < self.size and 0 <= global_coordinate_neg[1] < self.size:
+        if (0 <= global_coordinate_neg[0] < self.size) and (0 <= global_coordinate_neg[1] < self.size):
             self.map[global_coordinate_neg[0], global_coordinate_neg[1]] = 1
         else:
             print("Waypoint out of bounds")
