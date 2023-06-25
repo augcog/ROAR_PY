@@ -2,8 +2,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 class RoarPyOccupancyMap:
-    map: np.ndarray
-    size: int
+    map: np.ndarray # 2D Occupancy Map
+    size: int       # Size of the map (assume square map)
 
     def __init__(self, size) -> None:
         self.size = size

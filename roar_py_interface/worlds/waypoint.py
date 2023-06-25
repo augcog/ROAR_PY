@@ -8,9 +8,9 @@ from functools import cached_property
 @serde
 @dataclass
 class RoarPyWaypoint:
-    location: np.ndarray
-    roll_pitch_yaw: np.ndarray # rpy of the road in radians, note that a road in the forward direction of the robot means their rpys are the same
-    lane_width: float
+    location: np.ndarray        # x, y, z of the center of the waypoint
+    roll_pitch_yaw: np.ndarray  # rpy of the road in radians, note that a road in the forward direction of the robot means their rpys are the same
+    lane_width: float           # width of the lane in meters at this waypoint
     
     @cached_property
     def line_representation(self) -> Tuple[np.ndarray, np.ndarray]:
