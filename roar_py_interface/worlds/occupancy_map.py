@@ -2,7 +2,7 @@ import numpy as np
 from skimage.draw import polygon
 import matplotlib.pyplot as plt
 from typing import List
-from waypoint import RoarPyWaypoint  # Assuming RoarPyWaypoint class is in RoarPyWaypoint.py
+from waypoint import RoarPyWaypoint
 
 class OccupancyMap:
     def __init__(self, size):
