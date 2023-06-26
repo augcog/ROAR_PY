@@ -17,7 +17,7 @@ class RoarPyCarlaLocationInWorldSensor(RoarPyLocationInWorldSensor):
 
     async def receive_observation(self) -> RoarPyLocationInWorldSensorData:
         self.received_data = RoarPyLocationInWorldSensorData(
-            self.binded_target.get_location()
+            self.binded_target.get_3d_location()
         )
         return self.received_data
     
