@@ -90,6 +90,10 @@ class RoarPyCarlaBase:
         ang_vel = self._base_actor.get_angular_velocity()
         return rotation_from_carla(carla.Rotation(roll=ang_vel.x, pitch=ang_vel.y, yaw=ang_vel.z))
     
+    def get_location(self) -> np.ndarray:
+        loc = self._base_actor.get_location()
+        return location_from_carla(carla.Location(x=loc.x, y=loc.y, z=loc.z))
+    
     # Angular velocity in radians per second
     @roar_py_thread_sync
     def set_angular_velocity(self, target_angular_velocity : np.ndarray):
