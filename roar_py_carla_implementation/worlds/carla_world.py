@@ -115,12 +115,6 @@ class RoarPyCarlaWorld(RoarPyWorld):
             )
             real_ws.append(real_w)
         return real_ws
-    
-    @cached_property
-    @roar_py_thread_sync
-    def occupancy_map(self) -> RoarPyOccupancyMap:
-        occ_map = RoarPyOccupancyMap(10000000)
-        return occ_map.add_waypoints(self.maneuverable_waypoints)
 
     @cached_property
     def map_name(self):
