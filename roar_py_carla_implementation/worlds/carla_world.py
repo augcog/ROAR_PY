@@ -6,7 +6,7 @@ import asyncio
 import numpy as np
 import os.path
 
-from roar_py_interface import RoarPyActor, RoarPySensor, roar_py_thread_sync, roar_py_append_item, roar_py_remove_item, RoarPyWaypoint
+from roar_py_interface import RoarPyActor, RoarPySensor, roar_py_thread_sync, roar_py_append_item, roar_py_remove_item, RoarPyWaypoint, RoarPyOccupancyMap
 from roar_py_interface.sensors import *
 from ..actors import RoarPyCarlaVehicle, RoarPyCarlaActor
 from ..sensors import *
@@ -115,6 +115,12 @@ class RoarPyCarlaWorld(RoarPyWorld):
             )
             real_ws.append(real_w)
         return real_ws
+    
+    @cached_property
+    @roar_py_thread_sync
+    def occupancy_map(self) -> RoarPyOccupancyMap:
+        occ_map = RoarPyOccupancyMap(10000000)
+        return occ_map.add_waypoints(self.maneuverable_waypoints)
 
     @cached_property
     def map_name(self):

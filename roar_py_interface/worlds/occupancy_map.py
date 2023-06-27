@@ -2,13 +2,18 @@ import numpy as np
 from skimage.draw import polygon
 import matplotlib.pyplot as plt
 from typing import List
+from serde import serde
+from dataclasses import dataclass
 from waypoint import RoarPyWaypoint
 
-class OccupancyMap:
+@serde
+@dataclass
+class RoarPyOccupancyMap:
     def __init__(self, size):
         self.size = size
         self.map = np.zeros((size, size))
 
+    @staticmethod
     def add_road(self, waypoint1: RoarPyWaypoint, waypoint2: RoarPyWaypoint):
         # Get the vertices of the polygon representing the road
         point1, point2 = waypoint1.line_representation
@@ -22,6 +27,7 @@ class OccupancyMap:
         # Mark these points on the map as road
         self.map[rr, cc] = 1
 
+    @staticmethod
     def add_waypoints(self, waypoints: List[RoarPyWaypoint]):
         for waypoint1, waypoint2 in zip(waypoints[:-1], waypoints[1:]):
             self.add_road(waypoint1, waypoint2)
