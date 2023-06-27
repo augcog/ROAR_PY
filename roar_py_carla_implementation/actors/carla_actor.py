@@ -200,6 +200,16 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         self._internal_sensors.append(new_sensor)
         return new_sensor
     
+    @roar_py_append_item
+    @roar_py_thread_sync
+    def attach_location_in_world_sensor(
+        self,
+        name: str = "carla_location_in_world_sensor",
+    ):
+        new_sensor = RoarPyCarlaLocationInWorldSensor(self._carla_instance, self, name=name)
+        self._internal_sensors.append(new_sensor)
+        return new_sensor
+    
     @roar_py_remove_item
     @roar_py_thread_sync
     def remove_sensor(self, sensor: RoarPySensor):

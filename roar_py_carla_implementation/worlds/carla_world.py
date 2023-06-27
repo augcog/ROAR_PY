@@ -6,7 +6,7 @@ import asyncio
 import numpy as np
 import os.path
 
-from roar_py_interface import RoarPyActor, RoarPySensor, roar_py_thread_sync, roar_py_append_item, roar_py_remove_item, RoarPyWaypoint, RoarPyOccupancyMap
+from roar_py_interface import RoarPyActor, RoarPySensor, roar_py_thread_sync, roar_py_append_item, roar_py_remove_item, RoarPyWaypoint
 from roar_py_interface.sensors import *
 from ..actors import RoarPyCarlaVehicle, RoarPyCarlaActor
 from ..sensors import *
