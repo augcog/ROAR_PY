@@ -7,3 +7,5 @@ from .rotation_sensor import RoarPyFrameQuatSensor, RoarPyFrameQuatSensorData, R
 from .lidar_sensor import RoarPyLiDARSensor, RoarPyLiDARSensorData
 from .location_in_world_sensor import RoarPyLocationInWorldSensor, RoarPyLocationInWorldSensorData
 from .occupancy_map_sensor import RoarPyOccupancyMapSensor, RoarPyOccupancyMapSensorData, RoarPyOccupancyMapSensorImpl
+from .velocimeter_sensor import RoarPyVelocimeterSensor, RoarPyVelocimeterSensorData
+from .custom_lambda_sensor import RoarPyCustomLambdaSensor, RoarPyCustomLambdaSensorData

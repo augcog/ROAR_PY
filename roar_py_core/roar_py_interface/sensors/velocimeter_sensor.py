@@ -8,9 +8,9 @@ import gymnasium as gym
 @remote_support_sensor_data_register
 @serde
 @dataclass
-class RoarPyAccelerometerSensorData(RoarPyRemoteSupportedSensorData):
-    # acceleration (x,y,z local axis) in m/s^2
-    acceleration: np.ndarray #np.NDArray[np.float32]
+class RoarPyVelocimeterSensorData(RoarPyRemoteSupportedSensorData):
+    # velocity (x,y,z axis) in m/s^2
+    velocity: np.ndarray #np.NDArray[np.float32]
 
     def get_gym_observation_spec(self) -> gym.Space:
         return gym.spaces.Box(
@@ -21,10 +21,10 @@ class RoarPyAccelerometerSensorData(RoarPyRemoteSupportedSensorData):
         )
 
     def convert_obs_to_gym_obs(self):
-        return self.acceleration
+        return self.velocity
 
-class RoarPyAccelerometerSensor(RoarPySensor[RoarPyAccelerometerSensorData], RoarPyRemoteSupportedSensorData):
-    sensordata_type = RoarPyAccelerometerSensorData
+class RoarPyVelocimeterSensor(RoarPySensor[RoarPyVelocimeterSensorData], RoarPyRemoteSupportedSensorData):
+    sensordata_type = RoarPyVelocimeterSensorData
     def get_gym_observation_spec(self) -> gym.Space:
         return gym.spaces.Box(
             low =-np.inf,
@@ -33,5 +33,5 @@ class RoarPyAccelerometerSensor(RoarPySensor[RoarPyAccelerometerSensorData], Roa
             dtype=np.float32
         )
 
-    def convert_obs_to_gym_obs(self, obs: RoarPyAccelerometerSensorData):
+    def convert_obs_to_gym_obs(self, obs: RoarPyVelocimeterSensorData):
         return obs.convert_obs_to_gym_obs()

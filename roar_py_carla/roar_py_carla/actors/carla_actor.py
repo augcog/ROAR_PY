@@ -95,6 +95,26 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         new_sensor = RoarPyCarlaAccelerometerSensor(self._carla_instance, self, name=name)
         self._internal_sensors.append(new_sensor)
         return new_sensor
+    
+    @roar_py_append_item
+    @roar_py_thread_sync
+    def attach_velocimeter_sensor(
+        self,
+        name : str = "carla_velocimeter_sensor",
+    ):
+        new_sensor = RoarPyCarlaVelocimeterSensor(self._carla_instance, self, name=name)
+        self._internal_sensors.append(new_sensor)
+        return new_sensor
+    
+    @roar_py_append_item
+    @roar_py_thread_sync
+    def attach_local_velocimeter_sensor(
+        self,
+        name : str = "carla_local_velocimeter_sensor",
+    ):
+        new_sensor = RoarPyCarlaLocalVelocimeterSensor(self._carla_instance, self, name=name)
+        self._internal_sensors.append(new_sensor)
+        return new_sensor
 
     @roar_py_append_item
     @roar_py_thread_sync
