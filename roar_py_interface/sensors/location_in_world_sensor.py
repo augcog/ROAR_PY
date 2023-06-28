@@ -1,4 +1,3 @@
-from ROAR_PY.roar_py_interface.base.sensor import RoarPyRemoteSupportedSensorData
 from ..base import RoarPySensor,RoarPyRemoteSupportedSensorData
 from ..base.sensor import remote_support_sensor_data_register
 from serde import serde
