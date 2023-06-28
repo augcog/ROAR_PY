@@ -32,6 +32,7 @@ class RoarPyLocationInWorldSensorData(RoarPyRemoteSupportedSensorData):
         ])
     
 class RoarPyLocationInWorldSensor(RoarPySensor[RoarPyLocationInWorldSensorData]):
+    sensordata_type = RoarPyLocationInWorldSensorData
     def __init__(
         self, 
         name: str,

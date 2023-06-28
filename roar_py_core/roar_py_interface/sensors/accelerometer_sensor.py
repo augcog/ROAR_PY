@@ -24,6 +24,7 @@ class RoarPyAccelerometerSensorData(RoarPyRemoteSupportedSensorData):
         return self.acceleration
 
 class RoarPyAccelerometerSensor(RoarPySensor[RoarPyAccelerometerSensorData], RoarPyRemoteSupportedSensorData):
+    sensordata_type = RoarPyAccelerometerSensorData
     def get_gym_observation_spec(self) -> gym.Space:
         return gym.spaces.Box(
             low =-np.inf,

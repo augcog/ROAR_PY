@@ -1,6 +1,6 @@
 from roar_py_interface import RoarPySensor, RoarPyRemoteSupportedSensorData, RoarPyRemoteSupportedSensorSerializationScheme
 from ..base import RoarPyObjectWithRemoteMessage, register_object_with_remote_message
-from typing import Any, TypeVar, Generic, Optional
+from typing import Any, TypeVar, Generic, Optional, Type
 import gymnasium as gym
 from serde import serde
 from dataclasses import dataclass
@@ -56,6 +56,13 @@ class RoarPyRemoteSensorObsInfo:
             print(f"Failed to deserialize data of type {self.last_data_type} with error {e}")
             return None
         return new_data
+
+    def get_last_obs_type(self) -> Type[RoarPyRemoteSupportedSensorData]:
+        if self.last_data is None:
+            return None
+        else:
+            last_data_type_real = RoarPyRemoteSupportedSensorData._supported_data_types[self.last_data_type]
+            return last_data_type_real
     
     @staticmethod
     def from_sensor(sensor: RoarPySensor, pack_obs_spec : bool) -> "RoarPyRemoteSensorObsInfo":
@@ -89,6 +96,7 @@ class RoarPyRemoteClientSensor(RoarPySensor[_ObsTClient], Generic[_ObsTClient], 
         self._closed = False
         self._last_data = None
         self._new_data = None
+        self._data_type = None
         self._obs_spec = None
         self.new_request : RoarPyRemoteSensorObsInfoRequest = RoarPyRemoteSensorObsInfoRequest(
             close = False,
@@ -96,12 +104,20 @@ class RoarPyRemoteClientSensor(RoarPySensor[_ObsTClient], Generic[_ObsTClient], 
         )
         self._depack_info(start_info)
     
+    @property
+    def sensordata_type(self):
+        return self._data_type
+
     def _depack_info(self, data: RoarPyRemoteSensorObsInfo) -> bool:
         self._control_timestep = data.control_timestep
         
         new_data = data.get_last_obs()
         if new_data is not None:
             self._new_data = new_data
+        
+        new_data_type = data.get_last_obs_type()
+        if new_data_type is not None:
+            self._data_type = new_data_type
         
         new_obs_spec = data.get_obs_spec()
         if new_obs_spec is not None:

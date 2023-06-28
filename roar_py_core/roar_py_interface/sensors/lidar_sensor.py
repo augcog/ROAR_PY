@@ -39,6 +39,7 @@ class RoarPyLiDARSensorData(RoarPyRemoteSupportedSensorData):
 
 
 class RoarPyLiDARSensor(RoarPySensor[RoarPyLiDARSensorData]):
+    sensordata_type = RoarPyLiDARSensorData
     def __init__(
         self,
         name: str,

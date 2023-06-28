@@ -129,7 +129,7 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
         assert target_data_type in __class__.SUPPORTED_BLUEPRINT_TO_TARGET_DATA[sensor.type_id], "Unsupported target_data_type: {} for blueprint_id: {}".format(target_data_type, sensor.type_id)
 
         RoarPyCameraSensor.__init__(self, name = name, control_timestep = 0.0, target_data_type = target_data_type)
-        self._target_data_type = target_data_type
+        self.sensordata_type = target_data_type
         sensor.listen(
             self.listen_carla_data
         )
@@ -156,12 +156,12 @@ class RoarPyCarlaCameraSensor(RoarPyCameraSensor,RoarPyCarlaBase):
             self._base_actor.type_id,
             self.image_size_width,
             self.image_size_height,
-            self._target_data_type,
+            self.sensordata_type,
             carla_data
         )
 
     def get_gym_observation_spec(self) -> gym.Space:
-        return self._target_data_type.gym_observation_space(self.image_size_width, self.image_size_height)
+        return self.sensordata_type.gym_observation_space(self.image_size_width, self.image_size_height)
     
     async def receive_observation(self) -> RoarPyCameraSensorData:
         while self.received_data is None:

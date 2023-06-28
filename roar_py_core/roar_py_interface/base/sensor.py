@@ -92,6 +92,7 @@ def remote_support_sensor_data_register(cls): #: typing.Type["RoarPyRemoteSuppor
 
 _ObsT = typing.TypeVar("_ObsT")
 class RoarPySensor(typing.Generic[_ObsT]):
+    sensordata_type : typing.Type = _ObsT
     def __init__(
         self, 
         name: str,

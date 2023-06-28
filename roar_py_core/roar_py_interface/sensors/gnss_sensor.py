@@ -34,6 +34,7 @@ class RoarPyGNSSSensorData(RoarPyRemoteSupportedSensorData):
         ])
 
 class RoarPyGNSSSensor(RoarPySensor[RoarPyGNSSSensorData]):
+    sensordata_type = RoarPyGNSSSensorData
     def __init__(
         self, 
         name: str,

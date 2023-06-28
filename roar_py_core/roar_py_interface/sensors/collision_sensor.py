@@ -31,6 +31,7 @@ class RoarPyCollisionSensorData(RoarPyRemoteSupportedSensorData):
 
 
 class RoarPyCollisionSensor(RoarPySensor[RoarPyCollisionSensorData]):
+    sensordata_type = RoarPyCollisionSensorData
     def __init__(
         self, 
         name: str,

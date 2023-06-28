@@ -169,6 +169,7 @@ class RoarPyCameraSensorDataSemanticSegmentation(RoarPyCameraSensorData):
         return gym.spaces.Box(low=0, high=np.iinfo(np.uint64).max, shape=(height, width, 1), dtype=np.uint64)
 
 class RoarPyCameraSensor(RoarPySensor[RoarPyCameraSensorData]):
+    sensordata_type = RoarPyCameraSensorData
     def __init__(
         self,
         name: str,
@@ -176,7 +177,7 @@ class RoarPyCameraSensor(RoarPySensor[RoarPyCameraSensorData]):
         target_data_type: typing.Type[RoarPyCameraSensorData]
     ):
         super().__init__(name, control_timestep)
-        self._target_data_type = target_data_type
+        self.sensordata_type = target_data_type
 
     @property
     def image_size_width(self) -> int:
@@ -191,7 +192,7 @@ class RoarPyCameraSensor(RoarPySensor[RoarPyCameraSensorData]):
         raise NotImplementedError()
     
     def get_gym_observation_spec(self) -> gym.Space:
-        return self._target_data_type.gym_observation_space(self.image_size_width, self.image_size_height)
+        return self.sensordata_type.gym_observation_space(self.image_size_width, self.image_size_height)
 
     def convert_obs_to_gym_obs(self, obs: RoarPyCameraSensorData):
         return obs.to_gym()

@@ -47,6 +47,7 @@ class RoarPyOccupancyMapSensorData(RoarPyRemoteSupportedSensorData):
         return __class__.from_image(img)
 
 class RoarPyOccupancyMapSensor(RoarPySensor[RoarPyOccupancyMapSensorData]):
+    sensordata_type = RoarPyOccupancyMapSensorData
     def __init__(self, name: str = "occupancy_map_sensor"):
         super().__init__(name, 0.0)
 

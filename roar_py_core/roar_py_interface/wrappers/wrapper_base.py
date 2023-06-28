@@ -1,4 +1,4 @@
-from typing import Any, TypeVar, Generic, Union, Callable, Iterable, Optional
+from typing import Any, TypeVar, Generic, Union, Callable, Iterable, Optional, Type
 import threading
 from ..actors import RoarPyActor
 from ..base.sensor import RoarPySensor
@@ -79,6 +79,10 @@ class RoarPySensorWrapper(Generic[_SensorWrapperObsT], RoarPyWrapper[RoarPySenso
         RoarPyWrapper.__init__(self, wrapped_object, wrapper_name)
         RoarPySensor.__init__(self, wrapped_object.name, wrapped_object.control_timestep)
     
+    @property
+    def sensordata_type(self) -> Type:
+        return self._wrapped_object.sensordata_type
+
     @property
     def control_timestep(self) -> float:
         return self._wrapped_object.control_timestep

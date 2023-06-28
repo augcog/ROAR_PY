@@ -24,6 +24,7 @@ class RoarPyGyroscopeSensorData(RoarPyRemoteSupportedSensorData):
         return self.angular_velocity
 
 class RoarPyGyroscopeSensor(RoarPySensor[RoarPyGyroscopeSensorData]):
+    sensordata_type = RoarPyGyroscopeSensorData
     def __init__(
         self, 
         name: str,

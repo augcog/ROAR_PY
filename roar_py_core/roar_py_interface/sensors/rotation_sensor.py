@@ -26,6 +26,7 @@ class RoarPyFrameQuatSensorData(RoarPyRemoteSupportedSensorData):
         return self.frame_quaternion
 
 class RoarPyFrameQuatSensor(RoarPySensor[RoarPyFrameQuatSensorData]):
+    sensordata_type = RoarPyFrameQuatSensorData
     def __init__(
         self, 
         control_timestep: float,
@@ -63,6 +64,7 @@ class RoarPyRollPitchYawSensorData(RoarPyRemoteSupportedSensorData):
         return self.roll_pitch_yaw
     
 class RoarPyRollPitchYawSensor(RoarPySensor[RoarPyRollPitchYawSensorData]):
+    sensordata_type = RoarPyRollPitchYawSensorData
     def __init__(
         self, 
         name: str,
