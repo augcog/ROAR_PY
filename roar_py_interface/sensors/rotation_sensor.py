@@ -44,6 +44,7 @@ class RoarPyFrameQuatSensor(RoarPySensor[RoarPyFrameQuatSensorData]):
     def convert_obs_to_gym_obs(self, obs: RoarPyFrameQuatSensorData):
         return obs.convert_obs_to_gym_obs()
 
+@remote_support_sensor_data_register
 @serde
 @dataclass
 class RoarPyRollPitchYawSensorData(RoarPyRemoteSupportedSensorData):
