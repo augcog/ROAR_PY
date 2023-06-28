@@ -29,7 +29,7 @@ class RoarPyCarlaWorld(RoarPyWorld):
         self.carla_world = carla_world
         self.carla_instance = carla_instance
         self.tick_callback_id : typing.Optional[int] = None
-        self.last_tick_time : typing.Optional[float] = None
+        self.last_tick_time : float = 0.0
         self._actors : typing.List[RoarPyCarlaActor] = []
         self._sensors : typing.List[RoarPySensor] = []
 

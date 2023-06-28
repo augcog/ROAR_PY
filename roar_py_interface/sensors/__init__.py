@@ -5,3 +5,4 @@ from .gnss_sensor import RoarPyGNSSSensor, RoarPyGNSSSensorData
 from .gyroscope_sensor import RoarPyGyroscopeSensor, RoarPyGyroscopeSensorData
 from .rotation_sensor import RoarPyFrameQuatSensor, RoarPyFrameQuatSensorData, RoarPyRollPitchYawSensor, RoarPyRollPitchYawSensorData, RoarPyFrameQuatSensorFromRollPitchYaw, RoarPyRollPitchYawSensorFromFrameQuat
 from .lidar_sensor import RoarPyLiDARSensor, RoarPyLiDARSensorData
+from .location_in_world_sensor import RoarPyLocationInWorldSensor, RoarPyLocationInWorldSensorData

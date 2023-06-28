@@ -5,3 +5,4 @@ from .carla_lidar_sensor import RoarPyCarlaLiDARSensor
 from .carla_gnss_sensor import RoarPyCarlaGNSSSensor
 from .carla_accelerometer_sensor import RoarPyCarlaAccelerometerSensor
 from .carla_gyroscope_sensor import RoarPyCarlaGyroscopeSensor
+from .carla_location_in_world_sensor import RoarPyCarlaLocationInWorldSensor
