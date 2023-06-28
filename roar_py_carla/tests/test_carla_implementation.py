@@ -1,4 +1,4 @@
-from roar_py_carla_implementation import RoarPyCarlaInstance, RoarPyCarlaVehicle
+from roar_py_carla import RoarPyCarlaInstance, RoarPyCarlaVehicle
 import roar_py_interface
 import carla
 import pytest

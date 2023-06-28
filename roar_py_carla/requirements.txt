@@ -1,0 +1,3 @@
+roar_py_core
+carla>=0.9.12
+networkx==3.1
