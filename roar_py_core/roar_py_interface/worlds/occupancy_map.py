@@ -1,6 +1,5 @@
 import numpy as np
 from PIL import Image, ImageDraw, ImageColor
-import matplotlib.pyplot as plt
 from typing import List, Optional, Tuple
 from serde import serde
 from dataclasses import dataclass
@@ -87,6 +86,7 @@ class RoarPyOccupancyMapProducer:
         filtered_waypoint_pairs : List[Tuple[RoarPyWaypoint,RoarPyWaypoint]] = []
         last_waypoint = None
 
+        # Filter out waypoints that are not in the image
         for i in range(len(self.waypoints) + 1):
             waypoint = self.waypoints[i % len(self.waypoints)]
             
@@ -102,7 +102,8 @@ class RoarPyOccupancyMapProducer:
             ):
                 last_waypoint = waypoint
             
-        #self.image = Image.new('L', self.image.size, 0)
+        # Draw the local occupancy map centered around the actor location
+        # self.image = Image.new('L', self.image.size, 0)
         draw = ImageDraw.Draw(self.image)
         for waypoint1, waypoint2 in filtered_waypoint_pairs:
             draw.polygon(
