@@ -17,17 +17,17 @@ pip install -e .
 
 | Folder | Description |
 | --- | --- |
-| `roar_py_interface` | Contains all the interfaces that interacts with a simulator / real world. |
-| `roar_py_carla_implementation` | Contains all the implementations of the interfaces for Carla. |
-| `roar_py_remote` | Contains all interface / wrappers for supporting remote + shared ownership control. |
+| `roar_py_core/roar_py_interface` | Contains all the interfaces that interacts with a simulator / real world. |
+| `roar_py_core/roar_py_remote` | Contains all interface / wrappers for supporting remote + shared ownership control. |
+| `roar_py_carla` | Contains all the implementations of the interfaces for Carla. |
 
-## Examples & Documents
+## Examples
 
-Please refer to `examples/` folder for examples and `docs/` folder for documents.
+Please refer to `examples/` folder for examples.
 
 ## Unit Tests
 
-All tests are located under `tests/` folder. To run all tests, simply run:
+All tests are located under `tests/` folder of the specific package. To run those tests, simply run:
 
 ```bash
 pytest tests

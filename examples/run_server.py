@@ -1,9 +1,8 @@
 import carla
-import roar_py_carla_implementation
 import roar_py_remote
 import roar_py_interface
 import roar_py_remote.services.base_stream_services.websocket_service
-import roar_py_carla_implementation
+import roar_py_carla
 import threading
 import asyncio
 from typing import Union
@@ -15,7 +14,7 @@ SYNC_WAIT_TIME = 0.5
 
 
 class ServerInst(roar_py_remote.RoarPyWebsocketServerService):
-    async def initialize_streamed_world(self, client, world : roar_py_carla_implementation.RoarPyCarlaWorld) -> bool:
+    async def initialize_streamed_world(self, client, world : roar_py_carla.RoarPyCarlaWorld) -> bool:
         # This method is called when a client connects to the server and requests a streamed world.
         # You can use this method to initialize the world for the client.
         
@@ -45,7 +44,7 @@ async def _main():
     carla_client = carla.Client('localhost', 2000)
     carla_client.set_timeout(5.0)
     
-    roar_py_instance = roar_py_carla_implementation.RoarPyCarlaInstance(carla_client)
+    roar_py_instance = roar_py_carla.RoarPyCarlaInstance(carla_client)
     roar_py_instance.world.set_asynchronous(True)
     roar_py_instance.world.set_control_steps(0.0, 0.005)
 

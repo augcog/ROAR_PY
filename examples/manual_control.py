@@ -1,4 +1,4 @@
-import roar_py_carla_implementation
+import roar_py_carla
 import roar_py_interface
 import carla
 import pygame
@@ -78,7 +78,7 @@ class ManualControlViewer:
 async def main():
     carla_client = carla.Client('localhost', 2000)
     carla_client.set_timeout(5.0)
-    roar_py_instance = roar_py_carla_implementation.RoarPyCarlaInstance(carla_client)
+    roar_py_instance = roar_py_carla.RoarPyCarlaInstance(carla_client)
     
     carla_world = roar_py_instance.world
     carla_world.set_asynchronous(True)
