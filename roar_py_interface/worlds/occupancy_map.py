@@ -38,7 +38,7 @@ class RoarPyOccupancyMapProducer:
     def height(self, value : int):
         self.image = self.image.resize((self.width, value))
 
-    def  plot_occupancy_map(self, location_2d : np.ndarray, rotation_yaw : float) -> Image:
+    def plot_occupancy_map(self, location_2d : np.ndarray, rotation_yaw : float) -> Image:
         assert location_2d.shape == (2, )
         location_min = location_2d - np.array([self.width_world, self.height_world]) # give a bit slack to make sure that we can properly rotate
         location_max = location_2d + np.array([self.width_world, self.height_world])
