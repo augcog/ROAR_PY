@@ -86,7 +86,7 @@ class RoarPyRemoteSupportedSensorData:
     def convert_obs_to_gym_obs(self):
         raise NotImplementedError()
 
-def remote_support_sensor_data_register(cls: typing.Type["RoarPyRemoteSupportedSensorData"]):
+def remote_support_sensor_data_register(cls): #: typing.Type["RoarPyRemoteSupportedSensorData"]):
     RoarPyRemoteSupportedSensorData._supported_data_types[cls.__name__] = cls
     return cls
 

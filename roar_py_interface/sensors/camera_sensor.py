@@ -28,7 +28,6 @@ class RoarPyCameraSensorData(RoarPyRemoteSupportedSensorData):
         raise NotImplementedError()
     
     def get_gym_observation_spec(self) -> gym.Space:
-        img = self.get_image()
         return self.__class__.gym_observation_space(*self.get_size())
 
     def convert_obs_to_gym_obs(self):
