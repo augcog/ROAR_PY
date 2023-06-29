@@ -9,6 +9,29 @@ from .waypoint import RoarPyWaypoint
 @serde
 @dataclass
 class RoarPyOccupancyMapProducer:
+    """
+    The RoarPyOccupancyMapProducer class generates a 2D occupancy map from a list of waypoints.
+
+    The generated map is an image, where each pixel corresponds to a location in the world. The intensity 
+    of a pixel represents the occupancy of the corresponding location, with 255 representing an occupied 
+    location and 0 representing a free location.
+
+    -----------
+    Attributes:
+    -----------
+        waypoints (List[RoarPyWaypoint]): 
+            A list of waypoints that define the lanes.
+        width (int): 
+            The width of the occupancy map in pixels.
+        height (int): 
+            The height of the occupancy map in pixels.
+        width_world (float): 
+            The width of the world in meters. This is used to 
+            convert world coordinates to pixel coordinates.
+        height_world (float): 
+            The height of the world in meters. This is used to 
+            convert world coordinates to pixel coordinates.
+    """
     def __init__(
         self, 
         waypoints : List[RoarPyWaypoint],
@@ -38,18 +61,39 @@ class RoarPyOccupancyMapProducer:
     def height(self, value : int):
         self.image = self.image.resize((self.width, value))
 
-    def  plot_occupancy_map(self, location_2d : np.ndarray, rotation_yaw : float) -> Image:
+    def plot_occupancy_map(self, location_2d : np.ndarray, rotation_yaw : float) -> Image:
+        """
+        Generates an occupancy map around a specific location.
+
+        -----
+        Args:
+        -----
+            location_2d (np.ndarray): 
+                The 2D coordinates (x, y) of the center of the image in the world frame.
+            rotation_yaw (float): 
+                The yaw angle (in radians) of the image relative to the world frame. 
+
+        --------
+        Returns:
+        --------
+            Image: 
+                An occupancy map centered around the specified location.
+        """
+        
         assert location_2d.shape == (2, )
         location_min = location_2d - np.array([self.width_world, self.height_world]) # give a bit slack to make sure that we can properly rotate
         location_max = location_2d + np.array([self.width_world, self.height_world])
         
         filtered_waypoint_pairs : List[Tuple[RoarPyWaypoint,RoarPyWaypoint]] = []
         last_waypoint = None
+
         for i in range(len(self.waypoints) + 1):
             waypoint = self.waypoints[i % len(self.waypoints)]
+            
             if last_waypoint is not None:
                 filtered_waypoint_pairs.append((last_waypoint, waypoint))
                 last_waypoint = None
+            
             if (
                 (np.all(waypoint.line_representation[0][:2] > location_min) and
                 np.all(waypoint.line_representation[0][:2] < location_max)) or
@@ -75,6 +119,25 @@ class RoarPyOccupancyMapProducer:
         return to_ret
     
     def world_to_pixel(self, location_2d : np.ndarray, rotation_center : float, center_2d : np.ndarray) -> np.ndarray:
+        """
+        Converts a location in the world frame to pixel coordinates in the image frame.
+
+        -----
+        Args:
+        -----
+            location_2d (np.ndarray): 
+                The 2D coordinates (x, y) of the location in the world frame.
+            rotation_center (float): 
+                The yaw angle (in radians) of the image relative to the world frame.
+            center_2d (np.ndarray): 
+                The 2D coordinates (x, y) of the center of the image in the world frame.
+
+        --------
+        Returns:
+        --------
+            np.ndarray: 
+                The pixel coordinates (x, y) of the location in the image frame.
+        """
         assert location_2d.shape == (2, )
         local_coordinate = location_2d - center_2d
         cos_r = np.cos(rotation_center)
