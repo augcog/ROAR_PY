@@ -124,22 +124,7 @@ class RoarPyOccupancyMapProducer:
                 last_waypoint = waypoint
             else:
                 break
-        
-        # for i in range(len(self.waypoints) + 1):
-        #     waypoint = self.waypoints[i % len(self.waypoints)]
-            
-        #     if last_waypoint is not None:
-        #         filtered_waypoint_pairs.append((last_waypoint, waypoint))
-        #         last_waypoint = None
-            
-        #     if (
-        #         (np.all(waypoint.line_representation[0][:2] > location_min) and
-        #         np.all(waypoint.line_representation[0][:2] < location_max)) or
-        #         (np.all(waypoint.line_representation[1][:2] > location_min) and
-        #         np.all(waypoint.line_representation[1][:2] < location_max))
-        #     ):
-        #         last_waypoint = waypoint
-            
+
         # Draw the local occupancy map centered around the actor location
         # self.image = Image.new('L', self.image.size, 0)
         draw = ImageDraw.Draw(self.image)
