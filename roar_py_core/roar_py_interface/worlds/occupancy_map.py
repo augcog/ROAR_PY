@@ -103,16 +103,18 @@ class RoarPyOccupancyMapProducer:
                 waypoint = self.waypoints[i]
                 if is_in_range(waypoint):
                     self.start_index = i
+                    last_waypoint = waypoint
                     break
         else:
             for i in range(len(self.waypoints)):
                 waypoint = self.waypoints[(self.start_index + i) % len(self.waypoints)]
                 if is_in_range(waypoint):
                     self.start_index = (self.start_index + i) % len(self.waypoints)
+                    last_waypoint = waypoint
                     break
 
         # Find the waypoint pairs that are in range
-        for i in range(len(self.waypoints) + 1):
+        for i in range(1, len(self.waypoints) + 1):
             curr_index = (self.start_index + i) % len(self.waypoints)
             waypoint = self.waypoints[curr_index]
 
