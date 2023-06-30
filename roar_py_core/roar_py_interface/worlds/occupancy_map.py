@@ -43,6 +43,7 @@ class RoarPyOccupancyMapProducer:
         self.width_world = width_world
         self.height_world = height_world
         self.waypoints = waypoints
+        self.start_index = -1
 
     @property
     def width(self) -> int:
@@ -83,24 +84,61 @@ class RoarPyOccupancyMapProducer:
         location_min = location_2d - np.array([self.width_world, self.height_world]) # give a bit slack to make sure that we can properly rotate
         location_max = location_2d + np.array([self.width_world, self.height_world])
         
-        filtered_waypoint_pairs : List[Tuple[RoarPyWaypoint,RoarPyWaypoint]] = []
-        last_waypoint = None
 
-        # Filter out waypoints that are not in the image
-        for i in range(len(self.waypoints) + 1):
-            waypoint = self.waypoints[i % len(self.waypoints)]
-            
-            if last_waypoint is not None:
-                filtered_waypoint_pairs.append((last_waypoint, waypoint))
-                last_waypoint = None
-            
-            if (
+        # Check if the waypoint is in range
+        def is_in_range(waypoint : RoarPyWaypoint) -> bool:
+            return (
                 (np.all(waypoint.line_representation[0][:2] > location_min) and
                 np.all(waypoint.line_representation[0][:2] < location_max)) or
                 (np.all(waypoint.line_representation[1][:2] > location_min) and
                 np.all(waypoint.line_representation[1][:2] < location_max))
-            ):
+            )
+
+        filtered_waypoint_pairs : List[Tuple[RoarPyWaypoint,RoarPyWaypoint]] = []
+        last_waypoint = None
+
+        # Find the starting index of the waypoint in range
+        if self.start_index == -1:
+            for i in range(len(self.waypoints)):
+                waypoint = self.waypoints[i]
+                if is_in_range(waypoint):
+                    self.start_index = i
+                    break
+        else:
+            for i in range(len(self.waypoints)):
+                waypoint = self.waypoints[(self.start_index + i) % len(self.waypoints)]
+                if is_in_range(waypoint):
+                    self.start_index = (self.start_index + i) % len(self.waypoints)
+                    break
+
+        # Find the waypoint pairs that are in range
+        for i in range(len(self.waypoints) + 1):
+            curr_index = (self.start_index + i) % len(self.waypoints)
+            waypoint = self.waypoints[curr_index]
+
+            if last_waypoint is not None:
+                filtered_waypoint_pairs.append((last_waypoint, waypoint))
+                last_waypoint = None
+            
+            if is_in_range(waypoint):
                 last_waypoint = waypoint
+            else:
+                break
+        
+        # for i in range(len(self.waypoints) + 1):
+        #     waypoint = self.waypoints[i % len(self.waypoints)]
+            
+        #     if last_waypoint is not None:
+        #         filtered_waypoint_pairs.append((last_waypoint, waypoint))
+        #         last_waypoint = None
+            
+        #     if (
+        #         (np.all(waypoint.line_representation[0][:2] > location_min) and
+        #         np.all(waypoint.line_representation[0][:2] < location_max)) or
+        #         (np.all(waypoint.line_representation[1][:2] > location_min) and
+        #         np.all(waypoint.line_representation[1][:2] < location_max))
+        #     ):
+        #         last_waypoint = waypoint
             
         # Draw the local occupancy map centered around the actor location
         # self.image = Image.new('L', self.image.size, 0)
