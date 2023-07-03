@@ -17,18 +17,28 @@ class RoarPyCarlaCollisionSensor(RoarPyCollisionSensor, RoarPyCarlaBase):
         assert sensor.type_id == "sensor.other.collision", "Unsupported blueprint_id: {} for carla collision sensor support".format(sensor.type_id)
         RoarPyCollisionSensor.__init__(self, name, control_timestep = 0.0)
         RoarPyCarlaBase.__init__(self, carla_instance, sensor)
-        self.received_data : typing.Optional[RoarPyCollisionSensorData] = None
+        self.received_data : RoarPyCollisionSensorData = None
+        self.new_data = RoarPyCollisionSensorData(
+            None,
+            None,
+            np.zeros(3)
+        )
         sensor.listen(
             self.listen_callback
         )
 
     async def receive_observation(self) -> RoarPyCollisionSensorData:
-        while self.received_data is None:
-            await asyncio.sleep(0.001)
-        return self.received_data
+        ret = self.new_data
+        self.received_data = self.new_data
+        self.new_data = RoarPyCollisionSensorData(
+            None,
+            None,
+            np.zeros(3)
+        )
+        return ret
     
     def listen_callback(self, event: carla.CollisionEvent):
-        self.received_data = RoarPyCollisionSensorData(
+        self.new_data = RoarPyCollisionSensorData(
             self._carla_instance.search_actor(event.actor.id),
             self._carla_instance.search_actor(event.other_actor.id),
             np.array([

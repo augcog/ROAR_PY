@@ -3,6 +3,7 @@ from roar_py_interface.actors.actor import RoarPyActor, RoarPyResettableActor
 from roar_py_interface.sensors import *
 from roar_py_interface.base import RoarPySensor
 from roar_py_interface.wrappers import roar_py_thread_sync, roar_py_append_item, roar_py_remove_item
+from roar_py_interface.worlds.occupancy_map import RoarPyOccupancyMapProducer
 import typing
 import gymnasium as gym
 import carla
@@ -230,6 +231,31 @@ class RoarPyCarlaActor(RoarPyActor, RoarPyCarlaBase):
         self._internal_sensors.append(new_sensor)
         return new_sensor
     
+    @roar_py_append_item
+    @roar_py_thread_sync
+    def attach_occupancy_map_sensor(
+        self,
+        width : int,
+        height : int,
+        width_in_world : float,
+        height_in_world : float,
+        name: str = "carla_occupancy_map_sensor",
+    ):
+        world = self._get_carla_world()
+        new_sensor = RoarPyCarlaOccupancyMapSensor(
+            RoarPyOccupancyMapProducer(
+                world.maneuverable_waypoints,
+                width,
+                height,
+                width_in_world,
+                height_in_world,
+            ),
+            self,
+            name
+        )
+        self._internal_sensors.append(new_sensor)
+        return new_sensor
+
     @roar_py_remove_item
     @roar_py_thread_sync
     def remove_sensor(self, sensor: RoarPySensor):

@@ -104,7 +104,7 @@ class RoarPyCarlaBase:
     @roar_py_thread_sync
     def set_linear_3d_velocity(self, target_linear_velocity : np.ndarray) -> None:
         target_linear_velocity = location_to_carla(target_linear_velocity)
-        self._base_actor.set_target_velocity(carla.Vector3D(x=target_linear_velocity[0], y=target_linear_velocity[1], z=target_linear_velocity[2]))
+        self._base_actor.set_target_velocity(carla.Vector3D(x=target_linear_velocity.x, y=target_linear_velocity.y, z=target_linear_velocity.z))
     
     def get_3d_location(self) -> np.ndarray:
         loc = self._base_actor.get_location()
