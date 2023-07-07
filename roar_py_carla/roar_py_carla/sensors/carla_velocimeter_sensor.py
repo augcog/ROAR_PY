@@ -1,4 +1,4 @@
-from roar_py_interface import RoarPyVelocimeterSensor, RoarPyVelocimeterSensorData, roar_py_thread_sync
+from roar_py_core.roar_py_interface import RoarPyVelocimeterSensor, RoarPyVelocimeterSensorData, roar_py_thread_sync
 from ..base import RoarPyCarlaBase
 import typing
 import transforms3d as tr3d

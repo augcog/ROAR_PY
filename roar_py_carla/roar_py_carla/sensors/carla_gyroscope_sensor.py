@@ -1,4 +1,4 @@
-from roar_py_interface import RoarPyGyroscopeSensor, RoarPyGyroscopeSensorData, roar_py_thread_sync
+from roar_py_core.roar_py_interface import RoarPyGyroscopeSensor, RoarPyGyroscopeSensorData, roar_py_thread_sync
 import numpy as np
 import typing
 from ..base import RoarPyCarlaBase
