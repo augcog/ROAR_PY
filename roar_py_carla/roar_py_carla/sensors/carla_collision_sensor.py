@@ -1,4 +1,4 @@
-from roar_py_core.roar_py_interface import RoarPyCollisionSensor, RoarPyCollisionSensorData, roar_py_thread_sync
+from roar_py_interface import RoarPyCollisionSensor, RoarPyCollisionSensorData, roar_py_thread_sync
 from dataclasses import dataclass
 import typing
 import asyncio

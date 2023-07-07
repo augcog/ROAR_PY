@@ -1,4 +1,4 @@
-from roar_py_core.roar_py_interface import RoarPyLocationInWorldSensor, RoarPyLocationInWorldSensorData, roar_py_thread_sync
+from roar_py_interface import RoarPyLocationInWorldSensor, RoarPyLocationInWorldSensorData, roar_py_thread_sync
 from ..base import RoarPyCarlaBase
 import typing
 

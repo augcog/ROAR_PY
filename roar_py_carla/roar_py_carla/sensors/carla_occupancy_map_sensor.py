@@ -1,5 +1,5 @@
-from roar_py_core.roar_py_interface.sensors.occupancy_map_sensor import RoarPyOccupancyMapSensor, RoarPyOccupancyMapSensorData
-from roar_py_core.roar_py_interface.worlds.occupancy_map import RoarPyOccupancyMapProducer
+from roar_py_interface.sensors.occupancy_map_sensor import RoarPyOccupancyMapSensor, RoarPyOccupancyMapSensorData
+from roar_py_interface.worlds.occupancy_map import RoarPyOccupancyMapProducer
 import typing
 import gymnasium as gym
 

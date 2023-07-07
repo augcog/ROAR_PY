@@ -1,4 +1,4 @@
-from roar_py_core.roar_py_interface import RoarPyLiDARSensor, RoarPyLiDARSensorData, roar_py_thread_sync
+from roar_py_interface import RoarPyLiDARSensor, RoarPyLiDARSensorData, roar_py_thread_sync
 import typing
 import gymnasium as gym
 import carla
