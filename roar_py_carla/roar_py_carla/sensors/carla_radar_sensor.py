@@ -1,4 +1,4 @@
-from roar_py_core.roar_py_interface import RoarPyRadarSensor, RoarPyRadarSensorData, roar_py_thread_sync
+from roar_py_interface import RoarPyRadarSensor, RoarPyRadarSensorData, roar_py_thread_sync
 import typing
 import gymnasium as gym
 import carla
@@ -8,9 +8,11 @@ from PIL import Image
 from ..base import RoarPyCarlaBase
 
 def __convert_carla_radar_raw_to_roar_py(carla_radar_dat : carla.RadarMeasurement) -> RoarPyRadarSensorData:
-    p_cloud_size = len(carla_radar_dat)
-    p_cloud = np.copy(np.frombuffer(carla_radar_dat.raw_data, dtype=np.dtype('f4')))
-    p_cloud = np.reshape(p_cloud, (p_cloud_size, 4))
+    rows = []
+    for detection in carla_radar_dat:
+        row = np.array([detection.altitude, detection.azimuth, detection.depth, detection.velocity], dtype=np.float32)
+        rows.append(row)
+    p_cloud = np.stack(rows, axis=0)
     return RoarPyRadarSensorData(p_cloud)
 
 class RoarPyCarlaRadarSensor(RoarPyRadarSensor, RoarPyCarlaBase):
@@ -18,7 +20,6 @@ class RoarPyCarlaRadarSensor(RoarPyRadarSensor, RoarPyCarlaBase):
         self, 
         carla_instance: "RoarPyCarlaInstance",
         sensor: carla.Sensor,
-        target_data_type: typing.Optional[typing.Type[RoarPyRadarSensorData]] = None,
         name: str = "carla_radar_sensor",
     ):
         assert sensor.type_id == "sensor.other.radar", "Unsupported blueprint_id: {} for carla collision sensor support".format(sensor.type_id)

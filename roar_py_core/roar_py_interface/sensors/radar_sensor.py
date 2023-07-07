@@ -55,3 +55,14 @@ class RoarPyRadarSensor(RoarPySensor[RoarPyRadarSensorData]):
     @property
     def vertical_fov(self) -> float:
         raise NotImplementedError
+
+    def get_gym_observation_spec(self) -> gym.Space:
+        return gym.spaces.Box(
+            low=-np.inf,
+            high=np.inf,
+            shape=(10000, 4), # TODO: Fix this later
+            dtype=np.float32
+        )
+
+    def convert_obs_to_gym_obs(self, obs: RoarPyRadarSensorData):
+        return obs.convert_obs_to_gym_obs()
