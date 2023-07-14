@@ -8,3 +8,4 @@ from .carla_gyroscope_sensor import RoarPyCarlaGyroscopeSensor
 from .carla_location_in_world_sensor import RoarPyCarlaLocationInWorldSensor
 from .carla_velocimeter_sensor import RoarPyCarlaVelocimeterSensor, RoarPyCarlaLocalVelocimeterSensor
 from .carla_occupancy_map_sensor import RoarPyCarlaOccupancyMapSensor
+from .carla_radar_sensor import RoarPyCarlaRadarSensor

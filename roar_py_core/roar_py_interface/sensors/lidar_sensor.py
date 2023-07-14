@@ -12,7 +12,7 @@ class RoarPyLiDARSensorData(RoarPyRemoteSupportedSensorData):
     # Number of lasers shot
     channels: int
 
-    # Horizontal angle the LIDAR is rotated 
+    # Horizontal angle in radians the LIDAR is rotated 
     # at the time of the measurement
     horizontal_angle: float
     

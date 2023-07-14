@@ -9,3 +9,4 @@ from .location_in_world_sensor import RoarPyLocationInWorldSensor, RoarPyLocatio
 from .occupancy_map_sensor import RoarPyOccupancyMapSensor, RoarPyOccupancyMapSensorData, RoarPyOccupancyMapSensorImpl
 from .velocimeter_sensor import RoarPyVelocimeterSensor, RoarPyVelocimeterSensorData
 from .custom_lambda_sensor import RoarPyCustomLambdaSensor, RoarPyCustomLambdaSensorData
+from .radar_sensor import RoarPyRadarSensor, RoarPyRadarSensorData
