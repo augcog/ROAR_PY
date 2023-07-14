@@ -29,7 +29,7 @@ class RoarPyCarlaWorld(RoarPyWorld):
         self.carla_world = carla_world
         self.carla_instance = carla_instance
         self.tick_callback_id : typing.Optional[int] = None
-        self.last_tick_time : float = 0.0
+        self._last_tick_time : float = 0.0
         self._actors : typing.List[RoarPyCarlaActor] = []
         self._sensors : typing.List[RoarPySensor] = []
 
@@ -192,30 +192,30 @@ class RoarPyCarlaWorld(RoarPyWorld):
         self._control_subtimestep = control_substimestep
 
     def __on_tick_recv(self, world_snapshot : carla.WorldSnapshot):
-        self.last_tick_time = world_snapshot.timestamp.elapsed_seconds
+        self._last_tick_time = world_snapshot.timestamp.elapsed_seconds
     
     @roar_py_thread_sync
     async def step(self) -> float:
         if self.is_asynchronous:
-            start_time = self.last_tick_time
-            while self.last_tick_time == start_time:
+            start_time = self._last_tick_time
+            while self._last_tick_time == start_time:
                 await asyncio.sleep(__class__.ASYNC_SLEEP_TIME)
                 # Instead of waitForTick, we use sleep here to avoid blocking the event loop
             
             if start_time is None:
                 dt = 0.0
             else:
-                dt = self.last_tick_time - start_time
+                dt = self._last_tick_time - start_time
             return dt
         else:
             self.carla_world.tick(seconds=60.0) # server waits 60s for client to finish the tick
-            # self.last_tick_time = self.carla_world.get_snapshot().timestamp.elapsed_seconds # get the timestamp of the last tick
-            self.last_tick_time += self.control_timestep
+            # self._last_tick_time = self.carla_world.get_snapshot().timestamp.elapsed_seconds # get the timestamp of the last tick
+            self._last_tick_time += self.control_timestep
             return self.control_timestep
     
     @property
     def last_tick_elapsed_seconds(self) -> float:
-        return self.last_tick_time
+        return self._last_tick_time
 
     @roar_py_thread_sync
     def _get_weather(self) -> carla.WeatherParameters:

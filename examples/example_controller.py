@@ -52,6 +52,8 @@ async def main():
         image_height=768
     )
     assert camera is not None
+
+    start_time = carla_world.last_tick_elapsed_seconds
     try:
         while True:
             # Step the world first
@@ -104,6 +106,14 @@ async def main():
             await vehicle.apply_action(control)
     finally:
         roar_py_instance.close()
+        end_time = carla_world.last_tick_elapsed_seconds
+        delta_time = end_time - start_time
+        print(f"Total time: {delta_time} seconds")
+        """
+        ROAR Competition:
+        In ROAR Competition the finished lap count is calculated like what we did above, but there will be logic to verify that you actually finished the lap.
+        Also to improve the accuracy the game will be run with fixed time step.
+        """
 
 
 if __name__ == '__main__':
