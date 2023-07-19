@@ -5,9 +5,10 @@ import typing
 def location_from_carla(location : carla.Location) -> np.ndarray:
     # coordinate frame of CARLA is left-handed, z-up, x-right, y-backward
     # coordinate frame of ROAR is right-handed, z-up, x-forward, y-left
-    return np.array([location.x, -location.y, location.z])
+    return np.array([location.x, -location.y, location.z], dtype=np.float32)
 
 def location_to_carla(location : np.ndarray) -> carla.Location:
+    location = location.astype(np.float32)
     return carla.Location(x=location[0], y=-location[1], z=location[2])
 
 def rotation_from_carla(rotation : carla.Rotation) -> np.ndarray:
@@ -17,7 +18,7 @@ def rotation_from_carla(rotation : carla.Rotation) -> np.ndarray:
     return np.deg2rad(rot_deg)
 
 def rotation_to_carla(rotation : np.ndarray) -> carla.Rotation:
-    rot_deg = np.rad2deg(rotation)
+    rot_deg = np.rad2deg(rotation).astype(np.float32)
     return carla.Rotation(roll=rot_deg[0], pitch=-rot_deg[1], yaw=-rot_deg[2])
 
 def transform_from_carla(transform : carla.Transform) -> typing.Tuple[np.ndarray, np.ndarray]:
