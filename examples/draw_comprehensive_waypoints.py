@@ -17,23 +17,24 @@ async def main():
     carla_world.set_control_steps(0.00, 0.005)
     
     print("Map Name", carla_world.map_name)
-    waypoints = roar_py_instance.world.maneuverable_waypoints
+    comprehensive_waypoints = roar_py_instance.world.comprehensive_waypoints
     spawn_points = roar_py_instance.world.spawn_points
     roar_py_instance.close()
     
-    for waypoint in (waypoints[:] if waypoints is not None else []):
-        rep_line = waypoint.line_representation
-        rep_line = np.asarray(rep_line)
-        waypoint_heading = tr3d.euler.euler2mat(*waypoint.roll_pitch_yaw) @ np.array([1,0,0])
-        plt.arrow(
-            waypoint.location[0], 
-            waypoint.location[1], 
-            waypoint_heading[0] * 1, 
-            waypoint_heading[1] * 1, 
-            width=0.5, 
-            color='r'
-        )
-        plt.plot(rep_line[:,0], rep_line[:,1])
+    for lane_id, waypoint_list in comprehensive_waypoints.items():
+        for waypoint in waypoint_list:
+            rep_line = waypoint.line_representation
+            rep_line = np.asarray(rep_line)
+            waypoint_heading = tr3d.euler.euler2mat(*waypoint.roll_pitch_yaw) @ np.array([1,0,0])
+            # plt.arrow(
+            #     waypoint.location[0], 
+            #     waypoint.location[1], 
+            #     waypoint_heading[0] * 0.5, 
+            #     waypoint_heading[1] * 0.5, 
+            #     width=0.5, 
+            #     color='r'
+            # )
+            plt.plot(rep_line[:,0], rep_line[:,1], label="Lane {}".format(lane_id))
     for spawn_point in spawn_points:
         spawn_point_heading = tr3d.euler.euler2mat(0,0,spawn_point[1][2]) @ np.array([1,0,0])
         plt.arrow(

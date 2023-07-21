@@ -17,6 +17,10 @@ class RoarPyWorld:
     @property
     def maneuverable_waypoints(self) -> typing.Optional[typing.Iterable[RoarPyWaypoint]]:
         return None
+    
+    @property
+    def comprehensive_waypoints(self) -> typing.Optional[typing.Dict[typing.Any, typing.List[RoarPyWaypoint]]]:
+        return None
 
     @property
     def last_tick_elapsed_seconds(self) -> float:

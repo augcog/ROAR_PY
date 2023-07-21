@@ -66,55 +66,87 @@ class RoarPyCarlaWorld(RoarPyWorld):
             if isinstance(carlabase, RoarPySensor):
                 yield carlabase
 
+    @property
+    def comprehensive_waypoints(self) -> typing.Dict[typing.Any,typing.List[RoarPyWaypoint]]:
+        ret = {}
+        for waypoint in self._native_carla_waypoints:
+            transform_w = transform_from_carla(waypoint.transform)
+            new_waypoint = RoarPyWaypoint(
+                transform_w[0],
+                transform_w[1],
+                waypoint.lane_width
+            )
+            if waypoint.road_id not in ret:
+                ret[waypoint.road_id] = []
+            ret[waypoint.road_id].append(new_waypoint)
+        return ret
+
     @cached_property
     @roar_py_thread_sync
-    def maneuverable_waypoints(self) -> typing.List[RoarPyWaypoint]:
+    def maneuverable_waypoints(self) -> typing.Optional[typing.List[RoarPyWaypoint]]:
         waypoint_asset_dir = __class__.ASSET_DIR + "/waypoints"
         waypoint_file = waypoint_asset_dir + "/" + self.map_name + ".npz"
         if os.path.exists(waypoint_file):
             way_points = np.load(waypoint_file)
             return RoarPyWaypoint.load_waypoint_list(way_points)
         
-        grp = CarlaGlobalRoutePlanner(self._native_carla_map, self.WAYPOINTS_DISTANCE)
         spawn_points = self.spawn_points
         num_spawn_points = len(spawn_points)
-        native_ws = []
 
+        waypoints = None
         if num_spawn_points > 1:
+            waypoints = []
             for i in range(num_spawn_points):
                 curr_start = spawn_points[i][0]
                 curr_end = spawn_points[(i+1)%num_spawn_points][0]
-                loc_1 = carla.Location(curr_start[0], curr_start[1], curr_start[2])
-                loc_2 = carla.Location(curr_end[0], curr_end[1], curr_end[2])
-                try:
-                    native_ws += grp.trace_route(loc_1, loc_2)
-                except nx.NetworkXNoPath:
-                    native_ws = []
+                # print("Tracing from {} to {}".format(curr_start, curr_end))
+                current_traced = self._trace_waypoint(
+                    curr_start,
+                    curr_end
+                )
+                if current_traced is not None:
+                    waypoints.extend(current_traced)
+                else:
+                    waypoints = None
                     break
                 
-        if num_spawn_points == 1 or (num_spawn_points > 1 and len(native_ws) == 0):
+        if num_spawn_points == 1 or (num_spawn_points > 1 and waypoints is None):
             init_pos = spawn_points[0][0]
             init_rot = spawn_points[0][1]
 
-            pos_y = np.array([0,0.05,0])
+            pos_y = np.array([1.0,0.0,0.0]) # Go forward 1m and set as next waypoint
 
             second_pos = init_pos + tr3d.euler.euler2mat(*init_rot).dot(pos_y)
-            native_init_pos = carla.Location(init_pos[0], init_pos[1], init_pos[2])
-            native_second_pos = carla.Location(second_pos[0], second_pos[1], second_pos[2])
-            native_ws : typing.List[carla.Waypoint] = grp.trace_route(native_init_pos, native_second_pos) + grp.trace_route(native_second_pos, native_init_pos)
+            first_to_second = self._trace_waypoint(init_pos, second_pos)
+            second_to_first = self._trace_waypoint(second_pos, init_pos)
+            if first_to_second is not None and second_to_first is not None:
+                waypoints = list(first_to_second) + list(second_to_first)
+            else:
+                waypoints = None
+            
+        return waypoints
 
-        real_ws = []
-        for native_ww in native_ws:
-            w = native_ww[0]
-            transform_w = transform_from_carla(w.transform)
+    @cached_property
+    @roar_py_thread_sync
+    def _native_route_tracer(self):
+        return CarlaGlobalRoutePlanner(self._native_carla_map, self.WAYPOINTS_DISTANCE)
+
+    def _trace_waypoint(self, from_location : np.ndarray, to_location : np.ndarray) -> typing.Optional[typing.Iterable[RoarPyWaypoint]]:
+        location_carla = location_to_carla(from_location)
+        destination_carla = location_to_carla(to_location)
+        try:
+            native_waypoints = self._native_route_tracer.trace_route(location_carla, destination_carla)
+        except nx.NetworkXNoPath:
+            return None
+        for native_waypoint, native_waypoint_road_option in native_waypoints:
+            transform_w = transform_from_carla(native_waypoint.transform)
             # Interestingly carla's waypoint also has x axis pointing to the "forward" of the road
             real_w = RoarPyWaypoint(
                 transform_w[0],
                 transform_w[1],
-                w.lane_width
+                native_waypoint.lane_width
             )
-            real_ws.append(real_w)
-        return real_ws
+            yield real_w
 
     @cached_property
     def map_name(self):

@@ -1,5 +1,7 @@
-from typing import Any, TypeVar, Generic, Union, Callable, Iterable, Optional, Type
+from typing import Any, TypeVar, Generic, Union, Callable, Iterable, Optional, Type, Dict, List
 import threading
+
+from roar_py_interface.worlds.waypoint import RoarPyWaypoint
 from ..actors import RoarPyActor
 from ..base.sensor import RoarPySensor
 from ..worlds import RoarPyWorld, RoarPyWaypoint
@@ -142,6 +144,10 @@ class RoarPyWorldWrapper(RoarPyWrapper[RoarPyWorld], RoarPyWorld):
     @property
     def maneuverable_waypoints(self) -> Optional[Iterable[RoarPyWaypoint]]:
         return self._wrapped_object.maneuverable_waypoints
+
+    @property
+    def comprehensive_waypoints(self) -> Optional[Dict[Any, List[RoarPyWaypoint]]]:
+        return self._wrapped_object.comprehensive_waypoints
 
     async def step(self) -> float:
         return await self._wrapped_object.step()

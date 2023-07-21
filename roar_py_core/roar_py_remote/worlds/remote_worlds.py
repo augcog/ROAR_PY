@@ -1,4 +1,5 @@
 from roar_py_interface.worlds import RoarPyWorld
+from roar_py_interface.worlds.waypoint import RoarPyWaypoint
 from roar_py_interface.wrappers.wrapper_base import RoarPyWrapper
 from ..base import RoarPyObjectWithRemoteMessage, register_object_with_remote_message
 from roar_py_interface import RoarPyWaypoint, RoarPyWorldWrapper, RoarPyWorld
@@ -14,6 +15,7 @@ import copy
 @dataclass
 class RoarPyRemoteWorldInitInfo:
     maneuverable_waypoints: Optional[List[RoarPyWaypoint]]
+    comprehensive_waypoints: Optional[Dict[List[RoarPyWaypoint]]]
     is_asynchronous: bool
 
 @serde
@@ -125,7 +127,8 @@ class RoarPyRemoteServerWorldWrapper(RoarPyObjectWithRemoteMessage[RoarPyRemoteW
             sensor_info_map[oid] = sensor._pack_info()
         ret = RoarPyRemoteWorldObsInfo(
             init_info=None if not self._req_need_init_info else RoarPyRemoteWorldInitInfo(
-                maneuverable_waypoints=self.maneuverable_waypoints,
+                maneuverable_waypoints=list(self.maneuverable_waypoints),
+                comprehensive_waypoints=self.comprehensive_waypoints,
                 is_asynchronous=self.is_asynchronous
             ),
             stepped=self._stepped,
@@ -147,6 +150,7 @@ class RoarPyRemoteClientWorld(RoarPyWorld, RoarPyObjectWithRemoteMessage[RoarPyR
         self._is_asynchronous = False
         self._last_step_t = 0.0
         self._maneuverable_waypoints = None
+        self._comprehensive_waypoints = None
 
         self._new_info : Optional[RoarPyRemoteWorldObsInfo] = None
 
@@ -167,6 +171,10 @@ class RoarPyRemoteClientWorld(RoarPyWorld, RoarPyObjectWithRemoteMessage[RoarPyR
     @property
     def maneuverable_waypoints(self) -> Optional[Iterable[RoarPyWaypoint]]:
         return self._maneuverable_waypoints
+
+    @property
+    def comprehensive_waypoints(self) -> Optional[Dict[Any, List[RoarPyWaypoint]]]:
+        return self._comprehensive_waypoints
 
     def _update_actor_map(self, actor_info_map : Dict[int, RoarPyRemoteActorObsInfo]) -> None:
         for oid, actor_info in actor_info_map.items():
@@ -222,6 +230,7 @@ class RoarPyRemoteClientWorld(RoarPyWorld, RoarPyObjectWithRemoteMessage[RoarPyR
     def _depack_info(self, data: RoarPyRemoteWorldObsInfo) -> bool:
         if data.init_info is not None:
             self._maneuverable_waypoints = data.init_info.maneuverable_waypoints
+            self._comprehensive_waypoints = data.init_info.comprehensive_waypoints
             self._is_asynchronous = data.init_info.is_asynchronous
             self._req_need_init_info = False
         

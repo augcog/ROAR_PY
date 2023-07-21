@@ -64,6 +64,10 @@ class RoarPyRemoteMaskedWorld(RoarPyWorld):
         return self.__underlying_world.maneuverable_waypoints
 
     @property
+    def comprehensive_waypoints(self) -> typing.Optional[typing.Dict[typing.Any, typing.List[RoarPyWaypoint]]]:
+        return self.__underlying_world.comprehensive_waypoints
+
+    @property
     def last_tick_elapsed_seconds(self) -> float:
         return self._last_step_timestamp
 
