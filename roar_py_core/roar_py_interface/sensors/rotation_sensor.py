@@ -49,7 +49,9 @@ class RoarPyFrameQuatSensor(RoarPySensor[RoarPyFrameQuatSensorData]):
 @serde
 @dataclass
 class RoarPyRollPitchYawSensorData(RoarPyRemoteSupportedSensorData):
-    # Normalized[-pi,pi) roll,pitch,yaw
+    """
+    Normalized[-pi,pi) roll,pitch,yaw
+    """
     roll_pitch_yaw: np.ndarray #np.NDArray[np.float32]
 
     def get_gym_observation_spec(self) -> gym.Space:
