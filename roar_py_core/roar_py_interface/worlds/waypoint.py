@@ -40,3 +40,16 @@ class RoarPyWaypoint:
             'lane_widths': np.stack([waypoint.lane_width for waypoint in waypoints], axis=0)
         }
     
+    @staticmethod
+    def from_line_representation(
+        point_1: np.ndarray,
+        point_2: np.ndarray,
+        roll_pitch_yaw: np.ndarray,
+    ) -> "RoarPyWaypoint":
+        midpoint = (point_1 + point_2) / 2
+        line_length = np.linalg.norm(point_1 - point_2)
+        return RoarPyWaypoint(
+            midpoint,
+            roll_pitch_yaw,
+            line_length
+        )

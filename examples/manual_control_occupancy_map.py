@@ -6,7 +6,7 @@ import asyncio
 from manual_control import ManualControlViewer
 
 async def main():
-    carla_client = carla.Client('localhost', 3000)
+    carla_client = carla.Client('localhost', 2000)
     carla_client.set_timeout(15.0)
     roar_py_instance = roar_py_carla.RoarPyCarlaInstance(carla_client)
 
@@ -18,7 +18,7 @@ async def main():
     occ_map_producer = roar_py_interface.RoarPyOccupancyMapProducer(carla_world.maneuverable_waypoints, 100, 100, 5, 5)
     
     roar_py_instance.close()
-    spawn_point, spawn_rpy =carla_world.spawn_points[1]
+    spawn_point, spawn_rpy =carla_world.spawn_points[0]
     
     print("Spawning vehicle at", spawn_point, spawn_rpy)
 

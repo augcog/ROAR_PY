@@ -21,30 +21,33 @@ async def main():
     spawn_points = roar_py_instance.world.spawn_points
     roar_py_instance.close()
     
-    for waypoint in (waypoints[:] if waypoints is not None else []):
-        rep_line = waypoint.line_representation
-        rep_line = np.asarray(rep_line)
-        waypoint_heading = tr3d.euler.euler2mat(*waypoint.roll_pitch_yaw) @ np.array([1,0,0])
-        plt.arrow(
-            waypoint.location[0], 
-            waypoint.location[1], 
-            waypoint_heading[0] * 1, 
-            waypoint_heading[1] * 1, 
-            width=0.5, 
-            color='r'
-        )
-        plt.plot(rep_line[:,0], rep_line[:,1])
-    for spawn_point in spawn_points:
-        spawn_point_heading = tr3d.euler.euler2mat(0,0,spawn_point[1][2]) @ np.array([1,0,0])
-        plt.arrow(
-            spawn_point[0][0], 
-            spawn_point[0][1], 
-            spawn_point_heading[0] * 20, 
-            spawn_point_heading[1] * 20, 
-            width=5, 
-            color='r'
-        )
-    plt.show()
+    with plt.ion():
+
+        for waypoint in (waypoints[:] if waypoints is not None else []):
+            rep_line = waypoint.line_representation
+            rep_line = np.asarray(rep_line)
+            waypoint_heading = tr3d.euler.euler2mat(*waypoint.roll_pitch_yaw) @ np.array([1,0,0])
+            plt.arrow(
+                waypoint.location[0], 
+                waypoint.location[1], 
+                waypoint_heading[0] * 1, 
+                waypoint_heading[1] * 1, 
+                width=0.5, 
+                color='r'
+            )
+            plt.plot(rep_line[:,0], rep_line[:,1])
+            plt.pause(0.001)
+        for spawn_point in spawn_points:
+            spawn_point_heading = tr3d.euler.euler2mat(0,0,spawn_point[1][2]) @ np.array([1,0,0])
+            plt.arrow(
+                spawn_point[0][0], 
+                spawn_point[0][1], 
+                spawn_point_heading[0] * 20, 
+                spawn_point_heading[1] * 20, 
+                width=5, 
+                color='r'
+            )
+        plt.show(blocking=True)
 
 if __name__ == '__main__':
     asyncio.run(main())
