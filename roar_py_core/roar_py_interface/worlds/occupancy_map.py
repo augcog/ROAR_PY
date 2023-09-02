@@ -4,6 +4,33 @@ from typing import List, Optional, Tuple
 from serde import serde
 from dataclasses import dataclass
 from .waypoint import RoarPyWaypoint
+import functools
+import numba
+
+@numba.jit(nopython=True)
+def line_intersects_line(
+    line1_start : np.ndarray,
+    line1_end : np.ndarray,
+    line2_start : np.ndarray,
+    line2_end : np.ndarray,
+):
+    line1_diff = line1_end - line1_start
+    line2_diff = line2_end - line2_start
+    
+    q = (line1_start[1] - line2_start[1]) * (line2_diff[0]) - (line1_start[0] - line2_start[0]) * (line2_diff[1])
+    d = (line1_diff[0]) * (line2_diff[1]) - (line1_diff[1]) * (line2_diff[0])
+
+    if d == 0:
+        return False
+
+    r = q / d
+    q = (line1_start[1] - line2_start[1]) * (line1_diff[0]) - (line1_start[0] - line2_start[0]) * (line1_diff[1])
+    s = q / d
+
+    if r < 0 or r > 1 or s < 0 or s > 1:
+        return False
+
+    return True
 
 @serde
 @dataclass
@@ -87,12 +114,34 @@ class RoarPyOccupancyMapProducer:
 
         # Check if the waypoint is in range
         def is_in_range(waypoint : RoarPyWaypoint) -> bool:
-            return (
-                (np.all(waypoint.line_representation[0][:2] > location_min) and
-                np.all(waypoint.line_representation[0][:2] < location_max)) or
-                (np.all(waypoint.line_representation[1][:2] > location_min) and
-                np.all(waypoint.line_representation[1][:2] < location_max))
+            wp_start = waypoint.line_representation[0][:2]
+            wp_end = waypoint.line_representation[1][:2]
+            segments_to_test = []
+            side_1 = np.array([location_min[0], location_max[1]])
+            side_2 = np.array([location_max[0], location_min[1]])
+
+            segments_to_test.append((location_min, side_1))
+            segments_to_test.append((side_1, location_max))
+            segments_to_test.append((location_max, side_2))
+            segments_to_test.append((side_2, location_min))
+
+            rst = functools.reduce(
+                lambda f, s: f or s,
+                [line_intersects_line(wp_start, wp_end, segment[0], segment[1]) for segment in segments_to_test],
+                False
             )
+            return rst
+            # for segment in segments_to_test:
+            #     return line_intersects_line(
+            #         wp_start[:2], wp_end[:2],
+                    
+            #     )
+            # return (
+            #     (np.all(waypoint.line_representation[0][:2] > location_min) and
+            #     np.all(waypoint.line_representation[0][:2] < location_max)) or
+            #     (np.all(waypoint.line_representation[1][:2] > location_min) and
+            #     np.all(waypoint.line_representation[1][:2] < location_max))
+            # )
 
         filtered_waypoint_pairs : List[Tuple[RoarPyWaypoint,RoarPyWaypoint]] = []
         last_waypoint = None
@@ -107,9 +156,9 @@ class RoarPyOccupancyMapProducer:
                     break
         else:
             for i in range(len(self.waypoints)):
-                waypoint = self.waypoints[(self.start_index + i) % len(self.waypoints)]
+                waypoint = self.waypoints[(self.start_index - 5 + i) % len(self.waypoints)]
                 if is_in_range(waypoint):
-                    self.start_index = (self.start_index + i) % len(self.waypoints)
+                    self.start_index = (self.start_index - 5 + i) % len(self.waypoints)
                     last_waypoint = waypoint
                     break
 

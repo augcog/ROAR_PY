@@ -13,3 +13,4 @@ networkx==3.1
 matplotlib
 websockets>=11.0.1
 typing_inspect>=0.8.0
+numba>=0.57.1
