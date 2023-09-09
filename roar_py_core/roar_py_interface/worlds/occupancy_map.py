@@ -156,9 +156,10 @@ class RoarPyOccupancyMapProducer:
                     break
         else:
             for i in range(len(self.waypoints)):
-                waypoint = self.waypoints[(self.start_index - 5 + i) % len(self.waypoints)]
+                waypoint_idx = (self.start_index - 10 + i) % len(self.waypoints)
+                waypoint = self.waypoints[waypoint_idx]
                 if is_in_range(waypoint):
-                    self.start_index = (self.start_index - 5 + i) % len(self.waypoints)
+                    self.start_index = waypoint_idx
                     last_waypoint = waypoint
                     break
 
