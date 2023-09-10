@@ -16,6 +16,10 @@ class RoarPyCustomLambdaSensorData(RoarPyRemoteSupportedSensorData):
     flattened: np.ndarray
     space: gym.Space
 
+    @property
+    def unflattened(self):
+        return gym.spaces.unflatten(self.space, self.flattened)
+
     def get_gym_observation_spec(self) -> gym.Space:
         return self.space
 

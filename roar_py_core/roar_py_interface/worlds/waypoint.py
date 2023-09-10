@@ -5,6 +5,9 @@ from serde import serde
 from dataclasses import dataclass
 from functools import cached_property
 
+def normalize_rad(radians : float) -> float:
+    return (radians + np.pi) % (2 * np.pi) - np.pi
+
 @serde
 @dataclass
 class RoarPyWaypoint:
@@ -53,3 +56,10 @@ class RoarPyWaypoint:
             roll_pitch_yaw,
             line_length
         )
+
+    @staticmethod
+    def interpolate(point_1 : "RoarPyWaypoint", point_2 : "RoarPyWaypoint", alpha : float) -> "RoarPyWaypoint":
+        location = point_1.location * alpha + point_2.location * (1-alpha)
+        roll_pitch_yaw = normalize_rad(point_1.roll_pitch_yaw * alpha + point_2.roll_pitch_yaw * (1-alpha))
+        lane_width = point_1.lane_width * alpha + point_2.lane_width * (1-alpha)
+        return RoarPyWaypoint(location, roll_pitch_yaw, lane_width)
