@@ -32,9 +32,8 @@ async def main():
                 width=10, 
                 color='r'
             )
-            plt.pause(0.001)
         for lane_id, waypoint_list in comprehensive_waypoints.items():
-            for waypoint in waypoint_list[:2]:
+            for waypoint in waypoint_list:
                 rep_line = waypoint.line_representation
                 rep_line = np.asarray(rep_line)
                 waypoint_heading = tr3d.euler.euler2mat(*waypoint.roll_pitch_yaw) @ np.array([1,0,0])
@@ -51,7 +50,7 @@ async def main():
                 else:
                     plt.plot(rep_line[:,0], rep_line[:,1], label="Lane {}".format(lane_id), color='b')
         
-        plt.show(block=True)
+    plt.show()
 
 if __name__ == '__main__':
     asyncio.run(main())

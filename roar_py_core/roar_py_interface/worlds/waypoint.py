@@ -15,6 +15,11 @@ class RoarPyWaypoint:
     roll_pitch_yaw: np.ndarray  # rpy of the road in radians, note that a road in the forward direction of the robot means their rpys are the same
     lane_width: float           # width of the lane in meters at this waypoint
     
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, RoarPyWaypoint):
+            return False
+        return np.allclose(self.location, __value.location) and np.allclose(self.roll_pitch_yaw, __value.roll_pitch_yaw) and np.allclose(self.lane_width, __value.lane_width)
+
     @cached_property
     def line_representation(self) -> Tuple[np.ndarray, np.ndarray]:
         mid_point = self.location

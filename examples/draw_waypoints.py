@@ -36,7 +36,7 @@ async def main():
                 color='r'
             )
             plt.plot(rep_line[:,0], rep_line[:,1])
-            plt.pause(0.001)
+            plt.pause(0.0001)
         for spawn_point in spawn_points:
             spawn_point_heading = tr3d.euler.euler2mat(0,0,spawn_point[1][2]) @ np.array([1,0,0])
             plt.arrow(
@@ -47,7 +47,7 @@ async def main():
                 width=5, 
                 color='r'
             )
-        plt.show(blocking=True)
+    plt.show()
 
 if __name__ == '__main__':
     asyncio.run(main())
