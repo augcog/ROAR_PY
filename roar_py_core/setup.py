@@ -24,7 +24,21 @@ setup(
     author="Yunhao Cao",
     keywords=["reinforcement learning", "gymnasium", "robotics", "rpc"],
     license="MIT",
-    install_requires=read_requirements_file("requirements.txt"),
-    packages=['roar_py_interface', 'roar_py_remote'], # find_packages(),
+    install_requires=[
+        "gymnasium>=0.28.1",
+        "numpy",
+        "asyncio",
+        "pyserde[all]>=0.10.4",
+        "Pillow>=9.5.0",
+        "transforms3d>=0.4.1",
+        "websockets>=11.0.1",
+        "numba>=0.55.0"
+    ],
+    tests_require=[
+        "pytest>=7.3.1",
+        "pytest-asyncio>=0.21.0"
+    ],
+    packages=find_packages(),
+    include_package_data=True,
     python_requires='>=3.8',
 )
