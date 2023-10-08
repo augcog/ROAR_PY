@@ -11,3 +11,4 @@ matplotlib
 websockets>=11.0.1
 pygame >= 2.4
 typing_inspect>=0.8.0
+numba>=0.55.0

@@ -10,7 +10,7 @@ def read_requirements_file(filename):
 
 setup(
     name='roar_py_carla',
-     version='0.0.1a',
+     version='0.1.0',
     description="ROAR_PY carla implementation",
     url="https://github.com/augcog/ROAR_PY",
     classifiers=[

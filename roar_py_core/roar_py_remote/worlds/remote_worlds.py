@@ -15,7 +15,7 @@ import copy
 @dataclass
 class RoarPyRemoteWorldInitInfo:
     maneuverable_waypoints: Optional[List[RoarPyWaypoint]]
-    comprehensive_waypoints: Optional[Dict[List[RoarPyWaypoint]]]
+    comprehensive_waypoints: Optional[Dict[Union[int, str, Any], List[RoarPyWaypoint]]]
     is_asynchronous: bool
 
 @serde

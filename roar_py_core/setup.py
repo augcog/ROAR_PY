@@ -10,7 +10,7 @@ def read_requirements_file(filename):
 
 setup(
     name='roar_py_core',
-     version='0.0.1a',
+    version='0.1.0',
     description="ROAR_PY interface definitions and streaming capabilities library",
     url="https://github.com/augcog/ROAR_PY",
     classifiers=[
