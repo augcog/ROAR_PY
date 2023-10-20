@@ -223,10 +223,11 @@ class RoarPyWaypointsTracker:
             delta_dist -= self._total_distance
         return delta_dist
 
-    def get_location(self, projection: RoarPyWaypointsProjection) -> np.ndarray:
-        delta_vector_unit = (self.waypoints[(projection.waypoint_idx + 1) % len(self.waypoints)].location - self.waypoints[projection.waypoint_idx].location) \
-             / self._distance_between_waypoints[projection.waypoint_idx]
-        return self.waypoints[projection.waypoint_idx].location + delta_vector_unit * projection.distance_from_waypoint
+    def get_interpolated_waypoint(self, projection: RoarPyWaypointsProjection) -> RoarPyWaypoint:
+        prev_wp = self.waypoints[projection.waypoint_idx]
+        next_wp = self.waypoints[(projection.waypoint_idx + 1) % len(self.waypoints)]
+        alpha = np.clip(projection.distance_from_waypoint / self._distance_between_waypoints[projection.waypoint_idx], 0, 1)
+        return RoarPyWaypoint.interpolate(prev_wp, next_wp, alpha)
     
     def total_distance_from_first_waypoint(
         self,
