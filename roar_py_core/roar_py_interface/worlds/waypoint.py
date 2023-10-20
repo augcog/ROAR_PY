@@ -186,13 +186,18 @@ class RoarPyWaypointsTracker:
             while remaining_distance > 0:
                 to_progress = self._distance_between_waypoints[current_projection.waypoint_idx] - current_projection.distance_from_waypoint
                 if remaining_distance < to_progress:
-                    current_projection.distance_from_waypoint += remaining_distance
+                    current_projection = RoarPyWaypointsProjection(
+                        current_projection.waypoint_idx,
+                        current_projection.distance_from_waypoint + remaining_distance
+                    )
                     remaining_distance = 0
                     break
                 else:
                     remaining_distance -= to_progress
-                    current_projection.waypoint_idx = (current_projection.waypoint_idx + 1) % size_of_waypoints
-                    current_projection.distance_from_waypoint = 0
+                    current_projection = RoarPyWaypointsProjection(
+                        (current_projection.waypoint_idx + 1) % size_of_waypoints,
+                        0
+                    )
                     continue
             return current_projection
         else:
@@ -201,13 +206,18 @@ class RoarPyWaypointsTracker:
             while remaining_distance > 0:
                 to_progress = current_projection.distance_from_waypoint
                 if remaining_distance < to_progress:
-                    current_projection.distance_from_waypoint -= remaining_distance
+                    current_projection = RoarPyWaypointsProjection(
+                        current_projection.waypoint_idx,
+                        current_projection.distance_from_waypoint - remaining_distance
+                    )
                     remaining_distance = 0
                     break
                 else:
                     remaining_distance -= to_progress
-                    current_projection.waypoint_idx = (current_projection.waypoint_idx - 1) % size_of_waypoints
-                    current_projection.distance_from_waypoint = self._distance_between_waypoints[current_projection.waypoint_idx]
+                    current_projection = RoarPyWaypointsProjection(
+                        (current_projection.waypoint_idx - 1) % size_of_waypoints,
+                        self._distance_between_waypoints[(current_projection.waypoint_idx - 1) % size_of_waypoints]
+                    )
                     continue
             if current_projection.distance_from_waypoint == self._distance_between_waypoints[current_projection.waypoint_idx]:
                 current_projection.waypoint_idx = (current_projection.waypoint_idx + 1) % size_of_waypoints
