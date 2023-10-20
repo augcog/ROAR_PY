@@ -10,7 +10,7 @@ def read_requirements_file(filename):
 
 setup(
     name='roar_py_carla',
-    version='0.1.0',
+    version='0.1.1',
     description="ROAR_PY carla implementation",
     url="https://github.com/augcog/ROAR_PY",
     classifiers=[
@@ -25,7 +25,7 @@ setup(
     keywords=["reinforcement learning", "gymnasium", "robotics", "carla", "carla-simulator"],
     license="MIT",
     install_requires=[
-        "roar_py_core==0.1.0",
+        "roar_py_core==0.1.1",
         "asyncio",
         "numpy",
         "carla>=0.9.12",

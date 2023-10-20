@@ -10,7 +10,7 @@ def read_requirements_file(filename):
 
 setup(
     name='roar_py_core',
-    version='0.1.0',
+    version='0.1.1',
     description="ROAR_PY interface definitions and streaming capabilities library",
     url="https://github.com/augcog/ROAR_PY",
     classifiers=[
@@ -32,7 +32,8 @@ setup(
         "Pillow>=9.5.0",
         "transforms3d>=0.4.1",
         "websockets>=11.0.1",
-        "numba>=0.55.0"
+        "numba>=0.55.0",
+        "shapely>=2.0.0"
     ],
     tests_require=[
         "pytest>=7.3.1",

@@ -1,9 +1,13 @@
 import numpy as np
-from typing import Tuple, List
+from typing import Tuple, List, Optional, Union
 import transforms3d as tr3d
 from serde import serde
 from dataclasses import dataclass
 from functools import cached_property
+from shapely import Polygon, Point
+from collections import namedtuple
+import math
+import copy
 
 def normalize_rad(radians : float) -> float:
     return (radians + np.pi) % (2 * np.pi) - np.pi
@@ -68,3 +72,150 @@ class RoarPyWaypoint:
         roll_pitch_yaw = normalize_rad(point_1.roll_pitch_yaw * alpha + point_2.roll_pitch_yaw * (1-alpha))
         lane_width = point_1.lane_width * alpha + point_2.lane_width * (1-alpha)
         return RoarPyWaypoint(location, roll_pitch_yaw, lane_width)
+
+    @staticmethod
+    def distance_to_waypoint_polygon(
+        waypoint1: "RoarPyWaypoint",
+        waypoint2: "RoarPyWaypoint",
+        point: Union[np.ndarray, Point]
+    ):
+        p1, p2 = waypoint1.line_representation
+        p3, p4 = waypoint2.line_representation
+        polygon = Polygon([p1[:2], p2[:2], p4[:2], p3[:2]])
+        if isinstance(point, np.ndarray):
+            return polygon.distance(Point(point[:2]))
+        else:
+            return polygon.distance(point)
+
+RoarPyWaypointsProjection = namedtuple("RoarPyWaypointsProjectResult", ["waypoint_idx", "distance_from_waypoint"])
+
+class RoarPyWaypointsTracker:
+    waypoints: List[RoarPyWaypoint]
+
+    def __init__(
+        self,
+        waypoints: List[RoarPyWaypoint],
+        current_traced_index: int = 0
+    ):
+        assert len(waypoints) > 1
+        self._waypoints = waypoints
+        self._distance_between_waypoints : List[float] = []
+        self._total_distance = 0
+        self._rebuild_waypoints_distances()
+        self.current_traced_index = current_traced_index
+
+    @property
+    def waypoints(self) -> List[RoarPyWaypoint]:
+        return self._waypoints
+    
+    @waypoints.setter
+    def waypoints(self, waypoints: List[RoarPyWaypoint]):
+        assert len(waypoints) > 1
+        self._waypoints = waypoints
+        self._rebuild_waypoints_distances()
+    
+    def _rebuild_waypoints_distances(self) -> None:
+        self._distance_between_waypoints = []
+        self._total_distance = 0
+        for i in range(len(self._waypoints)-1):
+            self._distance_between_waypoints.append(np.linalg.norm(self._waypoints[i].location - self._waypoints[i+1].location))
+            self._total_distance += self._distance_between_waypoints[-1]
+
+    def trace_point(self, point: np.ndarray, start_idx : int = 0) -> RoarPyWaypointsProjection:
+        """
+        Trace a point to the closest waypoint
+        :param point: point to be traced
+        :param start_idx: index to start tracing
+        :return: index of the closest waypoint
+        """
+        size_of_waypoints = len(self.waypoints)
+        assert size_of_waypoints > 1
+
+        point_p = Point(point[:2])
+
+        min_dist_idx, min_dist = 0, float("inf")
+        for i in range(1, int(math.ceil(size_of_waypoints/2)) + 2):
+            forward_waypoint_prev = self.waypoints[(start_idx + i - 1) % size_of_waypoints]
+            forward_waypoint_after = self.waypoints[(start_idx + i) % size_of_waypoints]
+            backward_waypoint_prev = self.waypoints[(start_idx - i) % size_of_waypoints]
+            backward_waypoint_after = self.waypoints[(start_idx - i + 1) % size_of_waypoints]
+            forward_distance = RoarPyWaypoint.distance_to_waypoint_polygon(forward_waypoint_prev, forward_waypoint_after, point_p)
+            backward_distance = RoarPyWaypoint.distance_to_waypoint_polygon(backward_waypoint_prev, backward_waypoint_after, point_p)
+            if forward_distance < min_dist:
+                min_dist_idx = (start_idx + i - 1) % size_of_waypoints
+                min_dist = forward_distance
+            if backward_distance < min_dist:
+                min_dist_idx = (start_idx - i) % size_of_waypoints
+                min_dist = backward_distance
+            if min_dist == 0:
+                break
+        
+        prev_waypoint = self.waypoints[min_dist_idx]
+        after_waypoint = self.waypoints[(min_dist_idx + 1) % size_of_waypoints]
+        distance_between_waypoints = self._distance_between_waypoints[min_dist_idx]
+        wp_delta_vector = after_waypoint.location - prev_waypoint.location
+        location_delta_vector = point - prev_waypoint.location
+        projected_distance = np.dot(wp_delta_vector, location_delta_vector) / distance_between_waypoints
+        
+        return RoarPyWaypointsProjection(
+            min_dist_idx,
+            projected_distance
+        )
+
+    def trace_forward_projection(self, projection : RoarPyWaypointsProjection, distance : float) -> RoarPyWaypointsProjection:
+        """
+        Trace forward from a projection result
+        :param projection: projection result
+        :param distance: distance to trace forward
+        :return: new projection result
+        """
+        size_of_waypoints = len(self.waypoints)
+        assert size_of_waypoints > 1
+        
+        distance %= self._total_distance
+
+        if distance >= 0:
+            current_projection = copy.copy(projection)
+            remaining_distance = distance
+            while remaining_distance > 0:
+                to_progress = self._distance_between_waypoints[current_projection.waypoint_idx] - current_projection.distance_from_waypoint
+                if remaining_distance < to_progress:
+                    current_projection.distance_from_waypoint += remaining_distance
+                    remaining_distance = 0
+                    break
+                else:
+                    remaining_distance -= to_progress
+                    current_projection.waypoint_idx = (current_projection.waypoint_idx + 1) % size_of_waypoints
+                    current_projection.distance_from_waypoint = 0
+                    continue
+            return current_projection
+        else:
+            current_projection = copy.copy(projection)
+            remaining_distance = -distance
+            while remaining_distance > 0:
+                to_progress = current_projection.distance_from_waypoint
+                if remaining_distance < to_progress:
+                    current_projection.distance_from_waypoint -= remaining_distance
+                    remaining_distance = 0
+                    break
+                else:
+                    remaining_distance -= to_progress
+                    current_projection.waypoint_idx = (current_projection.waypoint_idx - 1) % size_of_waypoints
+                    current_projection.distance_from_waypoint = self._distance_between_waypoints[current_projection.waypoint_idx]
+                    continue
+            if current_projection.distance_from_waypoint == self._distance_between_waypoints[current_projection.waypoint_idx]:
+                current_projection.waypoint_idx = (current_projection.waypoint_idx + 1) % size_of_waypoints
+                current_projection.distance_from_waypoint = 0
+            
+            return current_projection
+    
+    def get_location(self, projection: RoarPyWaypointsProjection) -> np.ndarray:
+        delta_vector_unit = (self.waypoints[(projection.waypoint_idx + 1) % len(self.waypoints)].location - self.waypoints[projection.waypoint_idx].location) \
+             / self._distance_between_waypoints[projection.waypoint_idx]
+        return self.waypoints[projection.waypoint_idx].location + delta_vector_unit * projection.distance_from_waypoint
+    
+    def total_distance_from_first_waypoint(
+        self,
+        projection_result: RoarPyWaypointsProjection
+    ) -> float:
+        return np.sum(self._distance_between_waypoints[:projection_result.waypoint_idx]) + projection_result.distance_from_waypoint
