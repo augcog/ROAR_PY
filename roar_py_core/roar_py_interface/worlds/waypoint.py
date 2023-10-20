@@ -100,6 +100,7 @@ class RoarPyWaypointsTracker:
         assert len(waypoints) > 1
         self._waypoints = waypoints
         self._distance_between_waypoints : List[float] = []
+        self._total_distance_from_first_waypoint : List[float] = []
         self._total_distance = 0
         self._rebuild_waypoints_distances()
         self.current_traced_index = current_traced_index
@@ -116,9 +117,14 @@ class RoarPyWaypointsTracker:
     
     def _rebuild_waypoints_distances(self) -> None:
         self._distance_between_waypoints = []
+        self._total_distance_from_first_waypoint = []
         self._total_distance = 0
-        for i in range(len(self._waypoints)-1):
-            self._distance_between_waypoints.append(np.linalg.norm(self._waypoints[i].location - self._waypoints[i+1].location))
+        for i in range(len(self._waypoints)):
+            self._total_distance_from_first_waypoint.append(self._total_distance)
+            if i == len(self._waypoints) - 1:
+                self._distance_between_waypoints.append(np.linalg.norm(self._waypoints[i].location - self._waypoints[0].location))
+            else:
+                self._distance_between_waypoints.append(np.linalg.norm(self._waypoints[i].location - self._waypoints[i+1].location))
             self._total_distance += self._distance_between_waypoints[-1]
 
     def trace_point(self, point: np.ndarray, start_idx : int = 0) -> RoarPyWaypointsProjection:
@@ -209,6 +215,14 @@ class RoarPyWaypointsTracker:
             
             return current_projection
     
+    def delta_distance_projection(self, projection_origin : RoarPyWaypointsProjection, projection_destination : RoarPyWaypointsProjection) -> float:
+        dist_origin = self.total_distance_from_first_waypoint(projection_origin)
+        dist_destination = self.total_distance_from_first_waypoint(projection_destination)
+        delta_dist = (dist_destination - dist_origin + self._total_distance) % self._total_distance
+        if delta_dist > self._total_distance / 2:
+            delta_dist -= self._total_distance
+        return delta_dist
+
     def get_location(self, projection: RoarPyWaypointsProjection) -> np.ndarray:
         delta_vector_unit = (self.waypoints[(projection.waypoint_idx + 1) % len(self.waypoints)].location - self.waypoints[projection.waypoint_idx].location) \
              / self._distance_between_waypoints[projection.waypoint_idx]
@@ -218,4 +232,4 @@ class RoarPyWaypointsTracker:
         self,
         projection_result: RoarPyWaypointsProjection
     ) -> float:
-        return np.sum(self._distance_between_waypoints[:projection_result.waypoint_idx]) + projection_result.distance_from_waypoint
+        return self._total_distance_from_first_waypoint[projection_result.waypoint_idx] + projection_result.distance_from_waypoint
