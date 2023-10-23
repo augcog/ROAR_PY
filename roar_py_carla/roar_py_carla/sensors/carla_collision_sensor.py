@@ -21,7 +21,7 @@ class RoarPyCarlaCollisionSensor(RoarPyCollisionSensor, RoarPyCarlaBase):
         self.new_data = RoarPyCollisionSensorData(
             None,
             None,
-            np.zeros(3)
+            None
         )
         sensor.listen(
             self.listen_callback
@@ -33,20 +33,30 @@ class RoarPyCarlaCollisionSensor(RoarPyCollisionSensor, RoarPyCarlaBase):
         self.new_data = RoarPyCollisionSensorData(
             None,
             None,
-            np.zeros(3)
+            None
         )
         return ret
     
     def listen_callback(self, event: carla.CollisionEvent):
-        self.new_data = RoarPyCollisionSensorData(
-            self._carla_instance.search_actor(event.actor.id),
-            self._carla_instance.search_actor(event.other_actor.id),
-            np.array([
-                event.normal_impulse.x, 
-                event.normal_impulse.y, 
-                event.normal_impulse.z
-            ])
-        )
+        current_actor = self._carla_instance.search_actor(event.actor.id)
+        other_actor = self._carla_instance.search_actor(event.other_actor.id)
+        impulse_normal = np.array([
+            event.normal_impulse.x, 
+            event.normal_impulse.y, 
+            event.normal_impulse.z
+        ])
+
+        self.new_data.actor = current_actor
+
+        if self.new_data.other_actor is None:
+            self.new_data.other_actor = [other_actor]
+        else:
+            self.new_data.other_actor.append(other_actor)
+        
+        if self.new_data.impulse_normals is None:
+            self.new_data.impulse_normals = [impulse_normal]
+        else:
+            self.new_data.impulse_normals.append(impulse_normal)
     
     def get_last_observation(self) -> typing.Optional[RoarPyCollisionSensorData]:
         return self.received_data

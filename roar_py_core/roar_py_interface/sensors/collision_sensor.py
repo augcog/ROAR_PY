@@ -14,9 +14,9 @@ class RoarPyCollisionSensorData(RoarPyRemoteSupportedSensorData):
     # The actor the sensor is attached to, the one that measured the collision.
     actor: typing.Optional[RoarPyActor]
     # The second actor involved in the collision.
-    other_actor: typing.Optional[RoarPyActor]
+    other_actor: typing.Optional[typing.List[RoarPyActor]]
     # impulse (x,y,z local axis) in N*s
-    impulse_normal: np.ndarray #np.NDArray[np.float32]
+    impulse_normals: typing.Optional[typing.List[np.ndarray]] #np.NDArray[np.float32]
 
     def get_gym_observation_spec(self) -> gym.Space:
         return gym.spaces.Box(
@@ -27,7 +27,14 @@ class RoarPyCollisionSensorData(RoarPyRemoteSupportedSensorData):
         )
 
     def convert_obs_to_gym_obs(self):
-        return self.impulse_normal
+        max_impulse_norm = -np.inf
+        max_impulse = None
+        for impulse_normal in self.impulse_normals:
+            impulse_norm = np.linalg.norm(impulse_normal)
+            if impulse_norm > max_impulse_norm:
+                max_impulse_norm = impulse_norm
+                max_impulse = impulse_normal
+        return max_impulse
 
 
 class RoarPyCollisionSensor(RoarPySensor[RoarPyCollisionSensorData]):

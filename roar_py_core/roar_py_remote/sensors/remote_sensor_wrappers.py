@@ -26,7 +26,7 @@ class RoarPyRemoteSharedSensorWrapper(typing.Generic[_ObsT], RoarPyRemoteSharedS
             last_obs = RoarPyCollisionSensorData(
                 actor=None,
                 other_actor=None,
-                impulse_normal=last_obs.impulse_normal,
+                impulse_normals=last_obs.impulse_normals,
             )
         return last_obs
 
