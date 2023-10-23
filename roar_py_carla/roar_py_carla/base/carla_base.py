@@ -149,10 +149,17 @@ class RoarPyCarlaBase:
         roll_pitch_yaw: np.ndarray,
         attachment_type: carla.AttachmentType = carla.AttachmentType.Rigid
     ) -> Optional[carla.Actor]:
-        assert location.shape == (3,) and roll_pitch_yaw.shape == (3,)
-        transform = transform_to_carla(location, roll_pitch_yaw)
-        new_actor = self._get_native_carla_world().try_spawn_actor(blueprint, transform, self._base_actor, attachment_type)
-        return new_actor
+        # assert location.shape == (3,) and roll_pitch_yaw.shape == (3,)
+        # transform = transform_to_carla(location, roll_pitch_yaw)
+        # new_actor = self._get_native_carla_world().try_spawn_actor(blueprint, transform, self._base_actor, attachment_type)
+        # return new_actor
+        return self._get_carla_world()._attach_native_carla_actor(
+            blueprint,
+            location,
+            roll_pitch_yaw,
+            attachment_type,
+            self._base_actor
+        )
 
     def __str__(self):
         return str(self._base_actor)
