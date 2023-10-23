@@ -13,11 +13,12 @@ async def main():
     carla_world = roar_py_instance.world
     carla_world.set_asynchronous(True)
     carla_world.set_control_steps(0.0, 0.005)
+    await carla_world.step()
+    roar_py_instance.clean_actors_not_registered()
 
     print("Map Name", carla_world.map_name)
     occ_map_producer = roar_py_interface.RoarPyOccupancyMapProducer(carla_world.maneuverable_waypoints, 100, 100, 5, 5)
     
-    roar_py_instance.close()
     spawn_point, spawn_rpy =carla_world.spawn_points[0]
     
     print("Spawning vehicle at", spawn_point, spawn_rpy)

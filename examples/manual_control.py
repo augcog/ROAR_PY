@@ -83,7 +83,9 @@ async def main():
     carla_world = roar_py_instance.world
     carla_world.set_asynchronous(True)
     carla_world.set_control_steps(0.0, 0.005)
-    
+    await carla_world.step()
+    roar_py_instance.clean_actors_not_registered()
+
     # spawn_point, spawn_rpy = carla_world.spawn_points[
     #     np.random.randint(len(carla_world.spawn_points))
     # ]

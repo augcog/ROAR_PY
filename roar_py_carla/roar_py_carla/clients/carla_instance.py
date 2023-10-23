@@ -1,5 +1,5 @@
 import carla
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from roar_py_interface.wrappers import roar_py_thread_sync
 from ..worlds import RoarPyCarlaWorld
 import weakref
@@ -62,7 +62,7 @@ class RoarPyCarlaInstance:
             except Exception:
                 # in case actor is already closed
                 pass
-            
+        
         self.actor_to_instance_map.clear()
     
     @roar_py_thread_sync
@@ -83,5 +83,27 @@ class RoarPyCarlaInstance:
     def is_closed(self) -> bool:
         return len(self.actor_to_instance_map) == 0
     
+    def clean_actors_not_registered(self, typeid_wildcard : Optional[Union[str, List[str]]] = ["vehicle.*", "sensor.*"]):
+        native_actors : carla.ActorList = self.world.carla_world.get_actors()
+        
+        if typeid_wildcard is not None:
+            if isinstance(typeid_wildcard, str):
+                to_iterate = [native_actors.filter(typeid_wildcard)]
+            else:
+                to_iterate = [native_actors.filter(x) for x in typeid_wildcard]
+        else:
+            to_iterate = [native_actors]
+        
+        instance_map_keys = self.actor_to_instance_map.keys()
+        for c_native_actors in to_iterate:
+            for actor in c_native_actors:
+                if actor.id in instance_map_keys:
+                    continue
+                else:
+                    print("ROAR_PY_CARLA: Cleaning up actor: {}, {}".format(actor.id, actor.type_id))
+                    if hasattr(actor, "is_listening") and hasattr(actor, "stop") and actor.is_listening:
+                        actor.stop()
+                    actor.destroy()
+
     def __del__(self):
         self.close()

@@ -15,7 +15,7 @@ async def main():
     carla_world = roar_py_instance.world
     carla_world.set_asynchronous(True)
     carla_world.set_control_steps(0.00, 0.005)
-    
+
     print("Map Name", carla_world.map_name)
     comprehensive_waypoints = roar_py_instance.world.comprehensive_waypoints
     spawn_points = roar_py_instance.world.spawn_points

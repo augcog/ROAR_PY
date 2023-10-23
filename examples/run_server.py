@@ -47,6 +47,8 @@ async def _main():
     roar_py_instance = roar_py_carla.RoarPyCarlaInstance(carla_client)
     roar_py_instance.world.set_asynchronous(True)
     roar_py_instance.world.set_control_steps(0.0, 0.005)
+    await roar_py_instance.world.step()
+    roar_py_instance.clean_actors_not_registered()
 
     roar_py_server_manager = roar_py_remote.RoarPyRemoteServerWorldManager(roar_py_instance.world, IS_ASYNC, SYNC_WAIT_TIME, thread_safe=False)
 

@@ -32,6 +32,8 @@ async def main():
     carla_world = roar_py_instance.world
     carla_world.set_asynchronous(True)
     carla_world.set_control_steps(0.0, 0.01)
+    await carla_world.step()
+    roar_py_instance.clean_actors_not_registered()
     
     way_points = carla_world.maneuverable_waypoints
     vehicle = carla_world.spawn_vehicle(
