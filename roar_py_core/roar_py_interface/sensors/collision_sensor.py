@@ -27,8 +27,12 @@ class RoarPyCollisionSensorData(RoarPyRemoteSupportedSensorData):
         )
 
     def convert_obs_to_gym_obs(self):
+        if self.impulse_normals is None:
+            return np.zeros(3)
+        
         max_impulse_norm = -np.inf
         max_impulse = None
+        
         for impulse_normal in self.impulse_normals:
             impulse_norm = np.linalg.norm(impulse_normal)
             if impulse_norm > max_impulse_norm:
