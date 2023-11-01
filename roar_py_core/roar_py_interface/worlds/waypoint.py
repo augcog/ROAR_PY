@@ -237,7 +237,7 @@ class RoarPyWaypointsTracker:
         prev_wp = self.waypoints[projection.waypoint_idx]
         next_wp = self.waypoints[(projection.waypoint_idx + 1) % len(self.waypoints)]
         alpha = np.clip(projection.distance_from_waypoint / self._distance_between_waypoints[projection.waypoint_idx], 0, 1)
-        return RoarPyWaypoint.interpolate(prev_wp, next_wp, alpha)
+        return RoarPyWaypoint.interpolate(prev_wp, next_wp, 1-alpha)
     
     def total_distance_from_first_waypoint(
         self,
