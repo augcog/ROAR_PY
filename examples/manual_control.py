@@ -52,7 +52,7 @@ class ManualControlViewer:
         
         pressed_keys = pygame.key.get_pressed()
         if pressed_keys[pygame.K_UP]:
-            new_control['throttle'] = 0.4
+            new_control['throttle'] = 1.0
         if pressed_keys[pygame.K_DOWN]:
             new_control['brake'] = 0.2
         if pressed_keys[pygame.K_LEFT]:
@@ -106,6 +106,11 @@ async def main():
         roar_py_interface.RoarPyCameraSensorDataRGB, # Specify what kind of data you want to receive
         np.array([-2.0 * vehicle.bounding_box.extent[0], 0.0, 3.0 * vehicle.bounding_box.extent[2]]), # relative position
         np.array([0, 10/180.0*np.pi, 0]), # relative rotation
+    )
+
+    collision_sensor = vehicle.attach_collision_sensor(
+        np.zeros(3),
+        np.zeros(3)
     )
 
     viewer = ManualControlViewer()
