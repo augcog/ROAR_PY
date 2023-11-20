@@ -17,7 +17,11 @@ class RoarPyCarlaCollisionSensor(RoarPyCollisionSensor, RoarPyCarlaBase):
         assert sensor.type_id == "sensor.other.collision", "Unsupported blueprint_id: {} for carla collision sensor support".format(sensor.type_id)
         RoarPyCollisionSensor.__init__(self, name, control_timestep = 0.0)
         RoarPyCarlaBase.__init__(self, carla_instance, sensor)
-        self.received_data : RoarPyCollisionSensorData = None
+        self.received_data = RoarPyCollisionSensorData(
+            None,
+            None,
+            None
+        )
         self.new_data = RoarPyCollisionSensorData(
             None,
             None,
@@ -28,25 +32,27 @@ class RoarPyCarlaCollisionSensor(RoarPyCollisionSensor, RoarPyCarlaBase):
         )
 
     async def receive_observation(self) -> RoarPyCollisionSensorData:
-        ret = self.new_data
-        self.received_data = self.new_data
-        self.new_data = RoarPyCollisionSensorData(
-            None,
-            None,
-            None
-        )
-        return ret
+        self.received_data.actor = self.new_data.actor
+        self.received_data.other_actor = self.new_data.other_actor
+        self.received_data.impulse_normals = self.new_data.impulse_normals
+
+        self.new_data.actor = None
+        self.new_data.other_actor = None
+        self.new_data.impulse_normals = None
+
+        return self.received_data
     
     def listen_callback(self, event: carla.CollisionEvent):
-        current_actor = self._carla_instance.search_actor(event.actor.id)
         other_actor = self._carla_instance.search_actor(event.other_actor.id)
         impulse_normal = np.array([
             event.normal_impulse.x, 
             event.normal_impulse.y, 
             event.normal_impulse.z
         ])
-
-        self.new_data.actor = current_actor
+        
+        if self.new_data.actor is None:
+            current_actor = self._carla_instance.search_actor(event.actor.id)
+            self.new_data.actor = current_actor
 
         if self.new_data.other_actor is None:
             self.new_data.other_actor = [other_actor]
