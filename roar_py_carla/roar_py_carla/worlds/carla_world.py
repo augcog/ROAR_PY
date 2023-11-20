@@ -148,6 +148,20 @@ class RoarPyCarlaWorld(RoarPyWorld):
             )
             yield real_w
 
+    def ground_projection(
+        self,
+        location : np.ndarray,
+        max_search_distance : float = 100.0,
+    ) -> typing.Optional[np.ndarray]:
+        location_carla = location_to_carla(location)
+        hit_location_carla : typing.Optional[carla.LabelledPoint] = self.carla_world.ground_projection(
+            location_carla,
+            max_search_distance
+        )
+        if hit_location_carla is None:
+            return None
+        return location_from_carla(hit_location_carla.location)
+
     @cached_property
     def map_name(self):
         native_name = self._native_carla_map.name
