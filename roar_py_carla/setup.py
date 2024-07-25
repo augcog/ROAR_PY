@@ -28,9 +28,10 @@ setup(
         "roar_py_core==0.1.1",
         "asyncio",
         "numpy",
-        "carla>=0.9.12",
+        "carla==0.9.12",
         "networkx>=3.1",
-        "transforms3d>=0.4.1"
+        "transforms3d>=0.4.1",
+        "pygame"
     ],
     tests_require=[
         "pytest>=7.3.1",
