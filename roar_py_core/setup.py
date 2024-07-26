@@ -28,7 +28,7 @@ setup(
         "gymnasium>=0.28.1",
         "numpy",
         "asyncio",
-        "pyserde[all]>=0.10.4",
+        "pyserde[all]==0.10.4",
         "Pillow>=9.5.0",
         "transforms3d>=0.4.1",
         "websockets>=11.0.1",
